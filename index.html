@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PacVu Package Library Work - Viewer v1</title>
+  <link rel="stylesheet" href="./style.css"/>
+  <style>
+    .row select { width:100%; padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:11px; background:#fff; }
+    .row select:focus { outline:none; border-color:#cc0000; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-inner">
+        <h1>PacVu Package Library Work</h1>
+        <p class="sub">Package Library · 2D Dieline Work Dashboard</p>
+        <div class="top-actions">
+          <button class="btn light" id="toggleSidebarBtn">숨기기</button>
+          <button class="btn sec"   id="downloadSvgBtn">SVG</button>
+          <button class="btn sec"   id="downloadDxfBtn">DXF</button>
+          <button class="btn sec"   id="downloadPdfBtn">PDF</button>
+        </div>
+
+        <details class="group" open>
+          <summary>패키지 라이브러리</summary>
+          <div class="group-body">
+            <div class="row">
+              <label>Box Category</label>
+              <select id="boxCategory"><option value="">선택</option></select>
+            </div>
+            <div class="row">
+              <label>Box Type</label>
+              <select id="boxType"><option value="">선택</option></select>
+            </div>
+          </div>
+        </details>
+
+        <details class="group" open>
+          <summary>박스 기본 치수</summary>
+          <div class="group-body">
+            <div class="row"><label>Width (W)</label><input id="baseW" type="number" step="1" value="235"></div>
+            <div class="row"><label>Depth (D)</label><input id="baseD" type="number" step="1" value="229"></div>
+            <div class="row"><label>Height (H)</label><input id="panelH" type="number" step="1" value="91"></div>
+          </div>
+        </details>
+
+        <details class="group" open>
+          <summary>표시옵션</summary>
+          <div class="group-body">
+            <div class="option-grid">
+              <label><span>끈구멍</span><input id="showHoles"  type="checkbox" checked></label>
+              <label><span>폴딩라인</span><input id="showFolds" type="checkbox" checked></label>
+              <label><span>사이즈</span><input id="showDims"   type="checkbox" checked></label>
+              <label><span>라벨</span><input id="showLabels"   type="checkbox" checked></label>
+            </div>
+            <div class="mini-title">끈구멍 설정</div>
+            <div class="row"><label>Hole Ø</label><input id="holeDia"     type="number" step="0.5" value="6"></div>
+            <div class="row"><label>Hole Gap</label><input id="holeGap"   type="number" step="1"   value="70"></div>
+            <div class="row"><label>Offset Y</label><input id="holeOffsetY" type="number" step="0.5" value="45"></div>
+            <details class="sub-group" open>
+              <summary>Bottle Top Hole</summary>
+              <div class="row"><label>Use</label><input id="t002BottleTopHoleEnabled" type="checkbox" data-render-input checked></div>
+              <div class="row"><label>Diameter</label><input id="t002BottleTopHoleDia" type="number" step="0.5" value="51"></div>
+              <div class="row"><label>Panel</label><input type="text" value="Bottle Top" readonly></div>
+              <div class="row"><label>X</label><input type="text" value="Center" readonly></div>
+              <div class="row"><label>Y</label><input id="t002BottleTopHoleY" type="number" step="0.5" value="38.5"></div>
+            </details>
+            <details class="sub-group" open>
+              <summary>Back Small Hole</summary>
+              <div class="row"><label>Use</label><input id="t002BackSmallHoleEnabled" type="checkbox" data-render-input checked></div>
+              <div class="row"><label>Diameter</label><input id="t002BackSmallHoleDia" type="number" step="0.5" value="20"></div>
+              <div class="row"><label>Panel</label><input type="text" value="Back" readonly></div>
+              <div class="row"><label>X</label><input type="text" value="Center" readonly></div>
+              <div class="row"><label>Y</label><input id="t002BackSmallHoleY" type="number" step="0.5" value="0"></div>
+            </details>
+          </div>
+        </details>
+
+        <div class="hint">외곽선 / 접는선 / 슬롯 / 끈구멍 등 구조확인 작업화면</div>
+      </div>
+    </aside>
+
+    <main class="viewer-wrap">
+      <div class="toolbar">
+        <button class="btn light" id="showSidebarBtn">설정</button>
+        <button class="btn light" id="fitBtn">중앙</button>
+        <button class="btn light" id="zoomInBtn">＋</button>
+        <button class="btn light" id="zoomOutBtn">－</button>
+      </div>
+      <div class="legend">
+        <div><span class="ln" style="background:#c00;"></span>톰슨선 (외곽컷)</div>
+        <div><span class="ln" style="background:#1d6fe8; border-top:2px dashed #1d6fe8;"></span>접는선</div>
+        <div><span class="ln" style="background:#e53935;"></span>슬롯</div>
+        <div><span class="ln" style="background:#1f8f4f;"></span>끈구멍</div>
+      </div>
+      <div class="status" id="statusBox">Zoom 90%</div>
+      <div id="svgHost"></div>
+    </main>
+  </div>
+
+  <!-- external -->
+  <script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script type="module">
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js/+esm';
+    window.PacVuOrbitControls = OrbitControls;
+  </script>
+  <script src="./viewer/PacVu3DTheme.js?v=20260725-white1"></script>
+  <script src="./viewer/PacVu3DViewer.js"></script>
+  <script src="./shared/PacVuUnits.js"></script>
+  <script src="./shared/PacVu2DVisualProfiles.js?v=20260802-tray-internal-gap1"></script>
+  <script src="./shared/PacVu2DVisualContract.js?v=20260802-r001-responsive1"></script>
+  <script src="./structures/shipping/common/Shipping2DVisualCommon.js?v=20260802-r001-profile1"></script>
+  <script src="./shared/PacVu2DVisualEngine.js?v=20260802-r001-profile1"></script>
+  <script src="./shared/PacVuShippingCommon.js"></script>
+  <script src="./export/PacVuExportHeader.js"></script>
+
+  <!-- M001: G-Type Mailer -->
+<script src="./structures/mailer/common/Mailer2DVisualCommon.js?v=20260802-mailer-responsive1"></script>
+<script src="./structures/mailer/M001/M001_spec.js"></script>
+  <script src="./structures/mailer/M001/M001_layout.js"></script>
+  <script src="./structures/mailer/M001/M001_renderer.js"></script>
+  <script src="./structures/mailer/M001/M001_3d_test.js?v=20260725-recovery3"></script>
+
+  <!-- M002: G-style Mailer 2 -->
+  <script src="./structures/mailer/M002/M002_spec.js"></script>
+  <script src="./structures/mailer/M002/M002_layout.js?v=20260730-insertdepth1"></script>
+  <script src="./structures/mailer/M002/M002_renderer.js?v=20260730-svgmaster2"></script>
+  <script src="./structures/mailer/M002/M002_3d.js?v=20260730-brandshadow2"></script>
+
+  <!-- M003: PacVu Master G Box -->
+  <script src="./structures/mailer/M003/M003_spec.js"></script>
+  <script src="./structures/mailer/M003/M003_layout.js"></script>
+  <script src="./structures/mailer/M003/M003_renderer.js?v=20260730-overallgap1"></script>
+  <script src="./structures/mailer/M003/M003_3d_test.js?v=20260802-m003-slider-hitarea1"></script>
+
+  <!-- T001: B-Type Tuck current working template -->
+  <script src="./structures/tuck/T001/T001_spec.js?v=20260727-bottom-revision-4"></script>
+  <script src="./structures/tuck/T001/T001_layout.js?v=20260727-bottom-revision-4"></script>
+  <script src="./structures/tuck/common/Tuck2DVisualCommon.js?v=20260802-tuck-responsive2"></script>
+  <script src="./structures/tuck/T001/T001_renderer.js"></script>
+  <script src="./structures/tuck/T001/T001_3d_test.js?v=20260727-bottom-revision-4"></script>
+
+  <!-- T002: B-Type Bottle Box -->
+  <script src="./structures/tuck/T002/T002_spec.js"></script>
+  <script src="./structures/tuck/T002/T002_layout.js"></script>
+  <script src="./structures/tuck/T002/T002_renderer.js"></script>
+  <script src="./structures/tuck/T002/T002_3d.js"></script>
+
+  <!-- T003: B-Type Bottle Box / left -->
+  <script src="./structures/tuck/T003/T003_spec.js"></script>
+  <script src="./structures/tuck/T003/T003_layout.js"></script>
+  <script src="./structures/tuck/T003/T003_renderer.js"></script>
+  <script src="./structures/tuck/T003/T003_3d.js"></script>
+
+  <!-- T004: B-Type Tuck Box -->
+  <script src="./structures/tuck/T004/T004_spec.js"></script>
+  <script src="./structures/tuck/T004/T004_layout.js"></script>
+  <script src="./structures/tuck/T004/T004_renderer.js"></script>
+  <script src="./structures/tuck/T004/T004_3d.js"></script>
+
+  <!-- T005: B-Type Tuck Box -->
+  <script src="./structures/tuck/T005/T005_spec.js"></script>
+  <script src="./structures/tuck/T005/T005_layout.js"></script>
+  <script src="./structures/tuck/T005/T005_renderer.js"></script>
+  <script src="./structures/tuck/T005/T005_3d.js"></script>
+
+  <!-- GA001: Gable Lock Box master -->
+  <script src="./structures/gable/common/Gable2DVisualCommon.js?v=20260802-ga001-spacing2"></script>
+  <script src="./structures/gable/GA001/GA001_spec.js?v=20260802-safety1"></script>
+  <script src="./structures/gable/GA001/GA001_layout.js?v=20260802-handle-size1"></script>
+  <script src="./structures/gable/GA001/GA001_renderer.js?v=20260802-ga001-spacing2"></script>
+  <script src="./structures/gable/GA001/GA001_3d_test.js"></script>
+
+  <!-- R001: A-Type RSC Shipping -->
+  <script src="./structures/shipping/rsc/R001/R001_spec.js"></script>
+  <script src="./structures/shipping/rsc/R001/R001_layout.js"></script>
+  <script src="./structures/shipping/rsc/R001/R001_renderer.js?v=20260730-r001overall5"></script>
+  <script src="./structures/shipping/rsc/R001/R001_3d.js?v=20260731-r001assembly1"></script>
+
+  <!-- R002: A-Type RSC Shipping 2 -->
+  <script src="./structures/shipping/rsc/R002/R002_spec.js"></script>
+  <script src="./structures/shipping/rsc/R002/R002_layout.js"></script>
+  <script src="./structures/shipping/rsc/R002/R002_renderer.js"></script>
+  <script src="./structures/shipping/rsc/R002/R002_3d.js?v=20260731-r002assembly1"></script>
+
+  <!-- R003: A-Type RSC Shipping 3 -->
+  <script src="./structures/shipping/rsc/R003/R003_spec.js"></script>
+  <script src="./structures/shipping/rsc/R003/R003_layout.js"></script>
+  <script src="./structures/shipping/rsc/R003/R003_renderer.js?v=20260802-vertical-dim1"></script>
+  <script src="./structures/shipping/rsc/R003/R003_3d.js?v=20260731-r003assembly1"></script>
+
+  <!-- R004: A-Type RSC Shipping 4 with handle cut -->
+  <script src="./structures/shipping/rsc/R004/R004_spec.js"></script>
+  <script src="./structures/shipping/rsc/R004/R004_layout.js"></script>
+  <script src="./structures/shipping/rsc/R004/R004_renderer.js?v=20260802-vertical-dim1"></script>
+  <script src="./structures/shipping/rsc/R004/R004_3d.js?v=20260731-r004assembly1"></script>
+
+  <!-- S001: S-Series Sleeve & Slide set -->
+  <script src="./structures/sleeve_slide/S001/S001_spec.js"></script>
+  <script src="./structures/sleeve_slide/S001/product_fit/S001_product_profiles.js"></script>
+  <script src="./structures/sleeve_slide/S001/product_fit/S001_product_cut_paths.js"></script>
+  <script src="./structures/sleeve_slide/S001/product_fit/S001_product_instances.js"></script>
+  <script src="./structures/sleeve_slide/S001/product_fit/S001_product_placement.js"></script>
+  <script src="./structures/sleeve_slide/S001/product_fit/S001_product_fit_scenarios.js"></script>
+  <script src="./structures/sleeve_slide/S001/S001_layout.js"></script>
+  <script src="./structures/sleeve_slide/S001/S001_renderer.js"></script>
+  <script src="./structures/sleeve_slide/S001/S001_export.js"></script>
+  <script src="./structures/sleeve_slide/S001/S001_inner_3d.js?v=20260804-inner-bottom-direction7"></script>
+  <script src="./structures/sleeve_slide/S001/S001_insert_3d.js?v=20260804-insert-svg-guides4"></script>
+  <script src="./structures/sleeve_slide/S001/S001_assembly_3d.js?v=20260804-assembly-stage1"></script>
+  <script src="./structures/sleeve_slide/S001/S001_assembly_exact_3d.js?v=20260804-sleeve-floor-drop14"></script>
+  <script src="./structures/sleeve_slide/S001/S001_3d.js?v=20260804-split-notch4"></script>
+
+  <!-- B001: Bakery Box -->
+  <script src="./structures/bakery/common/Bakery2DVisualCommon.js?v=20260802-b001-ui1"></script>
+  <script src="./structures/bakery/B001/B001_spec.js"></script>
+  <script src="./structures/bakery/B001/B001_layout.js"></script>
+  <script src="./structures/bakery/B001/B001_renderer.js"></script>
+  <script src="./structures/bakery/B001/B001_3d_test.js?v=20260726-test"></script>
+
+  <!-- B002: Bakery Handle Box -->
+  <script src="./structures/bakery/B002/B002_spec.js"></script>
+  <script src="./structures/bakery/B002/B002_layout.js"></script>
+  <script src="./structures/bakery/B002/B002_renderer.js"></script>
+  <script src="./structures/bakery/B002/B002_3d.js"></script>
+
+  <!-- C001: Cake Box -->
+  <script src="./structures/cake/C001/C001_spec.js"></script>
+  <script src="./structures/cake/C001/C001_layout.js"></script>
+  <script src="./structures/cake/common/Cake2DVisualCommon.js"></script>
+  <script src="./structures/cake/C001/C001_renderer.js"></script>
+  <script src="./structures/cake/C001/C001_export.js"></script>
+  <script src="./structures/cake/C001/C001_3d.js"></script>
+
+  <!-- TR001: EB Tray Box -->
+  <script src="./structures/tray/common/Tray2DVisualCommon.js?v=20260802-tray-internal-gap1"></script>
+  <script src="./structures/tray/TR001/TR001_spec.js"></script>
+  <script src="./structures/tray/TR001/TR001_layout.js"></script>
+  <script src="./structures/tray/TR001/TR001_renderer.js?v=20260802-tr001-profile1"></script>
+  <script src="./structures/tray/TR001/TR001_3d.js?v=20260802-tr001-contact-shadow3"></script>
+
+  <!-- TR002: EB Tray Box -->
+  <script src="./structures/tray/TR002/TR002_spec.js"></script>
+  <script src="./structures/tray/TR002/TR002_layout.js"></script>
+  <script src="./structures/tray/TR002/TR002_renderer.js?v=20260802-tray-profile1"></script>
+  <script src="./structures/tray/TR002/TR002_3d.js?v=20260802-tr002-assembly1"></script>
+
+  <!-- TR003: Tray Box -->
+  <script src="./structures/tray/TR003/TR003_spec.js"></script>
+  <script src="./structures/tray/TR003/TR003_layout.js"></script>
+  <script src="./structures/tray/TR003/TR003_renderer.js?v=20260802-tray-profile1"></script>
+  <script src="./structures/tray/TR003/TR003_3d.js?v=20260802-tr003-four-semicircles5"></script>
+
+  <!-- export -->
+  <script src="./export/svgExport.js"></script>
+  <script src="./export/dxfExport.js"></script>
+
+  <!-- app (entry point) -->
+<script src="./app.js?v=20260802-tray-card3"></script>
+  <script src="./mockup3d.js?v=20260802-tr002-assembly1"></script>
+  <script src="./shared/PacVu2DWatermarkOverlay.js?v=20260802-m001-screen2"></script>
+</body>
+</html>

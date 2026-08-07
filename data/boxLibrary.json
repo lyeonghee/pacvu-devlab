@@ -1,0 +1,354 @@
+[
+  {
+    "categoryKey": "tuck",
+    "categoryLabel": "01 Tuck Box",
+    "items": [
+      {
+        "label": "T001 Standard Tuck Box",
+        "koreanName": "기본단상자",
+        "fefcoCode": "T001",
+        "engineKey": "bbox",
+        "variantKey": "T001",
+        "defaultDims": {
+          "W": 57,
+          "D": 57,
+          "H": 177
+        }
+      },
+      {
+        "label": "T002 Bottle Box (Right)",
+        "koreanName": "보틀박스",
+        "fefcoCode": "T002",
+        "engineKey": "bbox2",
+        "variantKey": "T002",
+        "defaultDims": {
+          "W": 126,
+          "D": 81,
+          "H": 308
+        }
+      },
+      {
+        "label": "T003 Bottle Box (Left)",
+        "koreanName": "E-Type Bottle / left",
+        "fefcoCode": "T003",
+        "engineKey": "bbox3",
+        "variantKey": "T003",
+        "defaultDims": {
+          "W": 86.5,
+          "D": 86.5,
+          "H": 296
+        }
+      },
+      {
+        "label": "T004 Auto-Lock Tuck Box",
+        "koreanName": "B-Type Tuck Box",
+        "fefcoCode": "T004",
+        "engineKey": "bbox4",
+        "variantKey": "T004",
+        "defaultDims": {
+          "W": 130,
+          "D": 65,
+          "H": 190
+        }
+      },
+      {
+        "label": "T005 Opposite Tuck End Box",
+        "koreanName": "맞뚜껑형 단상자",
+        "fefcoCode": "T005",
+        "engineKey": "bbox5",
+        "variantKey": "T005",
+        "defaultDims": {
+          "W": 286,
+          "D": 90,
+          "H": 344
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "mailer",
+    "categoryLabel": "02 Mailer Box",
+    "items": [
+      {
+        "label": "G-style Mailer Box 1",
+        "koreanName": "G-style M001",
+        "fefcoCode": "0427",
+        "engineKey": "gbox",
+        "variantKey": "M001",
+        "defaultDims": {
+          "W": 235,
+          "D": 229,
+          "H": 91
+        }
+      },
+      {
+        "label": "G-style Mailer Box 2",
+        "koreanName": "G-style M002",
+        "fefcoCode": "0427",
+        "engineKey": "gbox2",
+        "variantKey": "M002",
+        "defaultDims": {
+          "W": 400,
+          "D": 308,
+          "H": 80
+        }
+      },
+      {
+        "label": "G-style Mailer Box 3",
+        "koreanName": "M003 G박스 표준",
+        "fefcoCode": "0427",
+        "engineKey": "gbox3",
+        "variantKey": "M003",
+        "defaultDims": {
+          "W": 205,
+          "D": 205,
+          "H": 65
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "shipping",
+    "categoryLabel": "03 Shipping Box",
+    "items": [
+      {
+        "label": "A-Type / RSC Shipping Box 1",
+        "koreanName": "A형 타입 RSC 택배박스1",
+        "fefcoCode": "0201",
+        "engineKey": "rbox",
+        "variantKey": "default",
+        "defaultDims": {
+          "W": 285,
+          "D": 170,
+          "H": 120
+        }
+      },
+      {
+        "label": "A-Type / RSC Shipping Box 2",
+        "koreanName": "A형 타입 RSC 택배박스2",
+        "fefcoCode": "0201",
+        "engineKey": "rbox2",
+        "variantKey": "R002",
+        "defaultDims": {
+          "W": 425,
+          "D": 335,
+          "H": 103
+        }
+      },
+      {
+        "label": "A-Type / RSC Shipping Box 3",
+        "koreanName": "A형 타입 RSC 택배박스3",
+        "fefcoCode": "0201",
+        "engineKey": "rbox3",
+        "variantKey": "R003",
+        "defaultDims": {
+          "W": 350,
+          "D": 230,
+          "H": 220
+        }
+      },
+      {
+        "label": "A-Type / RSC Shipping Box 4 Handle",
+        "koreanName": "RSC Shipping Box 4 Handle",
+        "fefcoCode": "0201",
+        "engineKey": "rbox4",
+        "variantKey": "R004",
+        "defaultDims": {
+          "W": 280,
+          "D": 220,
+          "H": 190
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "gable",
+    "categoryLabel": "04 Gable Box",
+    "items": [
+      {
+        "label": "GA001 Gable Lock Box",
+        "koreanName": "게이블 락 박스",
+        "fefcoCode": "GA001",
+        "engineKey": "gable1",
+        "variantKey": "GA001",
+        "defaultDims": {
+          "W": 241,
+          "D": 127,
+          "H": 127
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "rigid",
+    "categoryLabel": "05 Rigid Box",
+    "items": []
+  },
+  {
+    "categoryKey": "sleeve_slide",
+    "categoryLabel": "06 Sleeve & Slide",
+    "items": [
+      {
+        "label": "S001 Box Set",
+        "koreanName": "S001 Box Set",
+        "fefcoCode": "S001",
+        "engineKey": "sSeries",
+        "variantKey": "S001",
+        "type": "set",
+        "defaultDims": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        },
+        "defaultProductSize": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        }
+      },
+      {
+        "label": "S001 Outer Sleeve",
+        "koreanName": "S001 Outer Sleeve",
+        "fefcoCode": "S001-1",
+        "engineKey": "sSeries",
+        "variantKey": "S001-1",
+        "type": "component",
+        "defaultDims": { "W": 298, "D": 61, "H": 292 },
+        "defaultProductSize": { "W": 298, "D": 61, "H": 292 }
+      },
+      {
+        "label": "S001 Inner Tray",
+        "koreanName": "S001 Inner Tray",
+        "fefcoCode": "S001-2",
+        "engineKey": "sSeries",
+        "variantKey": "S001-2",
+        "type": "component",
+        "defaultDims": { "W": 298, "D": 61, "H": 292 },
+        "defaultProductSize": { "W": 298, "D": 61, "H": 292 }
+      },
+      {
+        "label": "S001 Insert Pad",
+        "koreanName": "S001 Insert Pad",
+        "fefcoCode": "S001-3",
+        "engineKey": "sSeries",
+        "variantKey": "S001-3",
+        "type": "component",
+        "defaultDims": { "W": 298, "D": 61, "H": 292 },
+        "defaultProductSize": { "W": 298, "D": 61, "H": 292 }
+      }
+    ]
+  },
+  {
+    "categoryKey": "bakery",
+    "categoryLabel": "07 Bakery Box",
+    "items": [
+      {
+        "label": "B001 Bakery Box",
+        "koreanName": "B001 베이커리 박스",
+        "fefcoCode": "B001",
+        "engineKey": "b001",
+        "variantKey": "B001",
+        "sizeMode": "fixed",
+        "allowResize": false,
+        "defaultDims": {
+          "W": 160,
+          "D": 110,
+          "H": 80
+        }
+      },
+      {
+        "label": "B002 Bakery Handle Box",
+        "koreanName": "B002 쿠키 손잡이 박스",
+        "fefcoCode": "B002",
+        "engineKey": "b002",
+        "variantKey": "B002",
+        "sizeMode": "fixed",
+        "allowResize": false,
+        "defaultDims": {
+          "W": 136,
+          "D": 67,
+          "H": 137
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "tray",
+    "categoryLabel": "08 Tray Box",
+    "items": [
+      {
+        "label": "TR001 EB Tray Box",
+        "koreanName": "TR001 EB Tray Box",
+        "fefcoCode": "TR001",
+        "engineKey": "tr001",
+        "variantKey": "TR001",
+        "defaultDims": {
+          "W": 282,
+          "D": 368,
+          "H": 140
+        }
+      },
+      {
+        "label": "TR002 EB Tray Box",
+        "koreanName": "TR002 EB Tray Box",
+        "fefcoCode": "TR002",
+        "engineKey": "tr002",
+        "variantKey": "TR002",
+        "defaultDims": {
+          "W": 200,
+          "D": 280,
+          "H": 100
+        }
+      },
+      {
+        "label": "TR003 Tray Box",
+        "koreanName": "TR003 트레이 박스",
+        "fefcoCode": "TR003",
+        "engineKey": "tr003",
+        "variantKey": "TR003",
+        "defaultDims": {
+          "W": 317.5,
+          "D": 496.8875,
+          "H": 133.35
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "cake",
+    "categoryLabel": "09 Cake Box",
+    "items": [
+      {
+        "label": "C001 Cake Box",
+        "koreanName": "C001 케이크 박스",
+        "fefcoCode": "C001",
+        "engineKey": "c001",
+        "variantKey": "C001",
+        "defaultPreset": "no3",
+        "defaultDims": {
+          "W": 277,
+          "D": 275,
+          "H": 140
+        }
+      }
+    ]
+  },
+  {
+    "categoryKey": "rrp_display",
+    "categoryLabel": "10 Display / RRP",
+    "items": [
+      {
+        "label": "RRP 기본형 / 진열형 박스",
+        "koreanName": "RRP 타입",
+        "fefcoCode": "확인 필요",
+        "engineKey": "rrpbox",
+        "variantKey": "default",
+        "defaultDims": {
+          "W": 235,
+          "D": 229,
+          "H": 91
+        }
+      }
+    ]
+  }
+]

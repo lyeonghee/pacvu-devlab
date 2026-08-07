@@ -1,0 +1,927 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" width="576.18mm" height="635.914mm" version="1.1" viewBox="0 0 1633.266 1802.591">
+  <!-- Generator: Adobe Illustrator 29.8.2, SVG Export Plug-In . SVG Version: 2.1.1 Build 3)  -->
+  <polyline points="1560.058 1474.785 1449.507 1589.589 1405.284 1589.589" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1387.266,1578.056c3.238,7.022,10.286,11.533,18.019,11.533" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1387.266,1578.056l-47.392-102.761c-.784-1.744-2.391-2.973-4.279-3.274-1.888-.301-3.797.368-5.084,1.782l-11.843,13.008,10.366,22.23-4.954,132.313" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1304.251,1660.455c10.669,0,19.429-8.439,19.829-19.1" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1304.251,1660.455h0c-8.634,0-16.915-3.43-23.02-9.535l-61.331-61.331h-64.063v11.339l-59.528,59.528h-79.415" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M997.136,1642.434c.942,10.211,9.504,18.021,19.759,18.021" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M997.136,1642.434l-15.364-166.622c-.153-1.655-1.26-3.074-2.829-3.623-1.569-.549-3.32-.131-4.471,1.068l-111.737,116.331h-44.222" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M800.494,1578.056c3.238,7.022,10.286,11.533,18.019,11.533" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M800.494,1578.056l-47.392-102.761c-.784-1.744-2.39-2.973-4.279-3.274-1.888-.301-3.797.368-5.084,1.782l-11.843,13.008,10.366,22.23-4.954,132.313" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M717.48,1660.455c10.669,0,19.43-8.439,19.829-19.1" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M717.48,1660.455h-2.315c-7.152,0-14.011-2.841-19.068-7.898l-62.968-62.968h-64.063v11.339l-59.528,59.528h-79.443" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M410.34,1642.464c.956,10.198,9.513,17.99,19.756,17.99" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <polyline points="410.34 1642.464 395.018 1479.037 319.9 1403.919" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <line x1="1559.207" y1="1474.785" x2="1340.464" y2="1474.785" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="1328.943" y1="1474.785" x2="982.397" y2="1474.785" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="972.153" y1="1474.785" x2="753.692" y2="1474.785" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="742.172" y1="1474.785" x2="391.617" y2="1474.785" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="1319.342" y1="1490.147" x2="1220.502" y2="1588.987" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="732.57" y1="1490.147" x2="633.73" y2="1588.987" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <path d="M1560.058,1474.785v-873.071l-7.087-7.087-7.057-134.646h-153.706c-6.409,0-12.031,4.314-13.69,10.505l-26.807,100.046-11.339,11.339v19.843h-11.339" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M971.869,601.715v-19.843l-11.339-11.339-26.807-100.046c-1.659-6.191-7.281-10.505-13.69-10.505h-153.631l-7.138,136.359" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M747.932,596.045c0,3.073,2.449,5.587,5.521,5.667,3.072.081,5.649-2.302,5.81-5.371" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <polyline points="747.932 596.045 747.932 372.108 722.42 372.108 722.42 381.179" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M745.664,372.108l-1.813-34.601c-1.065-20.329-17.858-36.265-38.215-36.265h-272.573c-20.357,0-37.15,15.936-38.215,36.265l-1.813,34.601" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <polyline points="416.278 381.179 416.278 372.108 390.767 372.108 390.767 601.715 319.9 620.703 319.9 1403.919" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <line x1="1334.703" y1="602.565" x2="1334.703" y2="1471.1" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="747.932" y1="602.565" x2="747.932" y2="1471.1" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="977.538" y1="602.565" x2="977.538" y2="1471.1" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="390.767" y1="602.565" x2="390.767" y2="1473.935" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="1559.207" y1="601.715" x2="1341.223" y2="601.715" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <polyline points="983.207 601.715 971.869 601.715 754.451 601.715" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="747.081" y1="598.88" x2="391.617" y2="598.88" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="721.57" y1="378.345" x2="417.129" y2="378.345" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10" stroke-width="2"/>
+  <line x1="983.207" y1="321.085" x2="983.207" y2="601.715" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M997.381,306.911c-7.824,0-14.173,6.35-14.173,14.173" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <line x1="1329.034" y1="363.806" x2="1329.034" y2="601.715" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <line x1="1329.034" y1="525.179" x2="983.207" y2="525.179" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="1272.14" y1="306.911" x2="997.381" y2="306.911" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <line x1="983.207" y1="601.715" x2="1127.774" y2="601.715" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="1184.467" y1="601.715" x2="1329.034" y2="601.715" fill="none" stroke="#4257a6" stroke-dasharray="3" stroke-miterlimit="10"/>
+  <line x1="1272.14" y1="306.911" x2="1329.034" y2="363.806" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1184.467,601.715c0-15.647-12.699-28.346-28.346-28.346s-28.346,12.699-28.346,28.346,12.699,28.346,28.346,28.346,28.346-12.699,28.346-28.346" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1228.404,416.045c0-39.9-32.383-72.283-72.283-72.283s-72.283,32.383-72.283,72.283,32.383,72.284,72.283,72.284,72.283-32.383,72.283-72.284" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(89.838 154.226)" fill="#231f20" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="46.485" font-weight="600" isolation="isolate"><tspan x="0" y="0">T002 (126x81x308)</tspan></text>
+    </g>
+  </g>
+  <g id="Layer_2">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(94.068 95.651)" fill="#231f20" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="46.485" font-weight="600" isolation="isolate"><tspan x="0" y="0">B-Type</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g>
+    <line x1="453.256" y1="611.665" x2="453.256" y2="1464.836" fill="none" stroke="#231f20"/>
+    <polygon points="447.513 616.556 453.256 613.816 458.998 616.556 453.256 601.266 447.513 616.556" fill="#231f20"/>
+    <polygon points="447.513 1459.944 453.256 1462.684 458.998 1459.944 453.256 1475.234 447.513 1459.944" fill="#231f20"/>
+  </g>
+  <g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(544.681 499.65)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidTop</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(329.063 1020.598)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">Glue</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(495.19 1511.205)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">bottomLock-A</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(1094.401 1511.204)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">bottomLock-B</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(792.095 1511.204)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">bottomLock(L)</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(1375.165 1511.204)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">bottomLock(R)</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(793.345 550.474)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidSideFlap(L)</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(1396.275 550.474)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidSideFlap(R)</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <g isolation="isolate">
+              <text transform="translate(525.449 359.806)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="20" font-weight="500" isolation="isolate"><tspan x="0" y="0">Upper-Tuck</tspan></text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(558.736 319.033)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-1</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(403.904 327.706)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-2L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(697.471 326.338)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-2R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <text transform="translate(394.613 367.69)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-3-1L</tspan></text>
+          </g>
+        </g>
+      </g>
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <g isolation="isolate">
+            <text transform="translate(417.129 381.934)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-3-2L</tspan></text>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(693.75 367.865)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-3-1R</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(674.251 381.934)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-3-2R</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(396.117 499.65)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-4</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(342.578 634.816)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-5</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(324.263 1056)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-6</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(344.327 1419.502)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-7</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(405.34 1565.708)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-8L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(994.753 1565.884)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-8R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(414.461 1650.904)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-9L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1001.337 1646.173)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-9R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(455.382 1656.957)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-10L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1039.394 1654.437)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-10R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(493.686 1632.692)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-11L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1080.564 1632.692)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-11R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(525.336 1601.477)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-12L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1113.768 1601.477)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-12R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(576.901 1583.823)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-13L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1164.121 1583.823)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-13R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(659.908 1616.16)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-14L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1247.804 1616.16)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-14R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(690.815 1645.919)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-15L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1280.734 1646.326)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-15R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(694.012 1587.294)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-16L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1282.238 1583.823)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-16R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(698.212 1513.362)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-17L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1283.742 1508.7)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-17R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(696.658 1480.729)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-18L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1283.742 1480.729)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-18R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(731.017 1468.815)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-19L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1318.668 1466.906)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-19R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(778.522 1529.324)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-20L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1369.76 1537.156)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-20R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(767.161 1632.692)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-21L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(818.329 1583.998)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-22L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1405.284 1582.676)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-22R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(879.746 1537.155)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-23</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1469.095 1532.363)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-25</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1522.074 1062.564)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-26</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1522.542 607.701)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-26</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1511.671 525.179)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-27</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1450.216 476.834)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-28R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(820.668 476.834)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-28L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1382.737 476.834)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-29R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(887.563 479.663)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-29L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1367.543 529.409)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-30R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(907.69 527.51)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-30L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1344.406 588.805)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-31R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1343.208 601.714)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-32R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(924.838 587.955)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-31L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(927.783 601.04)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-32L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1316.845 616.218)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-33R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(957.136 618.075)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-33L</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1292.307 467.823)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-34</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1269.038 350.159)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-35</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1137.578 321.085)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-36</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(990.294 325.112)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-37</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(986.567 470.064)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-38</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(766.447 533.142)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-39</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(738.325 614.783)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-40</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(711.156 503.641)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-41</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(956.449 1469.944)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-24</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g>
+    <line x1="806.636" y1="1587.293" x2="787.16" y2="1616.342" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width=".5"/>
+    <polygon points="786.243 1613.48 787.602 1615.683 790.087 1616.206 785.025 1619.529 786.243 1613.48" fill="#ef3c25"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <g isolation="isolate">
+          <text transform="translate(1351.527 1628.075)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="16" font-weight="600" isolation="isolate"><tspan x="0" y="0">1-21R</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <g>
+    <line x1="1391.002" y1="1582.676" x2="1371.525" y2="1611.725" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width=".5"/>
+    <polygon points="1370.609 1608.863 1371.968 1611.066 1374.453 1611.589 1369.391 1614.912 1370.609 1608.863" fill="#ef3c25"/>
+  </g>
+  <g>
+    <line x1="381.07" y1="1485.457" x2="291.54" y2="1485.457" fill="none" stroke="#4257a6" stroke-miterlimit="10" stroke-width=".75"/>
+    <polygon points="385.053 1485.457 379.44 1480.729 380.772 1485.457 379.44 1490.184 385.053 1485.457" fill="#4257a6"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(102.563 1489.133)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">Bleed Line(22.4,311.32)</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g>
+    <line x1="383.778" y1="596.509" x2="234.127" y2="549.614" fill="none" stroke="#4257a6" stroke-dasharray="3 3" stroke-miterlimit="10" stroke-width=".75"/>
+    <polygon points="390.436 598.595 382.467 591.143 383.28 596.353 379.639 600.167 390.436 598.595" fill="#4257a6"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(157.99 545.643)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">Fold Line(24.1,-1.3)</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(89.14 605.187)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">CutPath(0,0)</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g>
+    <line x1="382.224" y1="600.46" x2="192.632" y2="600.46" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width=".75"/>
+    <polygon points="390.436 600.46 378.863 595.731 381.61 600.46 378.863 605.187 390.436 600.46" fill="#ef3c25"/>
+  </g>
+  <g>
+    <line x1="397.827" y1="1246.274" x2="738.604" y2="1246.274" fill="none" stroke="#231f20" stroke-miterlimit="2.613"/>
+    <polygon points="390.767 1246.274 400.716 1250.34 398.355 1246.274 400.716 1242.21 390.767 1246.274" fill="#231f20"/>
+    <polygon points="745.664 1246.274 735.715 1250.34 738.076 1246.274 735.715 1242.21 745.664 1246.274" fill="#231f20"/>
+  </g>
+  <g>
+    <line x1="752.725" y1="1246.274" x2="970.477" y2="1246.274" fill="none" stroke="#231f20" stroke-miterlimit="2.613"/>
+    <polygon points="745.664 1246.274 755.613 1250.34 753.253 1246.274 755.613 1242.21 745.664 1246.274" fill="#231f20"/>
+    <polygon points="977.538 1246.274 967.589 1250.34 969.95 1246.274 967.589 1242.21 977.538 1246.274" fill="#231f20"/>
+  </g>
+  <line x1="971.869" y1="601.715" x2="983.207" y2="601.715" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>
+  <path d="M1566.628,1479.314c.081-.112.163-.223.239-.338.081-.123.154-.248.228-.374.066-.113.132-.225.192-.34.069-.131.13-.264.191-.397.054-.119.109-.237.158-.358.054-.134.102-.27.149-.407.044-.126.087-.252.125-.38.041-.139.074-.279.108-.419.031-.129.062-.257.087-.388.028-.149.048-.299.069-.45.017-.124.035-.247.047-.373.015-.168.02-.336.025-.504.003-.089.013-.175.013-.264v-873.072c0-2.255-.896-4.417-2.49-6.012l-4.779-4.779-6.886-131.385c-.236-4.518-3.969-8.059-8.492-8.059h-153.706c-10.245,0-19.252,6.912-21.904,16.808l-26.218,97.846-6.549,6.549v-208.875c0-.28-.015-.56-.042-.839-.012-.125-.036-.247-.053-.371-.022-.151-.04-.302-.069-.452-.028-.141-.067-.277-.101-.415-.033-.131-.062-.263-.101-.393-.041-.134-.091-.264-.138-.395-.047-.131-.09-.262-.143-.391-.05-.12-.109-.236-.164-.353-.063-.135-.123-.27-.193-.402-.059-.11-.126-.214-.19-.321-.078-.131-.153-.264-.238-.392-.076-.114-.162-.221-.243-.331-.084-.113-.163-.228-.252-.338-.146-.178-.303-.347-.463-.512-.034-.035-.063-.073-.097-.108l-56.894-56.894c-.031-.031-.066-.058-.098-.089-.169-.164-.341-.323-.523-.472-.108-.089-.222-.167-.334-.25-.111-.083-.219-.169-.334-.246-.127-.085-.258-.159-.388-.236-.108-.065-.214-.133-.326-.193-.131-.07-.265-.13-.399-.192-.118-.056-.234-.115-.355-.165-.13-.054-.262-.097-.394-.144-.131-.047-.259-.097-.393-.137-.13-.039-.263-.068-.395-.102-.137-.035-.273-.073-.413-.101-.148-.029-.298-.047-.447-.068-.126-.018-.25-.042-.377-.054-.268-.026-.537-.04-.806-.041-.011,0-.021-.002-.032-.002h-274.759c-12.524,0-22.677,10.153-22.677,22.677v251.596l-6.55-6.549-26.217-97.846c-2.652-9.896-11.659-16.807-21.904-16.807h-159.908c-4.523,0-4.399,1.031-4.317-25.31l.077-24.344.551-29.716c0-2.39-.989-4.546-2.576-6.091l-1.517-28.956c-1.303-24.854-21.819-44.323-46.708-44.323h-272.573c-24.88,0-45.405,19.478-46.707,44.323l-1.518,28.957c-1.586,1.545-2.575,3.701-2.575,6.09v223.081l.454,196.239c-.189,115.512-2.593,464.865-2.565,465.144.012.126-.098,222.104,0,222.224.115.14,6.934,6.724,6.934,6.724l15.466,164.975c.695,7.415,12.828,18.463,27.544,18.463h79.443c2.255,0,4.418-.896,6.012-2.49l59.528-59.527c1.596-1.595,2.491-3.758,2.491-6.014v-2.835h52.036l63.206,62.827c1.218,1.211,2.678,2.142,4.286,2.744,1.658.621,6.544,3.809,7.694,4.067,2.032.455,4.053.925,6.134.998l6.554.23c15.311,0,27.753-11.985,28.326-27.286l4.954-132.312c.051-1.349-.221-2.689-.791-3.912l-7.973-17.099,5.151-5.658,45.623,98.927.659,1.264c4.874,9.348,14.541,15.21,25.083,15.21h44.222c2.314,0,4.529-.943,6.133-2.613l105.291-109.62,14.51,157.356.296,1.877c2.17,13.744,14.016,23.866,27.93,23.866h79.415c2.256,0,4.418-.896,6.014-2.49l59.527-59.527c1.595-1.596,2.49-3.758,2.49-6.014v-2.835h52.036l64.39,64.391c.499.498,4.862,3.064,6.148,3.629,3.598,1.582,5.856,2.141,9.776,2.429l5.661.417c15.085,0,28.686-12.278,30.225-27.284v-.002l4.954-132.312c.051-1.349-.221-2.689-.791-3.912l-7.972-17.099,5.151-5.659,45.623,98.928c4.616,10.008,14.72,16.475,25.741,16.475h44.222c2.312,0,4.522-.94,6.126-2.605l110.552-114.804c.07-.073.129-.151.196-.225.103-.114.206-.228.303-.348.087-.109.167-.221.249-.332v-.002h-.001Z" fill="none" stroke="#4257a6" stroke-miterlimit="10" stroke-width="2"/>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1126.434 413.575)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="20.161" font-weight="600" isolation="isolate"><tspan x="0" y="0">hole_1</tspan></text>
+    </g>
+    <g isolation="isolate">
+      <text transform="translate(1129.529 437.768)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="20.161" font-weight="600" isolation="isolate"><tspan x="0" y="0">51x51</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1134.033 600.583)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="15" font-weight="600" isolation="isolate"><tspan x="0" y="0">hole_2</tspan></text>
+    </g>
+    <g isolation="isolate">
+      <text transform="translate(1136.336 618.583)" fill="#ef3c25" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="15" font-weight="600" isolation="isolate"><tspan x="0" y="0">20x20</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(560.24 395.742)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-1</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(563.348 618.251)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-2</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(711.782 1030.376)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-12</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(856.633 621.638)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-4</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(942.079 1026.282)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-13</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1055.491 624.416)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0" xml:space="preserve">f-7L  </tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1149.563 545.643)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-6</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1240.667 621.638)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7R</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1296.387 1030.376)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-14</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(397.621 1033.511)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-11</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(550.514 1459.368)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-3</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(844.729 1466.905)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-5</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1145.161 1466.905)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-8</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1429.017 1467.059)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-10</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(649.238 1537.155)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-15</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1228.105 1542.794)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-16</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(1444.546 621.638)" fill="#4257a6" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="18.61" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-9</tspan></text>
+    </g>
+  </g>
+  <text transform="translate(525.317 1237.503)" font-family="Pretendard-SemiBold, Pretendard" font-size="21" font-weight="600"><tspan x="0" y="0">W 126 mm</tspan></text>
+  <text transform="translate(462.29 1063.423)" font-family="Pretendard-SemiBold, Pretendard" font-size="21" font-weight="600"><tspan x="0" y="0">H 308 mm</tspan></text>
+  <text transform="translate(817.892 1237.503)" font-family="Pretendard-SemiBold, Pretendard" font-size="21" font-weight="600"><tspan x="0" y="0">D 81 mm</tspan></text>
+</svg>

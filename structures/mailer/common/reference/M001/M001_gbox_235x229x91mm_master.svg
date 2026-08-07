@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" width="642.215mm" height="790.941mm" version="1.1" viewBox="0 0 1820.452 2242.037">
+  <!-- Generator: Adobe Illustrator 29.8.2, SVG Export Plug-In . SVG Version: 2.1.1 Build 3)  -->
+  <g id="layer-bleed">
+    <path d="M561.26,136.718v-6.491h688.819v6.491c124.925,0,235.516,88.188,235.516,182.877,0,35.538-6.965,85.113-57.024,85.113h-141.265l171.326,42.418c27.394,7.394,49.398,13.796,49.398,47.834v458.249c0,31.259-19.22,39.688-49.398,47.834l-171.377,40.902h147.27c21.078,0,38.166,17.087,38.166,38.166v215.155h24.001l14.173,5.669h269.291v99.213l14.173,4.252v113.386l-14.173,4.252v218.268l14.173,4.252v113.386l-14.173,4.252v99.213h-269.291l-14.173,5.669h-24.001v216.95c0,21.078-17.087,38.166-38.166,38.166h-195.786l-4.256,2.837h-657.629l-4.256-2.837h-195.786c-21.078,0-38.166-17.087-38.166-38.166h0v-216.95h-24.001l-14.173-5.669H31.181v-99.213l-14.173-4.252v-113.386l14.173-4.252v-218.268l-14.173-4.252v-113.386l14.173-4.252v-99.213h269.291l14.173-5.669h24.001v-215.155c0-21.078,17.087-38.166,38.166-38.166h147.27l-171.377-40.902c-30.179-8.146-49.398-16.576-49.398-47.834v-458.249c0-34.038,22.004-40.44,49.398-47.834l171.326-42.418h-141.265c-50.059,0-57.024-49.575-57.024-85.113,0-94.689,110.591-182.877,235.517-182.877h0Z" fill="none" stroke="#05f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.276"/>
+  </g>
+  <g id="layer-cut">
+    <path d="M572.599,148.057v-6.491h666.142v6.491c129.066,0,233.816,76.849,233.816,171.539,0,35.34-6.965,73.774-54.011,73.774l-179.804-.558c-3.704,0-6.707,3.003-6.707,6.707,0,3.105,2.132,5.805,5.153,6.524l218.492,52.031c17.752,4.792,41.014,18.5,41.014,36.887v458.249c0,23.904-17.937,30.658-41.014,36.887l-218.492,52.031c-3.603.858-5.829,4.475-4.971,8.078.719,3.021,3.419,5.153,6.524,5.153h195.786c14.816,0,26.827,12.011,26.827,26.827v211.779l-222.613,4.127c-2.351.006-4.251,1.916-4.246,4.267.006,2.342,1.903,4.24,4.246,4.246h257.953l14.173,5.669h257.953v99.213l14.173,4.252v90.709l-14.173,4.252v240.945l14.173,4.252v90.709l-14.173,4.252v99.213h-257.953l-14.173,5.669h-257.953c-2.351.006-4.251,1.916-4.246,4.267.006,2.342,1.903,4.24,4.246,4.246l222.613,4.127v215.648c0,14.816-12.011,26.827-26.827,26.827h-195.786l-4.256,2.837h-657.629l-4.256-2.837h-195.786c-14.816,0-26.827-12.011-26.827-26.827h0v-215.649l222.613-4.127c2.351-.006,4.251-1.916,4.246-4.267-.006-2.342-1.903-4.24-4.246-4.246h-257.953l-14.173-5.669H42.52v-99.213l-14.173-4.252v-90.709l14.173-4.252v-240.945l-14.173-4.252v-90.709l14.173-4.252v-99.213h257.953l14.173-5.669h257.953c2.351-.006,4.251-1.916,4.246-4.267-.006-2.342-1.903-4.24-4.246-4.246l-222.613-4.127v-211.779c0-14.816,12.011-26.827,26.827-26.827h195.786c3.704,0,6.707-3.003,6.707-6.707,0-3.105-2.132-5.805-5.153-6.524l-218.492-52.031c-23.078-6.229-41.014-12.984-41.014-36.887v-458.249c0-18.387,23.262-32.096,41.014-36.887l218.492-52.031c3.603-.858,5.829-4.475,4.971-8.078-.719-3.021-3.419-5.153-6.524-5.153h-179.804c-47.047,0-54.011-37.877-54.011-73.216,0-94.689,104.749-171.539,233.816-171.539h-.002,0Z" fill="#fff" stroke="#c00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.276"/>
+  </g>
+  <g id="layer-fold">
+    <line x1="572.599" y1="148.057" x2="572.599" y2="392.811" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1238.74" y1="148.057" x2="1238.74" y2="392.811" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="578.268" y1="399.518" x2="1233.071" y2="399.518" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="578.268" y1="399.518" x2="578.268" y2="1048.652" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1233.071" y1="399.518" x2="1233.071" y2="1048.652" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="578.268" y1="1048.652" x2="1233.071" y2="1048.652" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="578.268" y1="1048.652" x2="578.268" y2="1300.935" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1233.071" y1="1048.652" x2="1233.071" y2="1300.935" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="572.599" y1="1306.605" x2="1238.74" y2="1306.605" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="300.473" y1="1312.274" x2="300.473" y2="1950.069" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1510.866" y1="1312.274" x2="1510.866" y2="1950.069" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="314.646" y1="1306.605" x2="314.646" y2="1955.739" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1496.693" y1="1306.605" x2="1496.693" y2="1955.739" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="572.599" y1="1306.605" x2="572.599" y2="1414.361" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="572.599" y1="1513.574" x2="572.599" y2="1754.507" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="572.599" y1="1853.72" x2="572.599" y2="1955.739" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1238.74" y1="1306.605" x2="1238.74" y2="1414.361" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1238.74" y1="1513.574" x2="1238.74" y2="1754.507" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1238.74" y1="1853.72" x2="1238.74" y2="1955.739" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="572.599" y1="1955.739" x2="1238.74" y2="1955.739" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="576.855" y1="1955.739" x2="576.855" y2="2213.691" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+    <line x1="1234.484" y1="1955.739" x2="1234.484" y2="2213.691" fill="none" stroke="#1d6fe8" stroke-dasharray="5.669 4.535" stroke-miterlimit="11.339" stroke-width=".992"/>
+  </g>
+  <g id="layer-slots">
+    <path d="M579.685,1414.361h0c4.724,0,7.087,2.362,7.087,7.087v85.039c0,4.724-2.362,7.087-7.087,7.087h0c-4.724,0-7.087-2.362-7.087-7.087v-85.039c0-4.724,2.362-7.087,7.087-7.087Z" fill="none" stroke="#e53935" stroke-miterlimit="11.339" stroke-width="1.276"/>
+    <path d="M579.685,1754.507h0c4.724,0,7.087,2.362,7.087,7.087v85.039c0,4.724-2.362,7.087-7.087,7.087h0c-4.724,0-7.087-2.362-7.087-7.087v-85.039c0-4.724,2.362-7.087,7.087-7.087Z" fill="none" stroke="#e53935" stroke-miterlimit="11.339" stroke-width="1.276"/>
+    <path d="M1231.654,1414.361h0c4.724,0,7.087,2.362,7.087,7.087v85.039c0,4.724-2.362,7.087-7.087,7.087h0c-4.724,0-7.087-2.362-7.087-7.087v-85.039c0-4.724,2.362-7.087,7.087-7.087Z" fill="none" stroke="#e53935" stroke-miterlimit="11.339" stroke-width="1.276"/>
+    <path d="M1231.654,1754.507h0c4.724,0,7.087,2.362,7.087,7.087v85.039c0,4.724-2.362,7.087-7.087,7.087h0c-4.724,0-7.087-2.362-7.087-7.087v-85.039c0-4.724,2.362-7.087,7.087-7.087Z" fill="none" stroke="#e53935" stroke-miterlimit="11.339" stroke-width="1.276"/>
+  </g>
+  <g id="layer-holes">
+    <path d="M797.953,1176.211c0,4.697,3.807,8.504,8.504,8.504s8.504-3.807,8.504-8.504-3.807-8.504-8.504-8.504-8.504,3.807-8.504,8.504Z" fill="none" stroke="#1f8f4f" stroke-miterlimit="11.339" stroke-width="1.276"/>
+    <path d="M996.378,1176.211c0,4.697,3.807,8.504,8.504,8.504s8.504-3.807,8.504-8.504-3.807-8.504-8.504-8.504-8.504,3.807-8.504,8.504Z" fill="none" stroke="#1f8f4f" stroke-miterlimit="11.339" stroke-width="1.276"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(36.083 69.476)" fill="#231f20" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="51.73" font-weight="600" isolation="isolate"><tspan x="0" y="0">M001 (235x229x91)</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(479.103 69.476)" fill="#231f20" font-family="MyriadPro-Semibold, &apos;Myriad Pro&apos;" font-size="51.73" font-weight="600" isolation="isolate"><tspan x="0" y="0">E</tspan></text>
+      </g>
+    </g>
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(504.554 69.476)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="51.73" font-weight="500" isolation="isolate"><tspan x="0" y="0">골</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(864.122 266.351)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidFront</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(888.473 736.019)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">lid</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(878.912 1189.847)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">back</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(888.83 1661.948)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">base</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(890.661 2113.382)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">front</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(381.301 1714.287)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">sidePanelLeft</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1289.502 1714.287)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">sidePanelRight</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(379.409 295.855)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidDustFlapLeft</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1256.943 290.814)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidDustFlapRight</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(369.901 734.245)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidSideFlapLeft</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1280.878 734.245)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">lidSideFlapRight</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1243.582 1180.033)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">backInsertFlapRight</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1519.405 1755.544)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">bottomLockFlapRight</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(369.526 2152.043)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">frontInsertFlapLeft</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1238.311 2152.045)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">frontInsertFlapRight</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(369.332 1175.224)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">backInsertFlapLeft</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(64.649 1749.539)" fill="#231f20" font-family="Pretendard-Medium, Pretendard" font-size="24" font-weight="500" isolation="isolate"><tspan x="0" y="0">bottomLockFlapLeft</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(895.012 154.887)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-1</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(578.924 279.675)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-1L</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(591.557 720.597)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-3L</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(591.293 1194.22)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-5L</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(587.035 2105.37)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-9L</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(238.118 1610.797)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7L-1</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(320.673 1579.978)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7L-2</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1517.383 1621.137)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7R-1</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1430.904 1526.37)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7R-2</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(596.216 1387.258)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7L-3</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1169.358 1387.258)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7R-3</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(586.772 1644.034)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7L-4</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1169.095 1644.035)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7R-4</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(587.035 1911.354)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7L-5</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1164.292 1904.73)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-7R-5</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(894.919 388.614)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-2</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(890.136 1935.301)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-8</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1194.916 284.717)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-1R</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1180.71 710.936)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-3R</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1176.707 1194.635)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-5R</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(1186.805 2095.377)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-9R</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(890.398 1034.476)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-4</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(890.134 1299.694)" fill="#4056a5" font-family="Pretendard-SemiBold, Pretendard" font-size="18" font-weight="600" isolation="isolate"><tspan x="0" y="0">f-6</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <g isolation="isolate">
+        <text transform="translate(269.457 121.231)" fill="#ca2026" font-family="ArialMT, Arial" font-size="21.537" isolation="isolate"><tspan x="0" y="0">cutpath (0.0)</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g>
+    <line x1="401.691" y1="114.994" x2="565.667" y2="146.716" fill="none" stroke="#ce3741" stroke-miterlimit="10"/>
+    <polygon points="572.599 148.058 562.059 150.159 565.149 146.616 563.603 142.177 572.599 148.058" fill="#ce3741"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(578.268 152.394)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-2L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(378.7 244.841)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-3L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(359.9 376.57)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-4L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(469.368 388.477)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-5L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(583.918 404.291)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-6L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(435.2 453.352)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-7L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(329.96 487.885)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-8L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(320.662 790.34)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-9L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(327.982 968.968)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-10L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(451.637 1006.208)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-11L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(582.726 1056.435)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-12L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(454.815 1073.721)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-13L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(359.363 1076.829)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-14L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(355.507 1194.22)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-15L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(437.555 1290.32)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-16L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(579.685 1306.605)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-17L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(438.211 1323.18)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-18L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(304.022 1321.558)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-19L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(152.096 1327.812)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-20L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(46.568 1369.242)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-21L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(35.863 1425.184)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-22L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(30.99 1468.463)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-23L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(32.944 1505.263)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-24L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(49.352 1631.173)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-25L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(33.6 1768.02)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-26L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(31.646 1808.928)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-27L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(32.302 1843.89)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-28L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(149.357 1943.762)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-29L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(303.148 1950.069)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-30L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(436.607 1950.206)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-31L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(579.685 1964.508)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-32L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(455.064 1981.392)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-33L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(355.487 2078.368)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-34L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(359.313 2201.458)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-35L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(462.422 2206.089)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-36L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(574.935 2210.72)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-37L</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(893.324 2209.377)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">1-38</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(591.344 1472.958)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">slot_A</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(86.39 1468.6)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">lock_A</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(596.933 1811.107)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">slot_B</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(91.978 1806.749)" fill="#ec1c25" font-family="Pretendard-Bold, Pretendard" font-size="14" font-weight="700" isolation="isolate"><tspan x="0" y="0">lock_B</tspan></text>
+    </g>
+  </g>
+  <g>
+    <line x1="579.66" y1="1873.037" x2="1233.767" y2="1873.037" fill="none" stroke="#000" stroke-miterlimit="10"/>
+    <polygon points="572.599 1873.037 582.548 1877.102 580.187 1873.037 582.548 1868.973 572.599 1873.037"/>
+    <polygon points="1240.827 1873.037 1230.878 1877.102 1233.239 1873.037 1230.878 1868.973 1240.827 1873.037"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(848.881 1863.597)" font-family="Pretendard-SemiBold, Pretendard" font-size="25" font-weight="600" isolation="isolate"><tspan x="0" y="0">W 235 mm</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(688.163 1621.138)" font-family="Pretendard-SemiBold, Pretendard" font-size="25" font-weight="600" isolation="isolate"><tspan x="0" y="0">D 229 mm</tspan></text>
+    </g>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(695.029 1202.703)" font-family="Pretendard-SemiBold, Pretendard" font-size="25" font-weight="600" isolation="isolate"><tspan x="0" y="0">H 91 mm</tspan></text>
+    </g>
+  </g>
+  <g>
+    <line x1="679.192" y1="1315.539" x2="679.192" y2="1950.552" fill="none" stroke="#000" stroke-miterlimit="10"/>
+    <polygon points="679.192 1308.478 675.127 1318.428 679.192 1316.067 683.257 1318.428 679.192 1308.478"/>
+    <polygon points="679.192 1957.612 675.127 1947.663 679.192 1950.024 683.257 1947.663 679.192 1957.612"/>
+  </g>
+  <g>
+    <line x1="678.62" y1="1058.09" x2="678.62" y2="1301.921" fill="none" stroke="#000" stroke-miterlimit="10"/>
+    <polygon points="678.62 1051.029 674.555 1060.979 678.62 1058.618 682.685 1060.979 678.62 1051.029"/>
+    <polygon points="678.62 1308.982 674.555 1299.033 678.62 1301.393 682.685 1299.033 678.62 1308.982"/>
+  </g>
+  <g isolation="isolate">
+    <g isolation="isolate">
+      <text transform="translate(36.519 131.526)" font-family="Pretendard-Bold, Pretendard" font-size="40.396" font-weight="700" isolation="isolate"><tspan x="0" y="0">MASTER</tspan></text>
+    </g>
+  </g>
+</svg>
