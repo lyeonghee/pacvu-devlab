@@ -1235,12 +1235,23 @@ function setupMobileViewerLayout() {
   const mobileQuery = window.matchMedia('(max-width: 768px)');
   if (!sidebar || !showSidebarButton || !hideSidebarButton) return;
 
+  showSidebarButton.dataset.desktopLabel ||= showSidebarButton.textContent;
+  hideSidebarButton.dataset.desktopLabel ||= hideSidebarButton.textContent;
+
+  const syncControlLabels = isMobile => {
+    showSidebarButton.textContent = isMobile ? 'Settings' : showSidebarButton.dataset.desktopLabel;
+    showSidebarButton.setAttribute('aria-label', isMobile ? 'Open settings panel' : showSidebarButton.dataset.desktopLabel);
+    hideSidebarButton.textContent = isMobile ? 'Close' : hideSidebarButton.dataset.desktopLabel;
+    hideSidebarButton.setAttribute('aria-label', isMobile ? 'Close settings panel' : hideSidebarButton.dataset.desktopLabel);
+  };
+
   const syncMode = event => {
     const isMobile = event.matches;
+    syncControlLabels(isMobile);
     if (isMobile) {
       if (sidebar.dataset.mobileInitialized !== 'true') {
         sidebar.dataset.mobilePreviousCollapsed = String(sidebar.classList.contains('collapsed'));
-        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('collapsed');
         sidebar.dataset.mobileInitialized = 'true';
       }
     } else if (sidebar.dataset.mobileInitialized === 'true') {
@@ -2061,6 +2072,76 @@ function bindAll() {
 
   const host = get('svgHost');
   if (!host) return;
+
+  const touchPointers = new Map();
+  let touchGesture = null;
+  const touchPoint = event => ({ x: event.clientX, y: event.clientY });
+  const touchDistance = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
+  const touchMidpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const beginSingleTouch = point => {
+    touchGesture = {
+      mode: 'pan',
+      start: point,
+      startPanX: state.panX,
+      startPanY: state.panY
+    };
+  };
+  const beginPinch = () => {
+    const [first, second] = [...touchPointers.values()];
+    touchGesture = {
+      mode: 'pinch',
+      distance: Math.max(1, touchDistance(first, second)),
+      midpoint: touchMidpoint(first, second),
+      startZoom: state.zoom,
+      startPanX: state.panX,
+      startPanY: state.panY
+    };
+  };
+
+  host.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch' || !window.matchMedia('(max-width: 768px)').matches) return;
+    event.preventDefault();
+    host.setPointerCapture?.(event.pointerId);
+    touchPointers.set(event.pointerId, touchPoint(event));
+    if (touchPointers.size === 1) beginSingleTouch(touchPoint(event));
+    else if (touchPointers.size === 2) beginPinch();
+  }, { passive: false });
+
+  host.addEventListener('pointermove', event => {
+    if (event.pointerType !== 'touch' || !touchPointers.has(event.pointerId) || !touchGesture) return;
+    event.preventDefault();
+    touchPointers.set(event.pointerId, touchPoint(event));
+    const svg = get('mainSvg');
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const viewBox = svg.viewBox.baseVal;
+    const pixelsPerUnit = rect.width / viewBox.width;
+    if (!pixelsPerUnit) return;
+
+    if (touchPointers.size >= 2 && touchGesture.mode === 'pinch') {
+      const [first, second] = [...touchPointers.values()];
+      const midpoint = touchMidpoint(first, second);
+      state.zoom = Math.max(0.5, Math.min(2, touchGesture.startZoom * touchDistance(first, second) / touchGesture.distance));
+      state.panX = touchGesture.startPanX + (midpoint.x - touchGesture.midpoint.x) / pixelsPerUnit;
+      state.panY = touchGesture.startPanY + (midpoint.y - touchGesture.midpoint.y) / pixelsPerUnit;
+      applyTransform('pinch');
+    } else if (touchPointers.size === 1 && touchGesture.mode === 'pan') {
+      const point = touchPointers.values().next().value;
+      state.panX = touchGesture.startPanX + (point.x - touchGesture.start.x) / pixelsPerUnit;
+      state.panY = touchGesture.startPanY + (point.y - touchGesture.start.y) / pixelsPerUnit;
+      applyTransform('pan');
+    }
+  }, { passive: false });
+
+  const endTouch = event => {
+    if (event.pointerType !== 'touch' || !touchPointers.has(event.pointerId)) return;
+    touchPointers.delete(event.pointerId);
+    if (touchPointers.size === 1) beginSingleTouch(touchPointers.values().next().value);
+    else if (touchPointers.size === 0) touchGesture = null;
+    else beginPinch();
+  };
+  host.addEventListener('pointerup', endTouch);
+  host.addEventListener('pointercancel', endTouch);
 
   host.addEventListener('mousedown', e => {
     state.isDragging = true;
