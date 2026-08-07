@@ -544,3 +544,29 @@
 .pacvu-info-rule{color:#7a8391;font-size:10px;font-weight:400;line-height:1.55}
 .pacvu-info-kicker{margin-bottom:5px;color:#60718b;font-size:11px;font-weight:600;letter-spacing:.02em}
 .pacvu-info-rule-name{margin-bottom:4px;color:#202630;font-size:13px;font-weight:700}
+.pacvu-info-mobile-toggle{display:none}
+
+@media (max-width:768px){
+  .app{position:relative;width:100%;height:100dvh;min-height:100vh}
+  .sidebar{position:fixed;z-index:60;inset:0 auto 0 0;width:min(86vw,320px);min-width:min(86vw,320px);height:100dvh;border-right:1px solid #ddd;box-shadow:10px 0 30px rgba(25,34,48,.2);transform:translateX(0);transition:transform .22s ease;overflow:hidden}
+  .sidebar.collapsed{width:min(86vw,320px);min-width:min(86vw,320px);border-right:1px solid #ddd;transform:translateX(-105%);box-shadow:none}
+  .sidebar-inner{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+  .viewer-wrap{width:100%;min-width:0;flex:1 1 100%;touch-action:none}
+  .toolbar{top:max(8px,env(safe-area-inset-top));left:8px;right:8px;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar .btn{flex:0 0 auto;padding:8px 10px;font-size:11px;white-space:nowrap}
+  .legend{display:none}
+  .status{right:8px;bottom:calc(58px + env(safe-area-inset-bottom));padding:5px 8px;background:rgba(255,255,255,.82);pointer-events:none}
+  .pacvu-info-panel{position:absolute!important;z-index:40!important;top:auto!important;right:8px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;left:8px!important;width:auto!important;min-width:0!important;max-height:min(58vh,520px);padding:0 14px 14px;border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 -5px 22px rgba(25,34,48,.16);overflow-y:auto;overscroll-behavior:contain;transition:max-height .2s ease}
+  .pacvu-info-panel:not(.mobile-expanded){max-height:46px;overflow:hidden;padding-bottom:0}
+  .pacvu-info-panel:not(.mobile-expanded)>:not(.pacvu-info-mobile-toggle){display:none!important}
+  .pacvu-info-mobile-toggle{position:sticky;z-index:2;top:0;display:flex;align-items:center;justify-content:space-between;width:100%;height:45px;padding:0;border:0;background:rgba(255,255,255,.97);color:#202630;font:700 12px/1 "Pretendard";cursor:pointer}
+  .pacvu-info-mobile-toggle::after{content:"⌃";font-size:16px;color:#687181;transform:rotate(0);transition:transform .2s ease}
+  .pacvu-info-panel.mobile-expanded .pacvu-info-mobile-toggle::after{transform:rotate(180deg)}
+  .pacvu-info-mockup-button{margin-top:4px}
+  .pacvu-unit-tabs{margin-bottom:12px}
+  .pacvu-component-sizes{grid-template-columns:1fr;gap:8px}
+  .pacvu-component-sizes section{padding:8px 10px}
+  .pacvu-components-section{padding:12px 0}
+  .pacvu-template-rule-section{padding-top:12px;padding-bottom:2px}
+}

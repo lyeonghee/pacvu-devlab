@@ -1228,6 +1228,35 @@ function syncPacVuInfoPanelFrame() {
   panel.style.width = Math.max(toolbarRect.width, isS001Selection() ? 390 : 280) + 'px';
 }
 
+function setupMobileViewerLayout() {
+  const sidebar = document.getElementById('sidebar');
+  const showSidebarButton = document.getElementById('showSidebarBtn');
+  const hideSidebarButton = document.getElementById('toggleSidebarBtn');
+  const mobileQuery = window.matchMedia('(max-width: 768px)');
+  if (!sidebar || !showSidebarButton || !hideSidebarButton) return;
+
+  const syncMode = event => {
+    const isMobile = event.matches;
+    if (isMobile) {
+      if (sidebar.dataset.mobileInitialized !== 'true') {
+        sidebar.dataset.mobilePreviousCollapsed = String(sidebar.classList.contains('collapsed'));
+        sidebar.classList.add('collapsed');
+        sidebar.dataset.mobileInitialized = 'true';
+      }
+    } else if (sidebar.dataset.mobileInitialized === 'true') {
+      sidebar.classList.toggle('collapsed', sidebar.dataset.mobilePreviousCollapsed === 'true');
+      delete sidebar.dataset.mobileInitialized;
+      delete sidebar.dataset.mobilePreviousCollapsed;
+    }
+  };
+
+  hideSidebarButton.addEventListener('click', () => {
+    if (mobileQuery.matches) sidebar.classList.add('collapsed');
+  });
+  mobileQuery.addEventListener?.('change', syncMode);
+  syncMode(mobileQuery);
+}
+
 function observePacVuInfoPanelFrame() {
   const toolbar = document.querySelector('.viewer-wrap .toolbar');
   if (!toolbar || toolbar.dataset.infoPanelObserved === 'true') return;
@@ -1250,6 +1279,7 @@ function ensurePacVuInfoPanel() {
   panel.hidden = true;
   panel.setAttribute('aria-label', 'PacVu structure information');
   panel.innerHTML = [
+    '<button type="button" class="pacvu-info-mobile-toggle" aria-expanded="false">Dieline information</button>',
     '<button type="button" id="pacvuInfoMockup3dBtn" class="pacvu-info-mockup-button">3D MOCKUP viewer</button>',
     '<div class="pacvu-unit-tabs" role="group" aria-label="Display unit">',
     '<button type="button" data-unit="mm">mm</button>',
@@ -1271,6 +1301,10 @@ function ensurePacVuInfoPanel() {
     '<div class="pacvu-info-rule" id="pacvuTemplateRuleContent"></div>',
     '</div>'
   ].join('');
+  panel.querySelector('.pacvu-info-mobile-toggle')?.addEventListener('click', event => {
+    const expanded = panel.classList.toggle('mobile-expanded');
+    event.currentTarget.setAttribute('aria-expanded', String(expanded));
+  });
   panel.querySelector('#pacvuInfoMockup3dBtn')?.addEventListener('click', () => {
     const toolbarButton = document.getElementById('mockup3dBtn');
     if (toolbarButton && !toolbarButton.disabled) toolbarButton.click();
@@ -1845,6 +1879,7 @@ function updateLegendUi() {
 // ============================================================
 function bindAll() {
   setupPanelUi();
+  setupMobileViewerLayout();
   ensureDimensionUnitControl();
 
   fetch('./data/boxLibrary.json')
@@ -2019,7 +2054,10 @@ function bindAll() {
 
   const sidebar = get('sidebar');
   get('toggleSidebarBtn')?.addEventListener('click', () => sidebar?.classList.add('collapsed'));
-  get('showSidebarBtn')?.addEventListener('click',   () => sidebar?.classList.toggle('collapsed'));
+  get('showSidebarBtn')?.addEventListener('click', () => {
+    if (window.matchMedia('(max-width: 768px)').matches) sidebar?.classList.remove('collapsed');
+    else sidebar?.classList.toggle('collapsed');
+  });
 
   const host = get('svgHost');
   if (!host) return;
