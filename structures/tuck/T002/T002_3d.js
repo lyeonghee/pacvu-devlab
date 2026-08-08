@@ -127,25 +127,23 @@
       yBodyBottom: 1474.784, yBottomMax: 1660.455
     };
     const topMidY = mapper.y(525.178);
-    // Source-accurate Upper Tuck silhouette. The short horizontal and
-    // vertical cuts on both sides are true knife cuts, not fold lines.
-    const upperTuckSourcePath = [
-      'M416.278 381.178',
-      'L416.278 372.107',
-      'L390.767 372.107',
-      'L393.035 372.107',
-      'L394.848 337.506',
-      'C395.913 317.177 412.706 301.241 433.063 301.241',
-      'L705.636 301.241',
-      'C725.993 301.241 742.786 317.177 743.851 337.506',
-      'L745.664 372.107',
-      'L747.932 372.107',
-      'L722.42 372.107',
-      'L722.42 381.178',
-      'Z'
-    ].join(' ');
-    const upperTuckPolygon = global.T001_flattenPathD(upperTuckSourcePath)
-      .map(point => mapper.point(point.x, point.y));
+    const upperLeftShoulder = mapper.point(390.767, 372.107);
+    const upperLeftCut = mapper.point(416.278, 372.107);
+    const upperLeftFold = mapper.point(416.278, 378.344);
+    const upperRightCut = mapper.point(722.42, 372.107);
+    const upperRightShoulder = mapper.point(747.932, 372.107);
+    const upperRightFold = mapper.point(722.42, 378.344);
+    const upperLeftFoldShoulder = mapper.point(390.767, 378.344);
+    const upperRightFoldShoulder = mapper.point(747.932, 378.344);
+    // The central flap boundary is derived from the approved 2D Cut outline
+    // and its two relief cuts. 3D never rebuilds the Bezier profile.
+    const upperTuckPolygon = global.PacVuUpperTuckRule.boundaryFrom2D(
+      outline,
+      [upperLeftFold, upperLeftCut, upperLeftShoulder],
+      [upperRightShoulder, upperRightCut, upperRightFold]
+    );
+    const upperTuckReliefLeft = [upperLeftShoulder, upperLeftCut, upperLeftFold, upperLeftFoldShoulder];
+    const upperTuckReliefRight = [upperRightCut, upperRightShoulder, upperRightFoldShoulder, upperRightFold];
     const regions = [
       ['glue', 'adhesive', rect(g.xOuterL, g.yBodyTop, g.xFrontL, g.yBodyBottom)],
       ['front', 'body', rect(g.xFrontL, g.yBodyTop, g.xFrontR, g.yBodyBottom)],
@@ -185,6 +183,8 @@
       return panel(def[0], def[1], polygon, holes);
     })
       .filter(item => item.polygon.length >= 3 && area(item.polygon) > EPS);
+    panels.push(panel('upperTuckReliefLeft', 'topTuckRelief', upperTuckReliefLeft));
+    panels.push(panel('upperTuckReliefRight', 'topTuckRelief', upperTuckReliefRight));
 
     const a1 = mapper.point(732.57, 1490.146);
     const a2 = mapper.point(633.73, 1588.986);
@@ -238,7 +238,7 @@
       fold('top.front-lid', 'front', 'lidTop', ...h(g.xFrontL, g.xFrontR, g.yBodyTop), 90, [0.96, 1.00]),
       fold(
         'top.lid-tuck', 'lidTop', 'upperTuck',
-        mapper.point(417.129, 378.345), mapper.point(721.57, 378.345),
+        upperLeftFold, upperRightFold,
         110, [0.92, 0.96]
       )
     ];
@@ -444,6 +444,16 @@
       const radial = piece.flatCenter.clone().sub(a);
       const sign = new THREE.Vector3().crossVectors(axis, radial).z >= 0 ? 1 : -1;
       hinges.push({ object: hinge, axis, radians: THREE.MathUtils.degToRad(relation.angle) * sign, range: relation.phase, id: relation.id });
+    });
+    // The L-shaped cuts stop the two retained ears from joining the central
+    // tuck Fold. They have no Fold line of their own, so they remain rigidly
+    // attached to the lidTop frame while only the central upperTuck rotates.
+    const lidTopFrame = frames.get('lidTop');
+    ['upperTuckReliefLeft', 'upperTuckReliefRight'].forEach(id => {
+      const piece = pieces.get(id);
+      if (!lidTopFrame || !piece) throw new Error('T002 3D relief hierarchy failed at ' + id);
+      lidTopFrame.add(piece.mesh);
+      frames.set(id, lidTopFrame);
     });
     const frameBases = new Map();
     ['bottomA', 'bottomB', 'bottomL', 'bottomR'].forEach(id => {

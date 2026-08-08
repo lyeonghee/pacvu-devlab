@@ -52,8 +52,9 @@ function T002_piecewise(value, sourceStops, targetStops) {
 function T002_createRuleGrid(W, D, H) {
   const source = T002_SOURCE_GRID;
   const glueWidth = Math.min(25, D * (25 / 81));
-  const upperFoldDepth = D * ((source.yUpperFold - source.yTop) * T002_SOURCE_UNIT_TO_MM / 81);
-  const topDepth = D * ((source.yBodyTop - source.yTop) * T002_SOURCE_UNIT_TO_MM / 81);
+  const upperTuckRule = globalThis.PacVuUpperTuckRule.resolve('T002', D);
+  const upperFoldDepth = upperTuckRule.depth;
+  const topDepth = upperFoldDepth + D;
   const bottomMaxDepth = D * ((source.yBottomMax - source.yBodyBottom) / (source.yBottomBend - source.yBodyBottom) * 0.5);
   const grid = {
     xOuterL: 0,
@@ -68,7 +69,8 @@ function T002_createRuleGrid(W, D, H) {
     yBodyBottom: topDepth + H,
     yBottomBend: topDepth + H + D * 0.5,
     yBottomMax: topDepth + H + bottomMaxDepth,
-    glueWidth
+    glueWidth,
+    upperTuckRule
   };
   return grid;
 }
@@ -92,6 +94,12 @@ function T002_createRuleMapper(grid, W, D, H) {
       return T002_piecewise(value, [source.xOuterL, source.xFrontL], [grid.xOuterL, grid.xFrontL]);
     }
     if (value <= source.xFrontR) {
+      if (y <= source.yUpperFold) {
+        return globalThis.PacVuUpperTuckRule.mapX(
+          value, source.xFrontL, source.xFrontR, grid.xFrontL, grid.xFrontR,
+          T002_SOURCE_UNIT_TO_MM, grid.upperTuckRule.profileScale
+        );
+      }
       if (y > source.yBodyBottom) {
         return grid.xFrontL + (value - source.xFrontL) * W / (source.xFrontR - source.xFrontL);
       }
@@ -110,7 +118,13 @@ function T002_createRuleMapper(grid, W, D, H) {
   }
 
   function mapY(value) {
-    if (value <= source.yBodyTop) return grid.yBodyTop + (value - source.yBodyTop) * T002_SOURCE_UNIT_TO_MM * depthScale;
+    if (value <= source.yUpperFold) {
+      return grid.yTop + (value - source.yTop) * T002_SOURCE_UNIT_TO_MM * grid.upperTuckRule.scale;
+    }
+    if (value <= source.yBodyTop) {
+      return grid.yUpperFold + (value - source.yUpperFold) *
+        (grid.yBodyTop - grid.yUpperFold) / (source.yBodyTop - source.yUpperFold);
+    }
     if (value <= source.yBodyBottom) return grid.yBodyTop + (value - source.yBodyTop) * H / baseBodyHeight;
     return grid.yBodyBottom + (value - source.yBodyBottom) * T002_SOURCE_UNIT_TO_MM * depthScale;
   }
@@ -132,7 +146,7 @@ function T002_similarityPoint(point, sourceStart, sourceEnd, targetStart, target
   return { x: targetStart.x + real * px - imag * py, y: targetStart.y + imag * px + real * py };
 }
 
-function T002_buildRuleCutPath(sourcePath, mapper) {
+function T002_buildRuleCutPath(sourcePath, mapper, grid, D) {
   const parsed = T001_parseAbsolutePath(sourcePath);
   const start = mapper.point(parsed.start.x, parsed.start.y);
   const segments = parsed.segments.map(segment => {
@@ -145,7 +159,85 @@ function T002_buildRuleCutPath(sourcePath, mapper) {
       c2: T002_similarityPoint(segment.c2, segment.from, segment.to, from, to)
     };
   });
+  if (grid && Number.isFinite(D)) {
+    const source = T002_SOURCE_GRID;
+    const sourceBoundaries = [source.xFrontR, source.xSideLR, source.xBackR];
+    const targetBoundaries = [grid.xFrontR, grid.xSideLR, grid.xBackR];
+    const scale = T002_SOURCE_UNIT_TO_MM * (D / 81);
+    const localPoint = (point, sourceX, targetX) => ({
+      x: targetX + (point.x - sourceX) * scale,
+      y: grid.yBodyBottom + (point.y - source.yBodyBottom) * scale
+    });
+    for (let index = 0; index < parsed.segments.length - 1; index += 1) {
+      const sourceIncoming = parsed.segments[index];
+      const sourceOutgoing = parsed.segments[index + 1];
+      if (sourceIncoming.type !== 'C' || sourceOutgoing.type !== 'C') continue;
+      const boundaryIndex = sourceBoundaries.findIndex(x =>
+        Math.abs(sourceIncoming.to.x - x) <= 10 &&
+        Math.abs(sourceIncoming.to.y - source.yBodyBottom) <= 10
+      );
+      if (boundaryIndex < 0) continue;
+      const sourceX = sourceBoundaries[boundaryIndex];
+      const targetX = targetBoundaries[boundaryIndex];
+      const incoming = segments[index];
+      const outgoing = segments[index + 1];
+      const startPoint = localPoint(sourceIncoming.from, sourceX, targetX);
+      const joinPoint = localPoint(sourceIncoming.to, sourceX, targetX);
+      const endPoint = localPoint(sourceOutgoing.to, sourceX, targetX);
+      if (index > 0) segments[index - 1].to = startPoint;
+      incoming.from = startPoint;
+      incoming.c1 = localPoint(sourceIncoming.c1, sourceX, targetX);
+      incoming.c2 = localPoint(sourceIncoming.c2, sourceX, targetX);
+      incoming.to = joinPoint;
+      outgoing.from = joinPoint;
+      outgoing.c1 = localPoint(sourceOutgoing.c1, sourceX, targetX);
+      outgoing.c2 = localPoint(sourceOutgoing.c2, sourceX, targetX);
+      outgoing.to = endPoint;
+      if (index + 2 < segments.length) segments[index + 2].from = endPoint;
+      index += 1;
+    }
+  }
   return T001_segmentsToD(start, segments);
+}
+
+function T002_smoothBottomCubicJoins(pathD, grid) {
+  const parsed = T001_parseAbsolutePath(pathD);
+  const boundaries = [grid.xFrontR, grid.xSideLR, grid.xBackR];
+  for (let index = 0; index < parsed.segments.length - 1; index += 1) {
+    const incoming = parsed.segments[index];
+    const outgoing = parsed.segments[index + 1];
+    if (incoming.type !== 'C' || outgoing.type !== 'C') continue;
+    const join = incoming.to;
+    const nearBoundary = boundaries.some(x => Math.abs(join.x - x) <= 3);
+    if (!nearBoundary || Math.abs(join.y - grid.yBodyBottom) > 3) continue;
+    const inX = join.x - incoming.c2.x, inY = join.y - incoming.c2.y;
+    const outX = outgoing.c1.x - join.x, outY = outgoing.c1.y - join.y;
+    const inLength = Math.hypot(inX, inY), outLength = Math.hypot(outX, outY);
+    if (inLength < 0.0001 || outLength < 0.0001) continue;
+    let directionX = inX / inLength + outX / outLength;
+    let directionY = inY / inLength + outY / outLength;
+    const directionLength = Math.hypot(directionX, directionY);
+    if (directionLength < 0.0001) continue;
+    directionX /= directionLength;
+    directionY /= directionLength;
+    incoming.c2 = { x: join.x - directionX * inLength, y: join.y - directionY * inLength };
+    outgoing.c1 = { x: join.x + directionX * outLength, y: join.y + directionY * outLength };
+  }
+  for (let index = 0; index < parsed.segments.length - 1; index += 1) {
+    const incoming = parsed.segments[index];
+    const outgoing = parsed.segments[index + 1];
+    if (incoming.type !== 'L' || outgoing.type !== 'L') continue;
+    const join = incoming.to;
+    const isGlueBottomJoin = Math.abs(outgoing.to.x - grid.xOuterL) < 0.05 &&
+      join.x > grid.xFrontL && join.x < grid.xFrontL + Math.max(8, grid.glueWidth) &&
+      join.y > grid.yBodyBottom && join.y < grid.yBodyBottom + Math.max(8, grid.glueWidth);
+    if (!isGlueBottomJoin) continue;
+    const snapped = { x: grid.xFrontL, y: grid.yBodyBottom };
+    incoming.to = snapped;
+    outgoing.from = snapped;
+    break;
+  }
+  return T001_segmentsToD(parsed.start, parsed.segments);
 }
 
 function T002_lineElement(x1, y1, x2, y2) {
@@ -182,7 +274,8 @@ function T002_validateRuleLayout(layout) {
 
 function T002_getLayout(W, D, H) {
   const spec = T002_getSpec({ W, D, H });
-  const templateOverride = T002_isReferenceSize(spec.W, spec.D, spec.H);
+  const requestedRule = globalThis.PacVuUpperTuckRule.resolve('T002', spec.D);
+  const templateOverride = false;
 
   const sourceCutElements = [
     '<polyline points="1560.058 1474.784 1449.507 1589.588 1405.284 1589.588" fill="none" stroke="#ef3c25" stroke-miterlimit="2.613" stroke-width="2"/>',
@@ -252,16 +345,20 @@ function T002_getLayout(W, D, H) {
   ];
 
   const grid = templateOverride ? T002_createReferenceGrid() : T002_createRuleGrid(spec.W, spec.D, spec.H);
+  grid.upperTuckRule = requestedRule;
+  spec.upperTuckRule = requestedRule;
   const mapper = templateOverride ? T002_createReferenceMapper() : T002_createRuleMapper(grid, spec.W, spec.D, spec.H);
   const sourcePath = typeof T002_cutFillPath === 'function'
     ? T002_cutFillPath()
     : T001_buildCutFillPath(sourceCutElements.filter(el => !/M(?:1184\.467,601\.714|1228\.404,416\.044)/.test(el)));
-  const fillPath = T002_buildRuleCutPath(sourcePath, mapper);
+  const fillPath = T002_smoothBottomCubicJoins(T002_buildRuleCutPath(sourcePath, mapper, grid, spec.D), grid);
   const upperLeftShoulder = mapper.point(390.767, 372.107);
   const upperLeftCutA = mapper.point(416.278, 372.107);
-  const upperLeftCutB = mapper.point(416.278, 381.178);
+  const upperLeftCutBSource = mapper.point(416.278, 381.178);
+  const upperLeftCutB = { x: upperLeftCutA.x, y: upperLeftCutBSource.y };
   const upperRightCutA = mapper.point(722.42, 372.107);
-  const upperRightCutB = mapper.point(722.42, 381.178);
+  const upperRightCutBSource = mapper.point(722.42, 381.178);
+  const upperRightCutB = { x: upperRightCutA.x, y: upperRightCutBSource.y };
   const upperRightShoulder = mapper.point(747.932, 372.107);
   const upperTuckSideCuts = [
     T002_lineElement(upperLeftShoulder.x, upperLeftShoulder.y, upperLeftCutA.x, upperLeftCutA.y),
