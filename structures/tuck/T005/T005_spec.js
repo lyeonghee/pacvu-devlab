@@ -73,8 +73,11 @@ function T005_getSpec(input) {
     yTop: 346.838, yUpperFold: 428.816, yBodyTop: 674,
     yBodyBottom: 1649.098, yLowerFold: 1896.124, yBottom: 1978.104
   };
-  const upperTuck = D * (28.92 / 90);
-  const lowerTuck = D * (28.92 / 90);
+  const upperTuckRule = globalThis.PacVuUpperTuckRule
+    ? globalThis.PacVuUpperTuckRule.resolve('T005', D)
+    : { depth: Math.max(8, Math.min(45, D * (28.92 / 90))), mode: 'auto', profile: 'auto', relief: true, scale: D / 90, profileScale: D / 90 };
+  const upperTuck = upperTuckRule.depth;
+  const lowerTuck = upperTuck;
   const grid = {
     glueWidth,
     xGlueL: 0, xBackL: glueWidth, xBackR: glueWidth + W,
@@ -86,7 +89,7 @@ function T005_getSpec(input) {
   };
   const capsuleScale = Math.min(D / 90, H / 344);
   return {
-    W, D, H, glueWidth, upperTuck, lowerTuck, source, grid, capsuleScale,
+    W, D, H, glueWidth, upperTuck, lowerTuck, source, grid, capsuleScale, upperTuckRule,
     rules: Object.freeze({
       generationOrder: Object.freeze(['cutPath', 'foldLine', 'bleedPath']),
       glueWidth,

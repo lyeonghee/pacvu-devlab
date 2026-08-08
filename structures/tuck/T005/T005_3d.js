@@ -3,30 +3,8 @@
   if (!global.T005_getLayout) return;
   const EPS = 0.001;
 
-  function clipEdge(points, inside, intersect) {
-    const result = [];
-    if (!points.length) return result;
-    let previous = points[points.length - 1], previousInside = inside(previous);
-    points.forEach(current => {
-      const currentInside = inside(current);
-      if (currentInside !== previousInside) result.push(intersect(previous, current));
-      if (currentInside) result.push(current);
-      previous = current; previousInside = currentInside;
-    });
-    return result;
-  }
-  function atX(a, b, x) { const t = Math.abs(b.x-a.x)<1e-9?0:(x-a.x)/(b.x-a.x); return {x,y:a.y+(b.y-a.y)*t}; }
-  function atY(a, b, y) { const t = Math.abs(b.y-a.y)<1e-9?0:(y-a.y)/(b.y-a.y); return {x:a.x+(b.x-a.x)*t,y}; }
-  function clipRect(points, b) {
-    let p=points.slice();
-    p=clipEdge(p,q=>q.x>=b.minX-EPS,(a,c)=>atX(a,c,b.minX));
-    p=clipEdge(p,q=>q.x<=b.maxX+EPS,(a,c)=>atX(a,c,b.maxX));
-    p=clipEdge(p,q=>q.y>=b.minY-EPS,(a,c)=>atY(a,c,b.minY));
-    return clipEdge(p,q=>q.y<=b.maxY+EPS,(a,c)=>atY(a,c,b.maxY));
-  }
   function area(points) { let n=0; for(let i=0,j=points.length-1;i<points.length;j=i++)n+=points[j].x*points[i].y-points[i].x*points[j].y; return Math.abs(n/2); }
-  const rect=(minX,minY,maxX,maxY)=>({minX,minY,maxX,maxY});
-  const panel=(id,role,polygon,holes)=>Object.freeze({id,role,polygon:Object.freeze(polygon),holes:Object.freeze(holes||[])});
+  const panel=(id,role,polygon,holes,patches)=>Object.freeze({id,role,polygon:Object.freeze(polygon),holes:Object.freeze(holes||[]),patches:Object.freeze(patches||[])});
   const fold=(id,parentId,childId,a,b,angle,phase)=>Object.freeze({id,parentId,childId,axis:Object.freeze({a,b}),angle,phase:Object.freeze(phase)});
   function polylinePoints(element) {
     const value=global.T001_attr(element,'points')||'';
@@ -34,60 +12,182 @@
     for(let index=0;index<numbers.length;index+=2)points.push({x:numbers[index],y:numbers[index+1]});
     return points;
   }
-  function applyTuckRelief(polygon,leftCut,rightCut,isUpper) {
-    const leftInner=leftCut[1],rightInner=rightCut[1];
-    const reliefY=(leftCut[0].y+rightCut[0].y)/2;
-    return polygon.map(point=>{
-      const inReliefZone=isUpper?point.y>=reliefY-EPS:point.y<=reliefY+EPS;
-      if(!inReliefZone)return{x:point.x,y:point.y};
-      return{x:Math.max(leftInner.x,Math.min(rightInner.x,point.x)),y:point.y};
+  function linePoints(element) {
+    return ['x1','y1','x2','y2'].map(name=>Number(global.T001_attr(element,name)));
+  }
+  function signedArea(points) {
+    let value=0;
+    for(let index=0,previous=points.length-1;index<points.length;previous=index++)value+=points[previous].x*points[index].y-points[index].x*points[previous].y;
+    return value/2;
+  }
+  function contains(points,point) {
+    let inside=false;
+    for(let index=0,previous=points.length-1;index<points.length;previous=index++){
+      const a=points[index],b=points[previous];
+      if((a.y>point.y)!==(b.y>point.y)&&point.x<(b.x-a.x)*(point.y-a.y)/(b.y-a.y)+a.x)inside=!inside;
+    }
+    return inside;
+  }
+  function intersection(first,second) {
+    const rx=first.b.x-first.a.x,ry=first.b.y-first.a.y,sx=second.b.x-second.a.x,sy=second.b.y-second.a.y;
+    const denominator=rx*sy-ry*sx;
+    if(Math.abs(denominator)<1e-9)return null;
+    const qx=second.a.x-first.a.x,qy=second.a.y-first.a.y;
+    const t=(qx*sy-qy*sx)/denominator,u=(qx*ry-qy*rx)/denominator;
+    return {t,u,point:{x:first.a.x+t*rx,y:first.a.y+t*ry}};
+  }
+  function extendFold(segment,barriers) {
+    const length=Math.hypot(segment.b.x-segment.a.x,segment.b.y-segment.a.y),reach=Math.max(8,length*.025),margin=reach/length;
+    const choices={start:{fold:null,cut:null},end:{fold:null,cut:null}};
+    barriers.forEach(candidate=>{
+      if(candidate===segment)return;
+      const hit=intersection(segment,candidate);
+      if(!hit)return;
+      const candidateLength=Math.hypot(candidate.b.x-candidate.a.x,candidate.b.y-candidate.a.y);
+      const candidateMargin=candidate.kind==='fold'?Math.max(8,candidateLength*.025)/candidateLength:EPS;
+      if(hit.u<-candidateMargin||hit.u>1+candidateMargin)return;
+      const startDistance=Math.abs(hit.t),endDistance=Math.abs(hit.t-1);
+      const remember=(side,distance)=>{const current=choices[side][candidate.kind];if(!current||distance<current.distance)choices[side][candidate.kind]={point:hit.point,distance};};
+      if(hit.t>=-margin&&hit.t<=.05)remember('start',startDistance);
+      if(hit.t>=.95&&hit.t<=1+margin)remember('end',endDistance);
     });
+    const start=choices.start.cut||choices.start.fold||{point:segment.a},end=choices.end.cut||choices.end.fold||{point:segment.b};
+    return {a:start.point,b:end.point,kind:'fold'};
+  }
+  function cleanFace(points) {
+    const result=[];
+    points.forEach(point=>{
+      if(!result.length||Math.hypot(point.x-result[result.length-1].x,point.y-result[result.length-1].y)>EPS)result.push(point);
+    });
+    let changed=true;
+    while(changed&&result.length>3){
+      changed=false;
+      for(let index=0;index<result.length;index+=1){
+        const before=result[(index+result.length-1)%result.length],after=result[(index+1)%result.length];
+        if(Math.hypot(before.x-after.x,before.y-after.y)<=EPS){result.splice(index,1);changed=true;break;}
+      }
+    }
+    return result;
+  }
+  function orderFoldBoundedContour(points,foldElement) {
+    const values=linePoints(foldElement),a={x:values[0],y:values[1]},b={x:values[2],y:values[3]};
+    const dx=b.x-a.x,dy=b.y-a.y,lengthSquared=dx*dx+dy*dy;
+    const onFold=point=>{
+      if(lengthSquared<1e-12)return false;
+      const cross=Math.abs((point.x-a.x)*dy-(point.y-a.y)*dx)/Math.sqrt(lengthSquared);
+      const projection=((point.x-a.x)*dx+(point.y-a.y)*dy)/lengthSquared;
+      return cross<=EPS&&projection>=-EPS&&projection<=1+EPS;
+    };
+    const count=points.length;
+    for(let index=0;index<count;index+=1){
+      if(!onFold(points[index])||onFold(points[(index+1)%count]))continue;
+      return points.slice(index).concat(points.slice(0,index));
+    }
+    return points;
+  }
+  function buildPanelFaces(outline,cutPolylines,foldElements,labels) {
+    const boundary=outline.slice();
+    if(boundary.length>1&&Math.hypot(boundary[0].x-boundary[boundary.length-1].x,boundary[0].y-boundary[boundary.length-1].y)<=EPS)boundary.pop();
+    const cutSegments=[];
+    for(let index=0;index<boundary.length;index+=1)cutSegments.push({a:boundary[index],b:boundary[(index+1)%boundary.length],kind:'cut'});
+    cutPolylines.forEach(points=>{for(let index=0;index<points.length-1;index+=1)cutSegments.push({a:points[index],b:points[index+1],kind:'cut'});});
+    const rawFolds=foldElements.map(element=>{const values=linePoints(element);return {a:{x:values[0],y:values[1]},b:{x:values[2],y:values[3]},kind:'fold'};});
+    const barriers=cutSegments.concat(rawFolds),segments=cutSegments.concat(rawFolds.map(segment=>extendFold(segment,barriers)));
+    const divisions=segments.map(()=>[0,1]);
+    for(let first=0;first<segments.length;first+=1)for(let second=first+1;second<segments.length;second+=1){
+      const hit=intersection(segments[first],segments[second]);
+      if(!hit||hit.t<-EPS||hit.t>1+EPS||hit.u<-EPS||hit.u>1+EPS)continue;
+      divisions[first].push(Math.max(0,Math.min(1,hit.t)));divisions[second].push(Math.max(0,Math.min(1,hit.u)));
+    }
+    const nodes=[],nodeMap=new Map(),edges=[],edgeMap=new Set();
+    const nodeFor=point=>{
+      const key=Math.round(point.x*10000)+','+Math.round(point.y*10000);
+      if(nodeMap.has(key))return nodeMap.get(key);
+      const node={id:nodes.length,x:point.x,y:point.y,out:[]};nodes.push(node);nodeMap.set(key,node);return node;
+    };
+    segments.forEach((segment,index)=>{
+      const values=divisions[index].sort((a,b)=>a-b).filter((value,position,list)=>position===0||Math.abs(value-list[position-1])>1e-7);
+      for(let part=0;part<values.length-1;part+=1){
+        const start=values[part],finish=values[part+1];if(finish-start<1e-7)continue;
+        const interpolate=t=>({x:segment.a.x+(segment.b.x-segment.a.x)*t,y:segment.a.y+(segment.b.y-segment.a.y)*t});
+        const a=nodeFor(interpolate(start)),b=nodeFor(interpolate(finish));if(a===b)continue;
+        const key=Math.min(a.id,b.id)+':'+Math.max(a.id,b.id);if(edgeMap.has(key))continue;edgeMap.add(key);
+        const forward={from:a,to:b,used:false},reverse={from:b,to:a,used:false};forward.twin=reverse;reverse.twin=forward;a.out.push(forward);b.out.push(reverse);edges.push(forward,reverse);
+      }
+    });
+    nodes.forEach(node=>node.out.sort((a,b)=>Math.atan2(a.to.y-node.y,a.to.x-node.x)-Math.atan2(b.to.y-node.y,b.to.x-node.x)));
+    const faces=[];
+    edges.forEach(start=>{
+      if(start.used)return;
+      const points=[];let current=start,guard=0;
+      do{
+        current.used=true;points.push({x:current.from.x,y:current.from.y});
+        const outgoing=current.to.out,index=outgoing.indexOf(current.twin);
+        current=outgoing[(index+outgoing.length-1)%outgoing.length];
+        guard+=1;if(guard>edges.length+1)throw new Error('T005 3D: Cut/Fold face traversal failed.');
+      }while(current!==start&&!current.used);
+      const face=cleanFace(points),value=signedArea(face);
+      if(face.length>=3&&value>EPS)faces.push({polygon:face,area:value});
+    });
+    const named=labels.map(label=>({label,faces:[]}));
+    faces.forEach(face=>{
+      const direct=named.filter(entry=>contains(face.polygon,entry.label));
+      let owner=direct[0];
+      if(!owner){
+        const center=face.polygon.reduce((sum,point)=>({x:sum.x+point.x/face.polygon.length,y:sum.y+point.y/face.polygon.length}),{x:0,y:0});
+        owner=named.reduce((best,entry)=>{
+          const distance=(entry.label.x-center.x)**2+(entry.label.y-center.y)**2;
+          return !best||distance<best.distance?{entry,distance}:best;
+        },null).entry;
+      }
+      owner.faces.push(face.polygon);
+    });
+    const missing=named.filter(entry=>!entry.faces.length).map(entry=>entry.label.name);
+    if(missing.length)throw new Error('T005 3D: Cut/Fold panels are unavailable: '+missing.join(', '));
+    return named;
   }
 
   function buildContract(input) {
     const W=Number(input&&input.W)||286,D=Number(input&&input.D)||90,H=Number(input&&input.H)||344;
-    const layout=global.T005_getLayout(W,D,H),g=layout.grid;
+    const layout=global.T005_getLayout(W,D,H);
     const outline=global.T001_flattenPathD(layout.fillPath);
     if(!outline||outline.length<3)throw new Error('T005 3D: approved Cut outline is unavailable.');
-    const regions=[
-      ['glue','adhesive',rect(g.xGlueL,g.yBodyTop,g.xBackL,g.yBodyBottom)],
-      ['back','body',rect(g.xBackL,g.yBodyTop,g.xBackR,g.yBodyBottom)],
-      ['sideLeft','body',rect(g.xBackR,g.yBodyTop,g.xSideLR,g.yBodyBottom)],
-      ['front','body',rect(g.xSideLR,g.yBodyTop,g.xFrontR,g.yBodyBottom)],
-      ['sideRight','body',rect(g.xFrontR,g.yBodyTop,g.xSideRR,g.yBodyBottom)],
-      ['upperTuck','tuck',rect(g.xSideLR,g.yTop,g.xFrontR,g.yUpperFold)],
-      ['upperLid','lid',rect(g.xSideLR,g.yUpperFold,g.xFrontR,g.yBodyTop)],
-      ['upperDustLeft','dust',rect(g.xBackR,g.yUpperFold,g.xSideLR,g.yBodyTop)],
-      ['upperDustRight','dust',rect(g.xFrontR,g.yUpperFold,g.xSideRR,g.yBodyTop)],
-      ['lowerLid','lid',rect(g.xBackL,g.yBodyBottom,g.xBackR,g.yLowerFold)],
-      ['lowerTuck','tuck',rect(g.xBackL,g.yLowerFold,g.xBackR,g.yBottom)],
-      ['lowerDustLeft','dust',rect(g.xBackR,g.yBodyBottom,g.xSideLR,g.yLowerFold)],
-      ['lowerDustRight','dust',rect(g.xFrontR,g.yBodyBottom,g.xSideRR,g.yLowerFold)]
-    ];
-    const capsuleHoleEnabled=input.capsuleHoleEnabled!==false;
+    const capsuleHoleEnabled=!input||input.capsuleHoleEnabled!==false;
     const capsule=capsuleHoleEnabled?global.T001_flattenPathD(layout.capsuleHole.path):[];
-    const reliefCuts=layout.shortCutElements.map(polylinePoints);
-    const panels=regions.map(def=>{
-      let polygon=clipRect(outline,def[2]);
-      if(def[0]==='upperTuck')polygon=applyTuckRelief(polygon,reliefCuts[0],reliefCuts[1],true);
-      if(def[0]==='lowerTuck')polygon=applyTuckRelief(polygon,reliefCuts[2],reliefCuts[3],false);
-      return panel(def[0],def[1],polygon,def[0]==='sideLeft'&&capsuleHoleEnabled?[capsule]:[]);
-    })
-      .filter(item=>item.polygon.length>=3&&area(item.polygon)>EPS);
-    const v=x=>[{x,y:g.yBodyTop},{x,y:g.yBodyBottom}],h=(x1,x2,y)=>[{x:x1,y},{x:x2,y}];
+    const definitions=new Map([
+      ['Glue',['glue','adhesive']],['Back',['back','body']],['Side(L)',['sideLeft','body']],['Front',['front','body']],['Side(R)',['sideRight','body']],
+      ['upperLid',['upperLid','lid']],['upperTuck',['upperTuck','tuck']],['lowerLid',['lowerLid','lid']],['lowerTuck',['lowerTuck','tuck']],
+      ['upperDustFlap(L)',['upperDustLeft','dust']],['upperDustFlap(R)',['upperDustRight','dust']],
+      ['lowerDustFlap(L)',['lowerDustLeft','dust']],['lowerDustFlap(R)',['lowerDustRight','dust']]
+    ]);
+    const groups=buildPanelFaces(outline,layout.shortCutElements.map(polylinePoints),layout.foldElements,layout.labels);
+    const orderedFoldByPanel=new Map([
+      ['lowerDustLeft',layout.foldElements[10]],
+      ['upperDustLeft',layout.foldElements[11]],
+      ['upperDustRight',layout.foldElements[8]]
+    ]);
+    const panels=groups.map(group=>{
+      const definition=definitions.get(group.label.name);
+      if(!definition)throw new Error('T005 3D: unknown Cut/Fold panel '+group.label.name);
+      const faces=group.faces.slice().sort((first,second)=>area(second)-area(first));
+      const foldElement=orderedFoldByPanel.get(definition[0]);
+      const polygon=foldElement?orderFoldBoundedContour(faces[0],foldElement):faces[0];
+      return panel(definition[0],definition[1],polygon,definition[0]==='sideLeft'&&capsuleHoleEnabled?[capsule]:[],faces.slice(1));
+    });
+    const axis=index=>{const values=linePoints(layout.foldElements[index]);return [{x:values[0],y:values[1]},{x:values[2],y:values[3]}];};
     const folds=[
-      fold('body.front-sideLeft','front','sideLeft',...v(g.xSideLR),90,[.04,.14]),
-      fold('body.sideLeft-back','sideLeft','back',...v(g.xBackR),90,[.10,.20]),
-      fold('body.back-glue','back','glue',...v(g.xBackL),90,[.16,.26]),
-      fold('body.front-sideRight','front','sideRight',...v(g.xFrontR),90,[.12,.22]),
-      fold('lower.sideLeft-dust','sideLeft','lowerDustLeft',...h(g.xBackR,g.xSideLR,g.yBodyBottom),90,[.42,.50]),
-      fold('lower.sideRight-dust','sideRight','lowerDustRight',...h(g.xFrontR,g.xSideRR,g.yBodyBottom),90,[.42,.50]),
-      fold('lower.back-lid','back','lowerLid',...h(g.xBackL,g.xBackR,g.yBodyBottom),90,[.56,.68]),
-      fold('lower.lid-tuck','lowerLid','lowerTuck',...h(g.xBackL,g.xBackR,g.yLowerFold),110,[.50,.56]),
-      fold('upper.sideLeft-dust','sideLeft','upperDustLeft',...h(g.xBackR,g.xSideLR,g.yBodyTop),90,[.72,.80]),
-      fold('upper.sideRight-dust','sideRight','upperDustRight',...h(g.xFrontR,g.xSideRR,g.yBodyTop),90,[.72,.80]),
-      fold('upper.front-lid','front','upperLid',...h(g.xSideLR,g.xFrontR,g.yBodyTop),90,[.86,.98]),
-      fold('upper.lid-tuck','upperLid','upperTuck',...h(g.xSideLR,g.xFrontR,g.yUpperFold),110,[.80,.86])
+      fold('body.front-sideLeft','front','sideLeft',...axis(5),90,[.04,.14]),
+      fold('body.sideLeft-back','sideLeft','back',...axis(4),90,[.10,.20]),
+      fold('body.back-glue','back','glue',...axis(6),90,[.16,.26]),
+      fold('body.front-sideRight','front','sideRight',...axis(7),90,[.12,.22]),
+      fold('lower.sideLeft-dust','sideLeft','lowerDustLeft',...axis(10),90,[.42,.50]),
+      fold('lower.sideRight-dust','sideRight','lowerDustRight',...axis(9),90,[.42,.50]),
+      fold('lower.back-lid','back','lowerLid',...axis(2),90,[.56,.68]),
+      fold('lower.lid-tuck','lowerLid','lowerTuck',...axis(3),110,[.50,.56]),
+      fold('upper.sideLeft-dust','sideLeft','upperDustLeft',...axis(11),90,[.72,.80]),
+      fold('upper.sideRight-dust','sideRight','upperDustRight',...axis(8),90,[.72,.80]),
+      fold('upper.front-lid','front','upperLid',...axis(1),90,[.86,.98]),
+      fold('upper.lid-tuck','upperLid','upperTuck',...axis(0),110,[.80,.86])
     ];
     const ids=new Set(panels.map(item=>item.id));
     folds.forEach(item=>{if(!ids.has(item.parentId)||!ids.has(item.childId))throw new Error('T005 3D hierarchy failed: '+item.id);});
@@ -108,10 +208,11 @@
     function geometryFor(def) {
       let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
       def.polygon.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);});
-      const cx=(minX+maxX)/2,cy=(minY+maxY)/2,shape=new THREE.Shape();
-      def.polygon.forEach((p,i)=>i?shape.lineTo(p.x-cx,cy-p.y):shape.moveTo(p.x-cx,cy-p.y)); shape.closePath();
+      const cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+      const makeShape=points=>{const shape=new THREE.Shape();points.forEach((p,i)=>i?shape.lineTo(p.x-cx,cy-p.y):shape.moveTo(p.x-cx,cy-p.y));shape.closePath();return shape;};
+      const shape=makeShape(def.polygon),shapes=[shape].concat(def.patches.map(makeShape));
       def.holes.forEach(points=>{const hole=new THREE.Path();points.forEach((p,i)=>i?hole.lineTo(p.x-cx,cy-p.y):hole.moveTo(p.x-cx,cy-p.y));hole.closePath();shape.holes.push(hole);});
-      const geometry=new THREE.ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:false,curveSegments:48});
+      const geometry=new THREE.ExtrudeGeometry(shapes,{depth:thickness,bevelEnabled:false,curveSegments:48});
       geometry.translate(0,0,-thickness/2);Viewer.assignBoardFaceMaterials(geometry,thickness,'interior');geometry.computeVertexNormals();
       return {geometry,cx,cy};
     }

@@ -44,11 +44,13 @@ function T005_createMapper(spec) {
 }
 
 function T005_createTuckMapper(spec,mapper) {
-  const s=spec.source,g=spec.grid,scale=spec.D/90;
-  const upperSource=[1224.976,1229.437,1274.243,1989.581,2034.387,2036.257];
-  const upperTarget=[g.xSideLR,g.xSideLR+1.574*scale,g.xSideLR+17.381*scale,g.xFrontR-16.466*scale,g.xFrontR-.66*scale,g.xFrontR];
-  const lowerSource=[152.926,154.999,199.805,915.143,959.949,969.107];
-  const lowerTarget=[g.xBackL,g.xBackL+.731*scale,g.xBackL+16.536*scale,g.xBackR-19.743*scale,g.xBackR-3.23*scale,g.xBackR];
+  const s=spec.source,g=spec.grid,scale=spec.upperTuckRule.profileScale;
+  const upperSource=[1224.408,1229.437,1274.243,1989.581,2034.387,2038.458];
+  const upperEdge=((upperSource[1]-upperSource[0])+(upperSource[5]-upperSource[4]))*.5*s.unitToMm*scale;
+  const upperShoulder=((upperSource[2]-upperSource[0])+(upperSource[5]-upperSource[3]))*.5*s.unitToMm*scale;
+  const upperTarget=[g.xSideLR,g.xSideLR+upperEdge,g.xSideLR+upperShoulder,g.xFrontR-upperShoulder,g.xFrontR-upperEdge,g.xFrontR];
+  const lowerSource=[151.927,154.999,199.805,915.143,959.949,962.503];
+  const lowerTarget=[g.xBackL,g.xBackL+upperEdge,g.xBackL+upperShoulder,g.xBackR-upperShoulder,g.xBackR-upperEdge,g.xBackR];
   function x(value,y){
     if(y<=s.yUpperFold+T005_TOLERANCE&&value>=upperSource[0]&&value<=upperSource[upperSource.length-1])return T005_piecewiseLocal(value,upperSource,upperTarget);
     if(y>=s.yLowerFold-T005_TOLERANCE&&value>=lowerSource[0]&&value<=lowerSource[lowerSource.length-1])return T005_piecewiseLocal(value,lowerSource,lowerTarget);
@@ -70,13 +72,15 @@ function T005_polylineElement(points) {
 function T005_buildSingleCut(spec,mapper) {
   const tuckMapper=T005_createTuckMapper(spec,mapper);
   const outline=T001_transformPathD(T005_SOURCE_OUTLINE_D,tuckMapper);
-  const g=spec.grid,h=spec.D*(8.5884/90),v=spec.D*(3.4794/90);
+  const g=spec.grid,profileScale=spec.upperTuckRule.profileScale,heightScale=spec.upperTuckRule.scale;
+  const upperH=8.5884*profileScale,upperV=3.4794*heightScale;
+  const lowerH=upperH,lowerV=upperV;
   const anchor=T005_SOURCE_SHORT_CUTS.map(points=>tuckMapper.point(points[0][0],points[0][1]));
   const shortCuts=[
-    [anchor[0],{x:anchor[0].x+h,y:anchor[0].y},{x:anchor[0].x+h,y:anchor[0].y+v}],
-    [anchor[1],{x:anchor[1].x-h,y:anchor[1].y},{x:anchor[1].x-h,y:anchor[1].y+v}],
-    [anchor[2],{x:anchor[2].x+h,y:anchor[2].y},{x:anchor[2].x+h,y:anchor[2].y-v}],
-    [anchor[3],{x:anchor[3].x-h,y:anchor[3].y},{x:anchor[3].x-h,y:anchor[3].y-v}]
+    [anchor[0],{x:anchor[0].x+upperH,y:anchor[0].y},{x:anchor[0].x+upperH,y:anchor[0].y+upperV}],
+    [anchor[1],{x:anchor[1].x-upperH,y:anchor[1].y},{x:anchor[1].x-upperH,y:anchor[1].y+upperV}],
+    [anchor[2],{x:anchor[2].x+lowerH,y:anchor[2].y},{x:anchor[2].x+lowerH,y:anchor[2].y-lowerV}],
+    [anchor[3],{x:anchor[3].x-lowerH,y:anchor[3].y},{x:anchor[3].x-lowerH,y:anchor[3].y-lowerV}]
   ].map(T005_polylineElement);
   return {outline,shortCuts,cutElements:['<path d="'+outline+'"/>'].concat(shortCuts)};
 }
