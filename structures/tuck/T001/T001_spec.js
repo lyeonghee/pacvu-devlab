@@ -88,6 +88,10 @@ function T001_getSpec(input) {
     yBottomLockEnd: 934.578
   };
 
+  const upperTuckRule = globalThis.PacVuUpperTuckRule
+    ? globalThis.PacVuUpperTuckRule.resolve('T001', D)
+    : { depth: Math.max(8, Math.min(45, D * (23 / 57))), mode: 'auto', profile: 'auto', relief: false, scale: D / 57, profileScale: D / 57 };
+  const tuckDepth = upperTuckRule.depth;
   const grid = {
     xGlueL: 0,
     xFrontL: glueWidth,
@@ -96,15 +100,15 @@ function T001_getSpec(input) {
     xBackR: glueWidth + W + D + W,
     xSideRR: glueWidth + W + D + W + D,
     yTop: 0,
-    yLidFold: D * (23 / 57),
-    yBodyTop: D * (23 / 57) + D,
-    yBodyBottom: D * (23 / 57) + D + H,
-    yBottomLockBend: D * (23 / 57) + D + H + D * 0.5,
-    yBottomLockEnd: D * (23 / 57) + D + H + D * (43.5 / 57)
+    yLidFold: tuckDepth,
+    yBodyTop: tuckDepth + D,
+    yBodyBottom: tuckDepth + D + H,
+    yBottomLockBend: tuckDepth + D + H + D * 0.5,
+    yBottomLockEnd: tuckDepth + D + H + D * (43.5 / 57)
   };
   grid.glueWidth = glueWidth;
 
-  return { W, D, H, glueWidth, source, grid, exportMeta: T001_EXPORT_META };
+  return { W, D, H, glueWidth, source, grid, upperTuckRule, exportMeta: T001_EXPORT_META };
 }
 
 function T001_hasThumbNotch(spec) {

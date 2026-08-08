@@ -200,6 +200,23 @@ function T001_applyScreenVisualStyle(svg, profile) {
   return true;
 }
 
+// Overall dimensions follow the same bounded visual rule used by T002.
+// This is intentionally separate from T001's large-dieline master scaling.
+function T001_overallVisualStyle(layout) {
+  const base = T001_visualStyle({ bounds: { width: 256.6, height: 304.1 } });
+  const bounds = layout.bleedBounds || layout.bounds;
+  const fit = Math.min(bounds.width / 256.6, bounds.height / 304.1);
+  const displayScale = T001_clamp(fit, 1, 2.05);
+  return {
+    uiScale: T001_num(base.uiScale * displayScale),
+    dimensionFontSize: T001_num(base.dimensionFontSize * displayScale),
+    dimensionLineStroke: T001_num(base.dimensionLineStroke * displayScale),
+    dimensionTextOffset: T001_num(base.dimensionTextOffset * displayScale),
+    dimensionVerticalTextOffset: T001_num(base.dimensionVerticalTextOffset * displayScale),
+    arrowMarkerSize: T001_num(base.arrowMarkerSize * displayScale)
+  };
+}
+
 function T001_overallArrowMarkerDefs(size) {
   const s = T001_num(size || 10);
   const mid = T001_num(s / 2);
@@ -297,7 +314,7 @@ function T001_buildAdaptiveDimensionLayer(cfg, grid, style) {
     '</g>\n';
 }
 
-function T001_buildOverallDimensionLayer(layout, style) {
+function T001_buildOverallDimensionLayer(layout, style, useDedicatedMarkers) {
   const visual = style || T001_visualStyle(layout);
   const dieline = layout.dielineBounds || layout.bounds;
   const bounds = layout.bleedBounds || dieline;
@@ -307,14 +324,16 @@ function T001_buildOverallDimensionLayer(layout, style) {
   const widthLabel = T001_formatLength(bounds.width);
   const heightLabel = T001_formatLength(bounds.height);
   const guideHalf = 5 * s;
+  const markerStart = useDedicatedMarkers ? 'overall-arrow-start' : 'arrow';
+  const markerEnd = useDedicatedMarkers ? 'overall-arrow-end' : 'arrow';
   return '  <g id="layer-overall-dimensions">' +
     '<line class="overall-ext" x1="' + T001_num(bounds.minX) + '" y1="' + T001_num(arrowY - guideHalf) + '" x2="' + T001_num(bounds.minX) + '" y2="' + T001_num(arrowY + guideHalf) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '"/>' +
     '<line class="overall-ext" x1="' + T001_num(bounds.maxX) + '" y1="' + T001_num(arrowY - guideHalf) + '" x2="' + T001_num(bounds.maxX) + '" y2="' + T001_num(arrowY + guideHalf) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '"/>' +
-    '<line class="overall-dim" x1="' + T001_num(bounds.minX) + '" y1="' + T001_num(arrowY) + '" x2="' + T001_num(bounds.maxX) + '" y2="' + T001_num(arrowY) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '" marker-start="url(#arrow)" marker-end="url(#arrow)"/>' +
+    '<line class="overall-dim" x1="' + T001_num(bounds.minX) + '" y1="' + T001_num(arrowY) + '" x2="' + T001_num(bounds.maxX) + '" y2="' + T001_num(arrowY) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '" marker-start="url(#' + markerStart + ')" marker-end="url(#' + markerEnd + ')"/>' +
     '<text class="dim overall-text" data-overall-axis="horizontal" x="' + T001_num((bounds.minX + bounds.maxX) / 2) + '" y="' + T001_num(arrowY - 1.5 * s) + '" font-size="' + visual.dimensionFontSize + '" font-weight="600" text-anchor="middle">' + widthLabel + '</text>' +
     '<line class="overall-ext" x1="' + T001_num(arrowX - guideHalf) + '" y1="' + T001_num(bounds.minY) + '" x2="' + T001_num(arrowX + guideHalf) + '" y2="' + T001_num(bounds.minY) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '"/>' +
     '<line class="overall-ext" x1="' + T001_num(arrowX - guideHalf) + '" y1="' + T001_num(bounds.maxY) + '" x2="' + T001_num(arrowX + guideHalf) + '" y2="' + T001_num(bounds.maxY) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '"/>' +
-    '<line class="overall-dim" x1="' + T001_num(arrowX) + '" y1="' + T001_num(bounds.minY) + '" x2="' + T001_num(arrowX) + '" y2="' + T001_num(bounds.maxY) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '" marker-start="url(#arrow)" marker-end="url(#arrow)"/>' +
+    '<line class="overall-dim" x1="' + T001_num(arrowX) + '" y1="' + T001_num(bounds.minY) + '" x2="' + T001_num(arrowX) + '" y2="' + T001_num(bounds.maxY) + '" stroke="#111" stroke-width="' + visual.dimensionLineStroke + '" marker-start="url(#' + markerStart + ')" marker-end="url(#' + markerEnd + ')"/>' +
     '<text class="dim overall-text" data-overall-axis="vertical" x="' + T001_num(arrowX + visual.dimensionVerticalTextOffset) + '" y="' + T001_num((bounds.minY + bounds.maxY) / 2) + '" font-size="' + visual.dimensionFontSize + '" font-weight="600" transform="rotate(-90 ' + T001_num(arrowX + visual.dimensionVerticalTextOffset) + ' ' + T001_num((bounds.minY + bounds.maxY) / 2) + ')" text-anchor="middle">' + heightLabel + '</text>' +
     '</g>\n';
 }
@@ -333,7 +352,8 @@ function T001_renderSVG(cfg, appState) {
     T001_num(vbX) + ' ' + T001_num(vbY) + ' ' + T001_num(vbW) + ' ' + T001_num(vbH) +
     '" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">\n';
   const internalVisual = T001_internalDimensionStyle();
-  svg += '<defs>' + T001_arrowMarkerDef(visual.arrowMarkerSize) + T001_arrowMarkerDef(internalVisual.arrowMarkerSize, 'internal-dimension-arrow', 'userSpaceOnUse') + T001_overallArrowMarkerDefs(visual.arrowMarkerSize) + T001_watermarkDef(visual) + T001_styleBlock() + '</defs>\n';
+  const overallVisual = T001_overallVisualStyle(layout);
+  svg += '<defs>' + T001_arrowMarkerDef(visual.arrowMarkerSize) + T001_arrowMarkerDef(internalVisual.arrowMarkerSize, 'internal-dimension-arrow', 'userSpaceOnUse') + T001_overallArrowMarkerDefs(overallVisual.arrowMarkerSize) + T001_watermarkDef(visual) + T001_styleBlock() + '</defs>\n';
   svg += '<rect x="' + T001_num(vbX) + '" y="' + T001_num(vbY) + '" width="' + T001_num(vbW) + '" height="' + T001_num(vbH) + '" fill="#d0d0d0" stroke="none"/>\n';
   svg += '<g id="viewportGroup">\n';
   svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.fillPath + '"/></g>\n';
@@ -348,7 +368,7 @@ function T001_renderSVG(cfg, appState) {
   }
   if (!appState || appState.showDims) {
     svg += T001_buildAdaptiveDimensionLayer(cfg, layout.grid, visual);
-    svg += T001_buildOverallDimensionLayer(layout, visual);
+    svg += T001_buildOverallDimensionLayer(layout, overallVisual, true);
   }
   svg += '  <rect x="-5000" y="-5000" width="10000" height="10000" fill="url(#wm)" pointer-events="none"/>\n';
   svg += '</g></svg>';
