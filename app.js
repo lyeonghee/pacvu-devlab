@@ -403,6 +403,7 @@ let renderTimer = null;
 function render(forceFit = false, visualReason = 'initial-render') {
   let svgStr = '';
   const eng = selectedBoxMeta.engineKey;
+  updateUpperTuckCustomizeUi();
   if (eng !== 'gbox' && eng !== 'gbox2' && eng !== 'gbox3' && eng !== 'bbox' && eng !== 'bbox2' && eng !== 'bbox3' && eng !== 'bbox4' && eng !== 'bbox5' && eng !== 'tr001' && eng !== 'tr002' && eng !== 'tr003') updateT001DielineSizeInfo(null);
 
   if (eng === 'gbox') {
@@ -1169,6 +1170,30 @@ const PACVU_TEMPLATE_RULES = {
       'Hidden when W ≥ 100 mm'
     ]
   },
+  bbox2: {
+    ariaLabel: 'T002 Upper Tuck automatic rule',
+    kicker: 'Auto Rule',
+    name: 'Upper Tuck',
+    descriptions: ['Width follows W', 'Depth and profile follow the approved PacVu rule.']
+  },
+  bbox3: {
+    ariaLabel: 'T003 Upper Tuck automatic rule',
+    kicker: 'Auto Rule',
+    name: 'Upper Tuck',
+    descriptions: ['Width follows W', 'Depth and profile follow the approved PacVu rule.']
+  },
+  bbox4: {
+    ariaLabel: 'T004 Upper Tuck automatic rule',
+    kicker: 'Auto Rule',
+    name: 'Upper Tuck',
+    descriptions: ['Width follows W', 'Depth and profile follow the approved PacVu rule.']
+  },
+  bbox5: {
+    ariaLabel: 'T005 Upper Tuck automatic rule',
+    kicker: 'Auto Rule',
+    name: 'Upper Tuck',
+    descriptions: ['Width follows W', 'Depth and profile follow the approved PacVu rule.']
+  },
   gable1: {
     ariaLabel: 'GA001 Gable Box structure rule',
     kicker: 'ⓘ Structure Rule',
@@ -1310,6 +1335,17 @@ function ensurePacVuInfoPanel() {
     '<div class="pacvu-template-rule-section" id="pacvuTemplateRuleSection">',
     '<div class="pacvu-template-rule-label">Template Rule</div>',
     '<div class="pacvu-info-rule" id="pacvuTemplateRuleContent"></div>',
+    '<div class="upper-tuck-card" id="upperTuckCard" hidden>',
+    '<div class="upper-tuck-status">Upper Tuck: <strong id="upperTuckStatus">Auto</strong></div>',
+    '<button type="button" class="upper-tuck-customize-button" id="upperTuckCustomizeButton" aria-expanded="false">Customize Upper Tuck</button>',
+    '<div class="upper-tuck-customize" id="upperTuckCustomize" hidden>',
+    '<label><span>Mode</span><select id="upperTuckMode"><option value="auto">Auto</option><option value="custom">Custom</option></select></label>',
+    '<label><span>Upper Tuck Height</span><span class="upper-tuck-depth-control"><input id="upperTuckDepth" type="number" step="1" min="8" max="45"><em>mm</em></span></label>',
+    '<label><span>Profile</span><input type="text" value="Auto" readonly></label>',
+    '<label id="upperTuckReliefRow"><span>Relief</span><input type="text" value="On" readonly></label>',
+    '<button type="button" class="upper-tuck-reset-button" id="upperTuckResetButton">Reset to Auto</button>',
+    '</div>',
+    '</div>',
     '</div>'
   ].join('');
   panel.querySelector('.pacvu-info-mobile-toggle')?.addEventListener('click', event => {
@@ -1319,6 +1355,34 @@ function ensurePacVuInfoPanel() {
   panel.querySelector('#pacvuInfoMockup3dBtn')?.addEventListener('click', () => {
     const toolbarButton = document.getElementById('mockup3dBtn');
     if (toolbarButton && !toolbarButton.disabled) toolbarButton.click();
+  });
+  panel.querySelector('#upperTuckCustomizeButton')?.addEventListener('click', event => {
+    const region = panel.querySelector('#upperTuckCustomize');
+    const expanded = Boolean(region?.hidden);
+    if (region) region.hidden = !expanded;
+    event.currentTarget.setAttribute('aria-expanded', String(expanded));
+  });
+  panel.querySelector('#upperTuckMode')?.addEventListener('change', event => {
+    const templateId = getSelectedUpperTuckTemplateId();
+    if (!templateId) return;
+    const depth = Number(panel.querySelector('#upperTuckDepth')?.value);
+    window.PacVuUpperTuckRule.setState(templateId, { mode: event.target.value, depth });
+    updateUpperTuckCustomizeUi();
+    render(true, 'upper-tuck-mode');
+  });
+  panel.querySelector('#upperTuckDepth')?.addEventListener('input', event => {
+    const templateId = getSelectedUpperTuckTemplateId();
+    if (!templateId || panel.querySelector('#upperTuckMode')?.value !== 'custom') return;
+    window.PacVuUpperTuckRule.setState(templateId, { mode: 'custom', depth: Number(event.target.value) });
+    updateUpperTuckCustomizeUi();
+    scheduleRender('upper-tuck-depth');
+  });
+  panel.querySelector('#upperTuckResetButton')?.addEventListener('click', () => {
+    const templateId = getSelectedUpperTuckTemplateId();
+    if (!templateId) return;
+    window.PacVuUpperTuckRule.setState(templateId, { mode: 'auto' });
+    updateUpperTuckCustomizeUi();
+    render(true, 'upper-tuck-reset');
   });
   panel.querySelectorAll('#pacvuComponentsSection input[type=checkbox]').forEach(control => {
     control.addEventListener('change', () => {
@@ -1435,6 +1499,36 @@ function ensurePacVuTemplateRule() {
   return ensurePacVuInfoPanel()?.querySelector('#pacvuTemplateRuleContent') || null;
 }
 
+function getSelectedUpperTuckTemplateId() {
+  return {
+    bbox: 'T001', bbox2: 'T002', bbox3: 'T003', bbox4: 'T004', bbox5: 'T005'
+  }[selectedBoxMeta.engineKey] || '';
+}
+
+function updateUpperTuckCustomizeUi() {
+  const card = document.getElementById('upperTuckCard');
+  const templateId = getSelectedUpperTuckTemplateId();
+  if (!card) return;
+  card.hidden = !templateId;
+  if (!templateId || !window.PacVuUpperTuckRule) return;
+  const D = dimensionVal('baseD', 57);
+  const resolved = window.PacVuUpperTuckRule.resolve(templateId, D);
+  const mode = card.querySelector('#upperTuckMode');
+  const depth = card.querySelector('#upperTuckDepth');
+  const status = card.querySelector('#upperTuckStatus');
+  const reliefRow = card.querySelector('#upperTuckReliefRow');
+  if (mode) mode.value = resolved.mode;
+  if (depth) {
+    depth.value = String(Number(resolved.depth.toFixed(2)));
+    depth.disabled = resolved.mode !== 'custom';
+    depth.min = String(resolved.min);
+    depth.max = String(resolved.max);
+    depth.step = '1';
+  }
+  if (status) status.textContent = resolved.mode === 'custom' ? 'Custom' : 'Auto';
+  if (reliefRow) reliefRow.hidden = !resolved.relief;
+}
+
 function updatePacVuTemplateRule() {
   const notice = ensurePacVuTemplateRule();
   const section = document.getElementById('pacvuTemplateRuleSection');
@@ -1450,6 +1544,7 @@ function updatePacVuTemplateRule() {
   if (section) section.hidden = !rule;
   const panel = document.getElementById('pacvuInfoPanel');
   if (panel) panel.hidden = !rule;
+  updateUpperTuckCustomizeUi();
 }
 
 function updateFixedDimensionsMode() {

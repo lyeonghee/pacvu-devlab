@@ -544,6 +544,18 @@
 .pacvu-info-rule{color:#7a8391;font-size:10px;font-weight:400;line-height:1.55}
 .pacvu-info-kicker{margin-bottom:5px;color:#60718b;font-size:11px;font-weight:600;letter-spacing:.02em}
 .pacvu-info-rule-name{margin-bottom:4px;color:#202630;font-size:13px;font-weight:700}
+.upper-tuck-card{margin-top:12px;padding-top:12px;border-top:1px solid #e5e8ed}
+.upper-tuck-card[hidden],.upper-tuck-customize[hidden],#upperTuckReliefRow[hidden]{display:none}
+.upper-tuck-status{margin-bottom:8px;color:#343b46;font-size:11px}
+.upper-tuck-status strong{color:#5b49d8;font-weight:700}
+.upper-tuck-customize-button,.upper-tuck-reset-button{width:100%;border:1px solid #cdc7f4;border-radius:7px;background:#f5f3ff;color:#5140ca;font-size:10px;font-weight:700;line-height:1.2;padding:8px;cursor:pointer}
+.upper-tuck-customize{margin-top:9px;padding:9px;border:1px solid #e1e4e9;border-radius:8px;background:#fafbfc}
+.upper-tuck-customize>label{display:grid;grid-template-columns:1fr 102px;align-items:center;gap:8px;margin-bottom:7px;color:#59616d;font-size:10px}
+.upper-tuck-customize select,.upper-tuck-customize input{min-width:0;width:100%;height:28px;padding:4px 6px;border:1px solid #d5d9df;border-radius:6px;background:#fff;color:#29303a;font-size:10px}
+.upper-tuck-customize input[readonly],.upper-tuck-customize input:disabled{background:#f1f3f6;color:#69717c}
+.upper-tuck-depth-control{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px}
+.upper-tuck-depth-control em{font-size:9px;font-style:normal;color:#7d8590}
+.upper-tuck-reset-button{margin-top:2px;border-color:#d9dde3;background:#fff;color:#5f6874}
 .pacvu-info-mobile-toggle{display:none}
 
 @media (max-width:768px){
