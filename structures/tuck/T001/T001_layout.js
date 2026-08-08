@@ -27,10 +27,19 @@ function T001_createMapper(spec) {
   const sy = [src.yTop, src.yLidFold, src.yBodyTop, src.yBodyBottom, src.yBottomLockBend, src.yBottomLockEnd];
   const ty = [grid.yTop, grid.yLidFold, grid.yBodyTop, grid.yBodyBottom, grid.yBottomLockBend, grid.yBottomLockEnd];
 
+  function mapX(x, y) {
+    if (y <= src.yLidFold && x >= src.xFrontL && x <= src.xFrontR && globalThis.PacVuUpperTuckRule) {
+      return globalThis.PacVuUpperTuckRule.mapX(
+        x, src.xFrontL, src.xFrontR, grid.xFrontL, grid.xFrontR,
+        src.unitToMm, spec.upperTuckRule.profileScale
+      );
+    }
+    return T001_piecewise(x, sx, tx);
+  }
   return {
     point(x, y) {
       return {
-        x: T001_piecewise(x, sx, tx),
+        x: mapX(x, y),
         y: T001_piecewise(y, sy, ty)
       };
     },
