@@ -123,6 +123,46 @@
 
     const source = global.T003_SOURCE_GRID;
     const topMidY = g.yInnerFold;
+    // Extract bottomLock-A from its own continuous Final Cut run. Clipping the
+    // complete dieline leaves the triangulator free to bridge this narrow
+    // centre junction to unrelated curved vertices elsewhere in the outline.
+    const bottomASourcePath = [
+      'M560.679 1216.063',
+      'L562.482 1215.802',
+      'C562.214 1215.218 561.681 1214.801 561.049 1214.681',
+      'C560.417 1214.561 559.769 1214.753 559.305 1215.199',
+      'L545.245 1228.692',
+      'L555.010 1249.632',
+      'L549.341 1381.324',
+      'L480.459 1381.324',
+      'L437.939 1338.804',
+      'L438.506 1338.804',
+      'L438.506 1345.891',
+      'L403.073 1381.324',
+      'L326.821 1381.324',
+      'L315.482 1216.064',
+      'L315.482 1216.063',
+      'Z'
+    ].join(' ');
+    const bottomAPolygon = clipRect(
+      global.T001_flattenPathD(bottomASourcePath).map(point => mapper.point(point.x, point.y)),
+      rect(g.xFrontL, g.yBodyBottom, g.xFrontR, g.yBottomMax)
+    );
+    const upperLeftShoulder = mapper.point(805.876, 134.646);
+    const upperLeftCut = mapper.point(831.388, 134.646);
+    const upperLeftFold = mapper.point(831.388, 137.764);
+    const upperRightCut = mapper.point(1025.561, 134.646);
+    const upperRightShoulder = mapper.point(1051.073, 134.646);
+    const upperRightFold = mapper.point(1025.561, 137.764);
+    const upperLeftFoldShoulder = mapper.point(805.876, 137.764);
+    const upperRightFoldShoulder = mapper.point(1051.073, 137.764);
+    const upperTuckPolygon = global.PacVuUpperTuckRule.boundaryFrom2D(
+      outline,
+      [upperLeftFold, upperLeftCut, upperLeftShoulder],
+      [upperRightShoulder, upperRightCut, upperRightFold]
+    );
+    const upperTuckReliefLeft = [upperLeftShoulder, upperLeftCut, upperLeftFold, upperLeftFoldShoulder];
+    const upperTuckReliefRight = [upperRightCut, upperRightShoulder, upperRightFoldShoulder, upperRightFold];
     const regions = [
       ['glue', 'adhesive', rect(g.xOuterL, g.yBodyTop, g.xFrontL, g.yBodyBottom)],
       ['front', 'body', rect(g.xFrontL, g.yBodyTop, g.xFrontR, g.yBodyBottom)],
@@ -144,7 +184,11 @@
       ? global.T003_resolveHoles(layout, input || {})
       : [];
     let panels = regions.map(def => {
-      const polygon = clipRect(outline, def[2]);
+      const polygon = def[0] === 'bottomA'
+        ? bottomAPolygon.slice()
+        : def[0] === 'upperTuck'
+          ? upperTuckPolygon.slice()
+          : clipRect(outline, def[2]);
       const holes = holeCuts.filter(hole => {
         if (hole.id === 'hole_1') return def[0] === 'bottleTopUpper';
         return contains(polygon, hole);
@@ -152,6 +196,8 @@
       return panel(def[0], def[1], polygon, holes);
     })
       .filter(item => item.polygon.length >= 3 && area(item.polygon) > EPS);
+    panels.push(panel('upperTuckReliefLeft', 'topTuckRelief', upperTuckReliefLeft));
+    panels.push(panel('upperTuckReliefRight', 'topTuckRelief', upperTuckReliefRight));
 
     const a1 = mapper.point(546.138, 1230.604);
     const a2 = mapper.point(437.939, 1338.803);
@@ -205,7 +251,7 @@
       fold('top.front-lid', 'back', 'lidTop', ...h(g.xSideLR, g.xBackR, g.yBodyTop), 90, [0.96, 1.00]),
       fold(
         'top.lid-tuck', 'lidTop', 'upperTuck',
-        mapper.point(831.388, 137.764), mapper.point(1025.561, 137.764),
+        upperLeftFold, upperRightFold,
         110, [0.92, 0.96]
       )
     ];
@@ -411,6 +457,15 @@
       const radial = piece.flatCenter.clone().sub(a);
       const sign = new THREE.Vector3().crossVectors(axis, radial).z >= 0 ? 1 : -1;
       hinges.push({ object: hinge, axis, radians: THREE.MathUtils.degToRad(relation.angle) * sign, range: relation.phase, id: relation.id });
+    });
+    // The relief ears have no Fold line of their own. Keep them rigidly on
+    // lidTop while only the central upperTuck rotates around the crease.
+    const lidTopFrame = frames.get('lidTop');
+    ['upperTuckReliefLeft', 'upperTuckReliefRight'].forEach(id => {
+      const piece = pieces.get(id);
+      if (!lidTopFrame || !piece) throw new Error('T003 3D relief hierarchy failed at ' + id);
+      lidTopFrame.add(piece.mesh);
+      frames.set(id, lidTopFrame);
     });
     const frameBases = new Map();
     ['bottomA', 'bottomB', 'bottomL', 'bottomR'].forEach(id => {

@@ -88,7 +88,7 @@ const T003_SOURCE_UNIT_TO_MM = 25.4 / 72;
 const T003_SOURCE_GRID = Object.freeze({
   xOuterL: 258.789, xFrontL: 315.482, xFrontR: 560.679,
   xSideLR: 805.876, xBackR: 1051.073, xSideRR: 1294.285,
-  yTop: 42.52, yLidFold: 137.764, yInnerFold: 283.465,
+  yTop: 42.52, yUpperTuckTop: 92.126, yLidFold: 137.764, yInnerFold: 283.465,
   yBodyTop: 377.008, yBodyBottom: 1216.063,
   yBottomBend: 1338.803, yBottomMax: 1381.324
 });
@@ -105,20 +105,22 @@ function T003_createGrid(W, D, H) {
   const s = T003_SOURCE_GRID;
   const depthScale = D / 86.5;
   const sourceMm = value => value * T003_SOURCE_UNIT_TO_MM * depthScale;
+  const upperTuckRule = globalThis.PacVuUpperTuckRule.resolve('T003', D);
   const glueWidth = Math.min(25, D * (25 / 81));
-  const topDepth = sourceMm(s.yBodyTop - s.yTop);
+  const topDepth = upperTuckRule.depth + D;
   return {
     xOuterL: 0, xFrontL: glueWidth, xFrontR: glueWidth + W,
     xSideLR: glueWidth + W + D, xBackR: glueWidth + W + D + W,
     xSideRR: glueWidth + W + D + W + D,
     yTop: 0,
-    yLidFold: sourceMm(s.yLidFold - s.yTop),
+    yLidFold: upperTuckRule.depth,
     yInnerFold: sourceMm(s.yInnerFold - s.yTop),
     yBodyTop: topDepth,
     yBodyBottom: topDepth + H,
     yBottomBend: topDepth + H + D * 0.5,
     yBottomMax: topDepth + H + sourceMm(s.yBottomMax - s.yBodyBottom),
-    glueWidth
+    glueWidth,
+    upperTuckRule
   };
 }
 
@@ -126,10 +128,50 @@ function T003_createMapper(grid, W, D, H) {
   const s = T003_SOURCE_GRID;
   const sourceX = [s.xOuterL, s.xFrontL, s.xFrontR, s.xSideLR, s.xBackR, s.xSideRR];
   const targetX = [grid.xOuterL, grid.xFrontL, grid.xFrontR, grid.xSideLR, grid.xBackR, grid.xSideRR];
-  function mapX(value) { return T003_piecewise(value, sourceX, targetX); }
-  function mapY(value) {
+  function mapX(value, y) {
+    if (y <= s.yLidFold && value >= s.xSideLR && value <= s.xBackR) {
+      return globalThis.PacVuUpperTuckRule.mapX(
+        value, s.xSideLR, s.xBackR, grid.xSideLR, grid.xBackR,
+        T003_SOURCE_UNIT_TO_MM, 1
+      );
+    }
+    if (y <= s.yBodyTop && value >= s.xFrontL && value <= s.xFrontR) {
+      const targetCenter = (grid.xFrontL + grid.xFrontR) / 2;
+      const fixedScale = T003_SOURCE_UNIT_TO_MM;
+      const notchHalfWidth = (472.096 - 404.065) * fixedScale / 2;
+      const sourceAnchors = [s.xFrontL, 335.325, 404.065, 472.096, 540.837, s.xFrontR];
+      const targetAnchors = [
+        grid.xFrontL,
+        grid.xFrontL + (335.325 - s.xFrontL) * fixedScale,
+        targetCenter - notchHalfWidth,
+        targetCenter + notchHalfWidth,
+        grid.xFrontR - (s.xFrontR - 540.837) * fixedScale,
+        grid.xFrontR
+      ];
+      return T003_piecewise(value, sourceAnchors, targetAnchors);
+    }
+    return T003_piecewise(value, sourceX, targetX);
+  }
+  function mapY(value, x) {
+    if (Number.isFinite(x) && x >= s.xFrontL && x <= s.xFrontR && value <= s.yInnerFold) {
+      const fixedProfileBottom = 76.536;
+      const fixedProfileHeight = (fixedProfileBottom - s.yTop) * T003_SOURCE_UNIT_TO_MM;
+      if (value <= fixedProfileBottom) return grid.yTop + (value - s.yTop) * T003_SOURCE_UNIT_TO_MM;
+      return grid.yTop + fixedProfileHeight + (value - fixedProfileBottom) *
+        (grid.yInnerFold - grid.yTop - fixedProfileHeight) / (s.yInnerFold - fixedProfileBottom);
+    }
+    if (value <= s.yLidFold) {
+      const sourceCurveBottom = 113.386;
+      const fixedCurveHeight = (sourceCurveBottom - s.yUpperTuckTop) * T003_SOURCE_UNIT_TO_MM;
+      if (value <= sourceCurveBottom) {
+        return grid.yTop + (value - s.yUpperTuckTop) * T003_SOURCE_UNIT_TO_MM;
+      }
+      return grid.yTop + fixedCurveHeight + (value - sourceCurveBottom) *
+        (grid.yLidFold - grid.yTop - fixedCurveHeight) / (s.yLidFold - sourceCurveBottom);
+    }
     if (value <= s.yBodyTop) {
-      return grid.yTop + (value - s.yTop) * (grid.yBodyTop - grid.yTop) / (s.yBodyTop - s.yTop);
+      return grid.yLidFold + (value - s.yLidFold) *
+        (grid.yBodyTop - grid.yLidFold) / (s.yBodyTop - s.yLidFold);
     }
     if (value <= s.yBodyBottom) {
       return grid.yBodyTop + (value - s.yBodyTop) * H / (s.yBodyBottom - s.yBodyTop);
@@ -137,8 +179,9 @@ function T003_createMapper(grid, W, D, H) {
     return grid.yBodyBottom + (value - s.yBodyBottom) * (D / 86.5) * T003_SOURCE_UNIT_TO_MM;
   }
   return {
-    x: mapX, y: mapY,
-    point(x, y) { return { x: mapX(x), y: mapY(y) }; }
+    x(value) { return mapX(value); },
+    y(value) { return mapY(value, NaN); },
+    point(x, y) { return { x: mapX(x, y), y: mapY(y, x) }; }
   };
 }
 
@@ -161,6 +204,7 @@ function T003_validateLayout(layout) {
     ['frontWidth', g.xFrontR - g.xFrontL, s.W], ['backWidth', g.xBackR - g.xSideLR, s.W],
     ['sideLeftWidth', g.xSideLR - g.xFrontR, s.D], ['sideRightWidth', g.xSideRR - g.xBackR, s.D],
     ['bodyHeight', g.yBodyBottom - g.yBodyTop, s.H],
+    ['lidTopDepth', g.yBodyTop - g.yLidFold, s.D],
     ['glueWidth', g.glueWidth, Math.min(25, s.D * (25 / 81))],
     ['bottomLockBend', g.yBottomBend - g.yBodyBottom, s.D * 0.5],
     ['bleedWidth', layout.bleedBounds.width - layout.dielineBounds.width, 6],
@@ -176,11 +220,23 @@ function T003_validateLayout(layout) {
 function T003_getLayout(W, D, H) {
   const spec = T003_getSpec({ W, D, H });
   const grid = T003_createGrid(spec.W, spec.D, spec.H);
+  spec.upperTuckRule = grid.upperTuckRule;
   const mapper = T003_createMapper(grid, spec.W, spec.D, spec.H);
   const sourcePath = T003_cutFillPath({ spec: { useNeckLine: false } });
   const fillPath = T002_buildRuleCutPath(sourcePath, mapper);
-  const upperTuckLeft = [mapper.point(831.388,140.598),mapper.point(831.388,134.646),mapper.point(805.876,134.646)];
-  const upperTuckRight = [mapper.point(1051.073,134.646),mapper.point(1025.561,134.646),mapper.point(1025.561,140.598)];
+  const reliefWidth = (831.388 - 805.876) * T003_SOURCE_UNIT_TO_MM;
+  const reliefTopY = mapper.point(831.388, 134.646).y;
+  const reliefLegY = mapper.point(831.388, 140.598).y;
+  const upperTuckLeft = [
+    { x: grid.xSideLR + reliefWidth, y: reliefLegY },
+    { x: grid.xSideLR + reliefWidth, y: reliefTopY },
+    { x: grid.xSideLR, y: reliefTopY }
+  ];
+  const upperTuckRight = [
+    { x: grid.xBackR, y: reliefTopY },
+    { x: grid.xBackR - reliefWidth, y: reliefTopY },
+    { x: grid.xBackR - reliefWidth, y: reliefLegY }
+  ];
   const cutElements = [
     '<path d="' + fillPath + '"/>',
     '<polyline points="' + upperTuckLeft.map(point=>point.x+','+point.y).join(' ') + '"/>',
@@ -211,7 +267,12 @@ function T003_getLayout(W, D, H) {
     ['bottomLock-A',438.08,1262.7], ['bottomLock(L)',683.28,1262.7],
     ['bottomLock-B',928.47,1262.7], ['bottomLock(R)',1172.68,1262.7]
   ];
-  const labels = labelSources.map(item => ({ name: item[0], ...mapper.point(item[1], item[2]) }));
+  const labels = labelSources.map(item => {
+    if (item[0] === 'Upper-Tuck') {
+      return { name: item[0], x: (grid.xSideLR + grid.xBackR) / 2, y: grid.yLidFold / 2 };
+    }
+    return { name: item[0], ...mapper.point(item[1], item[2]) };
+  });
   const glueTop = mapper.point(258.789,392.199), glueBottom = mapper.point(258.789,1159.37);
   const glueFillPath = `M ${grid.xFrontL} ${grid.yBodyTop} L ${glueTop.x} ${glueTop.y} L ${glueBottom.x} ${glueBottom.y} L ${grid.xFrontL} ${grid.yBodyBottom} Z`;
   const layout = {
