@@ -96,14 +96,15 @@ function T004_piecewise(value, source, target) {
 function T004_createGrid(W,D,H) {
   const s=T004_SOURCE_GRID;
   const glueWidth=Math.min(25,D*(25/81));
-  const tuckDepth=(s.yLidFold-s.yTop)*T004_SOURCE_UNIT_TO_MM*(D/65);
-  const topDepth=(s.yBodyTop-s.yLidFold)*T004_SOURCE_UNIT_TO_MM*(D/65);
+  const upperTuckRule=globalThis.PacVuUpperTuckRule.resolve('T004',D);
+  const tuckDepth=upperTuckRule.depth;
+  const topDepth=D;
   const xOuterL=0, xFrontL=glueWidth, xFrontR=xFrontL+W;
   const xSideLR=xFrontR+D, xBackR=xSideLR+W, xSideRR=xBackR+D;
   const yTop=0, yLidFold=tuckDepth, yBodyTop=tuckDepth+topDepth;
   const yBodyBottom=yBodyTop+H, yBottomBend=yBodyBottom+D*0.5;
   const yBottomMax=yBodyBottom+(s.yBottomMax-s.yBodyBottom)*T004_SOURCE_UNIT_TO_MM*(D/65);
-  return {xOuterL,xFrontL,xFrontR,xSideLR,xBackR,xSideRR,yTop,yLidFold,yBodyTop,yBodyBottom,yBottomBend,yBottomMax,glueWidth};
+  return {xOuterL,xFrontL,xFrontR,xSideLR,xBackR,xSideRR,yTop,yLidFold,yBodyTop,yBodyBottom,yBottomBend,yBottomMax,glueWidth,upperTuckRule};
 }
 
 function T004_createMapper(grid,W,D,H) {
@@ -112,8 +113,26 @@ function T004_createMapper(grid,W,D,H) {
   const tx=[grid.xOuterL,grid.xFrontL,grid.xFrontR,grid.xSideLR,grid.xBackR,grid.xSideRR];
   const sy=[s.yTop,s.yLidFold,s.yBodyTop,s.yBodyBottom,s.yBottomBend,s.yBottomMax];
   const ty=[grid.yTop,grid.yLidFold,grid.yBodyTop,grid.yBodyBottom,grid.yBottomBend,grid.yBottomMax];
-  const x=value=>T004_piecewise(value,sx,tx), y=value=>T004_piecewise(value,sy,ty);
-  return {x,y,point(px,py){return {x:x(px),y:y(py)};}};
+  const x=(value,yValue)=>{
+    if(yValue<=280.342&&value>=s.xFrontL&&value<=s.xFrontR){
+      return globalThis.PacVuUpperTuckRule.mapX(value,s.xFrontL,s.xFrontR,grid.xFrontL,grid.xFrontR,T004_SOURCE_UNIT_TO_MM,1);
+    }
+    return T004_piecewise(value,sx,tx);
+  };
+  const y=value=>{
+    if(value<=s.yLidFold){
+      const sourceCurveBottom=257.665;
+      const sourceCurveHeight=(sourceCurveBottom-s.yTop)*T004_SOURCE_UNIT_TO_MM;
+      const curveHeight=Math.min(sourceCurveHeight,grid.yLidFold-grid.yTop);
+      if(value<=sourceCurveBottom){
+        return grid.yTop+(value-s.yTop)*curveHeight/(sourceCurveBottom-s.yTop);
+      }
+      return grid.yTop+curveHeight+(value-sourceCurveBottom)*
+        (grid.yLidFold-grid.yTop-curveHeight)/(s.yLidFold-sourceCurveBottom);
+    }
+    return T004_piecewise(value,sy,ty);
+  };
+  return {x(value){return x(value);},y,point(px,py){return {x:x(px,py),y:y(py)};}};
 }
 
 function T004_sourceFoldElements() {
@@ -133,7 +152,8 @@ function T004_validateLayout(layout) {
   const checks=[
     ['frontWidth',g.xFrontR-g.xFrontL,s.W],['backWidth',g.xBackR-g.xSideLR,s.W],
     ['sideLeftDepth',g.xSideLR-g.xFrontR,s.D],['sideRightDepth',g.xSideRR-g.xBackR,s.D],
-    ['bodyHeight',g.yBodyBottom-g.yBodyTop,s.H],['glueWidth',g.glueWidth,Math.min(25,s.D*(25/81))],
+    ['bodyHeight',g.yBodyBottom-g.yBodyTop,s.H],['lidTopDepth',g.yBodyTop-g.yLidFold,s.D],
+    ['glueWidth',g.glueWidth,Math.min(25,s.D*(25/81))],
     ['bottomLockBend',g.yBottomBend-g.yBodyBottom,s.D*0.5],
     ['bleedWidth',layout.bleedBounds.width-layout.dielineBounds.width,6],
     ['bleedHeight',layout.bleedBounds.height-layout.dielineBounds.height,6]
@@ -146,10 +166,22 @@ function T004_validateLayout(layout) {
 // This declaration replaces the preparation-stage average scaler above.
 function T004_getLayout(W,D,H) {
   const spec=T004_getSpec({W,D,H}), grid=T004_createGrid(spec.W,spec.D,spec.H);
+  spec.upperTuckRule=grid.upperTuckRule;
   const mapper=T004_createMapper(grid,spec.W,spec.D,spec.H);
   const fillPath=T002_buildRuleCutPath(T004_cutFillPath(),mapper);
-  const upperTuckLeft=[mapper.point(338.216,280.342),mapper.point(338.216,274.673),mapper.point(312.704,274.673)];
-  const upperTuckRight=[mapper.point(681.208,274.673),mapper.point(655.696,274.673),mapper.point(655.696,280.342)];
+  const reliefWidth=(338.216-312.704)*T004_SOURCE_UNIT_TO_MM;
+  const reliefTopY=mapper.point(338.216,274.673).y;
+  const reliefLegY=mapper.point(338.216,280.342).y;
+  const upperTuckLeft=[
+    {x:grid.xFrontL+reliefWidth,y:reliefLegY},
+    {x:grid.xFrontL+reliefWidth,y:reliefTopY},
+    {x:grid.xFrontL,y:reliefTopY}
+  ];
+  const upperTuckRight=[
+    {x:grid.xFrontR,y:reliefTopY},
+    {x:grid.xFrontR-reliefWidth,y:reliefTopY},
+    {x:grid.xFrontR-reliefWidth,y:reliefLegY}
+  ];
   const cutElements=[
     '<path d="'+fillPath+'"/>',
     '<polyline points="'+upperTuckLeft.map(point=>point.x+','+point.y).join(' ')+'"/>',
@@ -167,7 +199,10 @@ function T004_getLayout(W,D,H) {
     ['Glue',284,728],['Front',496.9,728],['Side(L)',773.3,728],['Back',1049.7,728],['Side(R)',1325.1,728],
     ['bottomLock-A',496.9,1020],['bottomLock(L)',773.3,1020],['bottomLock-B',1049.7,1020],['bottomLock(R)',1325.1,1020]
   ];
-  const labels=sources.map(v=>({name:v[0],...mapper.point(v[1],v[2])}));
+  const labels=sources.map(v=>{
+    if(v[0]==='Upper-Tuck') return {name:v[0],x:(grid.xFrontL+grid.xFrontR)/2,y:grid.yLidFold/2};
+    return {name:v[0],...mapper.point(v[1],v[2])};
+  });
   const gt=mapper.point(256.011,474.115),gb=mapper.point(256.011,940.814);
   const glueFillPath=`M ${grid.xFrontL} ${grid.yBodyTop} L ${gt.x} ${gt.y} L ${gb.x} ${gb.y} L ${grid.xFrontL} ${grid.yBodyBottom} Z`;
   const layout={spec,grid,mapper,fillPath,cutElements,foldElements,labels,glueFillPath,bleedPath,bleedElement:'<path d="'+bleedPath+'"/>',bounds:dielineBounds,dielineBounds,bleedBounds,transform:{a:1,b:0,c:0,d:1,e:0,f:0}};

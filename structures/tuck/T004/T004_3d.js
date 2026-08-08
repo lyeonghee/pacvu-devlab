@@ -121,6 +121,21 @@
     const mapper = layout.mapper;
     if (!outline || outline.length < 3) throw new Error('T004 3D: approved Cut outline is unavailable.');
 
+    const upperLeftShoulder = mapper.point(312.704, 274.673);
+    const upperLeftCut = mapper.point(338.216, 274.673);
+    const upperLeftFold = mapper.point(338.216, 277.507);
+    const upperRightCut = mapper.point(655.696, 274.673);
+    const upperRightShoulder = mapper.point(681.208, 274.673);
+    const upperRightFold = mapper.point(655.696, 277.507);
+    const upperLeftFoldShoulder = mapper.point(312.704, 277.507);
+    const upperRightFoldShoulder = mapper.point(681.208, 277.507);
+    const upperTuckPolygon = global.PacVuUpperTuckRule.boundaryFrom2D(
+      outline,
+      [upperLeftFold, upperLeftCut, upperLeftShoulder],
+      [upperRightShoulder, upperRightCut, upperRightFold]
+    );
+    const upperTuckReliefLeft = [upperLeftShoulder, upperLeftCut, upperLeftFold, upperLeftFoldShoulder];
+    const upperTuckReliefRight = [upperRightCut, upperRightShoulder, upperRightFoldShoulder, upperRightFold];
     const regions = [
       ['glue', 'adhesive', rect(g.xOuterL, g.yBodyTop, g.xFrontL, g.yBodyBottom)],
       ['front', 'body', rect(g.xFrontL, g.yBodyTop, g.xFrontR, g.yBodyBottom)],
@@ -137,10 +152,14 @@
       ['bottomR', 'bottomLock', rect(g.xBackR, g.yBodyBottom, g.xSideRR, g.yBottomMax)]
     ];
     let panels = regions.map(def => {
-      const polygon = clipRect(outline, def[2]);
+      const polygon = def[0] === 'upperTuck'
+        ? upperTuckPolygon.slice()
+        : clipRect(outline, def[2]);
       return panel(def[0], def[1], polygon, []);
     })
       .filter(item => item.polygon.length >= 3 && area(item.polygon) > EPS);
+    panels.push(panel('upperTuckReliefLeft', 'topTuckRelief', upperTuckReliefLeft));
+    panels.push(panel('upperTuckReliefRight', 'topTuckRelief', upperTuckReliefRight));
 
     const a1 = mapper.point(666.813, 1011.903);
     const a2 = mapper.point(589.082, 1089.633);
@@ -183,7 +202,7 @@
       fold('top.front-lid', 'front', 'lidTop', ...h(g.xFrontL, g.xFrontR, g.yBodyTop), 90, [0.90, 1.00]),
       fold(
         'top.lid-tuck', 'lidTop', 'upperTuck',
-        mapper.point(338.216, 277.507), mapper.point(655.696, 277.507),
+        upperLeftFold, upperRightFold,
         110, [0.84, 0.90]
       )
     ];
@@ -389,6 +408,15 @@
       const radial = piece.flatCenter.clone().sub(a);
       const sign = new THREE.Vector3().crossVectors(axis, radial).z >= 0 ? 1 : -1;
       hinges.push({ object: hinge, axis, radians: THREE.MathUtils.degToRad(relation.angle) * sign, range: relation.phase, id: relation.id });
+    });
+    // Relief ears have no Fold line, so they remain rigidly attached to
+    // lidTop while only the central upperTuck rotates.
+    const lidTopFrame = frames.get('lidTop');
+    ['upperTuckReliefLeft', 'upperTuckReliefRight'].forEach(id => {
+      const piece = pieces.get(id);
+      if (!lidTopFrame || !piece) throw new Error('T004 3D relief hierarchy failed at ' + id);
+      lidTopFrame.add(piece.mesh);
+      frames.set(id, lidTopFrame);
     });
     const frameBases = new Map();
     ['bottomA', 'bottomB', 'bottomL', 'bottomR'].forEach(id => {
