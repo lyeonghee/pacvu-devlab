@@ -363,11 +363,11 @@ function T003_buildExportSVG(cfg) {
 
 function T003_buildDXF(cfg) {
   const layout=T003_getLayout(cfg.W,cfg.D,cfg.H);
-  const rows=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  const rows=window.PacVuDXFR12.createRows(['CUT','FOLD','BLEED']);
   const line=(x1,y1,x2,y2,layer)=>rows.push('0','LINE','8',layer,'10',String(T003_num(x1)),'20',String(T003_num(-y1)),'30','0','11',String(T003_num(x2)),'21',String(T003_num(-y2)),'31','0');
   const path=(d,layer)=>{const p=T001_flattenPathD(d);for(let i=0;i<p.length-1;i++)line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,layer);};
   path(layout.fillPath,'CUT');
   T003_resolveHoles(layout,cfg).forEach(h=>rows.push('0','CIRCLE','8','CUT','10',String(T003_num(h.cx)),'20',String(T003_num(-h.cy)),'30','0','40',String(T003_num(h.r))));
   layout.foldElements.forEach(el=>line(Number(T001_attr(el,'x1')),Number(T001_attr(el,'y1')),Number(T001_attr(el,'x2')),Number(T001_attr(el,'y2')),'FOLD'));
-  path(layout.bleedPath,'BLEED'); rows.push('0','ENDSEC','0','EOF'); return rows.join('\n');
+  path(layout.bleedPath,'BLEED'); return window.PacVuDXFR12.finish(rows);
 }
