@@ -95,4 +95,75 @@
       `<g id="layer-fold" fill="none" stroke="#1d6fe8" stroke-width="0.45" stroke-dasharray="2.5 2">${layout.foldLines.map((line) => `<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}"/>`).join('')}</g>` +
       `<g id="layer-cut" fill="none" stroke="#cc0000" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round">${layout.cutPaths.map((d) => `<path d="${esc(d)}"/>`).join('')}</g></svg>`;
   };
+
+  function flattenPath(d) {
+    const tokens = d.match(/[A-Za-z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:e[-+]?\d+)?/gi) || [];
+    const points = [];
+    let index = 0;
+    let command = '';
+    let current = { x: 0, y: 0 };
+    let start = null;
+    let lastControl = null;
+    const read = () => Number(tokens[index++]);
+    const isCommand = (value) => /[A-Za-z]/.test(value || '');
+    const push = (point) => { current = point; points.push(point); };
+    const cubic = (p0, p1, p2, p3, t) => {
+      const m = 1 - t;
+      return {
+        x: m * m * m * p0.x + 3 * m * m * t * p1.x + 3 * m * t * t * p2.x + t * t * t * p3.x,
+        y: m * m * m * p0.y + 3 * m * m * t * p1.y + 3 * m * t * t * p2.y + t * t * t * p3.y
+      };
+    };
+    const quadratic = (p0, p1, p2, t) => {
+      const m = 1 - t;
+      return { x: m * m * p0.x + 2 * m * t * p1.x + t * t * p2.x, y: m * m * p0.y + 2 * m * t * p1.y + t * t * p2.y };
+    };
+    while (index < tokens.length) {
+      if (isCommand(tokens[index])) command = tokens[index++];
+      const upper = command.toUpperCase();
+      if (upper === 'Z') { if (start) push({ x: start.x, y: start.y }); command = ''; lastControl = null; continue; }
+      if (upper === 'M' || upper === 'L') {
+        const point = { x: read(), y: read() };
+        push(point); lastControl = null;
+        if (upper === 'M') { start = point; command = 'L'; }
+      } else if (upper === 'C' || upper === 'S') {
+        const from = current;
+        const c1 = upper === 'S'
+          ? (lastControl ? { x: 2 * from.x - lastControl.x, y: 2 * from.y - lastControl.y } : { x: from.x, y: from.y })
+          : { x: read(), y: read() };
+        const c2 = { x: read(), y: read() };
+        const to = { x: read(), y: read() };
+        for (let step = 1; step <= 24; step += 1) push(cubic(from, c1, c2, to, step / 24));
+        lastControl = c2;
+      } else if (upper === 'Q' || upper === 'T') {
+        const from = current;
+        const control = upper === 'T'
+          ? (lastControl ? { x: 2 * from.x - lastControl.x, y: 2 * from.y - lastControl.y } : { x: from.x, y: from.y })
+          : { x: read(), y: read() };
+        const to = { x: read(), y: read() };
+        for (let step = 1; step <= 20; step += 1) push(quadratic(from, control, to, step / 20));
+        lastControl = control;
+      } else throw new Error('Unsupported GA001 DXF path command: ' + command);
+    }
+    return points;
+  }
+
+  global.GA001_buildDXF = function GA001_buildDXF(config) {
+    const layout = global.GA001_getLayout(config);
+    const scale = global.GA001_SPEC.mmPerSourceUnit;
+    const rows = global.PacVuDXFR12.createRows(['CUT', 'FOLD', 'BLEED']);
+    const addLine = (a, b, layer) => rows.push(
+      '0', 'LINE', '8', layer,
+      '10', String(num(a.x * scale)), '20', String(num(-a.y * scale)), '30', '0',
+      '11', String(num(b.x * scale)), '21', String(num(-b.y * scale)), '31', '0'
+    );
+    const addPath = (d, layer) => {
+      const points = flattenPath(d);
+      for (let index = 1; index < points.length; index += 1) addLine(points[index - 1], points[index], layer);
+    };
+    layout.cutPaths.forEach((path) => addPath(path, 'CUT'));
+    layout.foldLines.forEach((line) => addLine({ x: line.x1, y: line.y1 }, { x: line.x2, y: line.y2 }, 'FOLD'));
+    addPath(layout.bleedPath, 'BLEED');
+    return global.PacVuDXFR12.finish(rows);
+  };
 })(window);
