@@ -339,15 +339,7 @@ function B001_elementSegments(el, t) {
 function B001_buildDXF(cfg) {
   cfg = B001_resolveFixedConfig(cfg);
   const layout = B001_getLayout(cfg.W, cfg.D, cfg.H);
-  const arr = [
-    '0', 'SECTION',
-    '2', 'HEADER',
-    '9', '$INSUNITS',
-    '70', '4',
-    '0', 'ENDSEC',
-    '0', 'SECTION',
-    '2', 'ENTITIES'
-  ];
+  const arr = window.PacVuDXFR12.createRows(['CUT', 'FOLD', 'BLEED', 'PERFORATION']);
   const addLine = (seg, layer) => {
     arr.push(
       '0', 'LINE',
@@ -369,8 +361,7 @@ function B001_buildDXF(cfg) {
   addElements(layout.requiredCutElements, 'CUT');
   addElements(layout.perforationElements, 'PERFORATION');
   addElements(layout.foldElements, 'FOLD');
-  arr.push('0', 'ENDSEC', '0', 'EOF');
-  return arr.join('\n');
+  return window.PacVuDXFR12.finish(arr);
 }
 
 function B001_pdfNum(value) {
