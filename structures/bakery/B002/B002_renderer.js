@@ -155,7 +155,7 @@ function B002_buildExportSVG(cfg) {
 function B002_buildDXF(cfg) {
   cfg = B002_resolveFixedConfig(cfg);
   const layout = B002_getLayout(cfg.W, cfg.D, cfg.H, cfg);
-  const rows = ['0', 'SECTION', '2', 'HEADER', '9', '$INSUNITS', '70', '4', '0', 'ENDSEC', '0', 'SECTION', '2', 'ENTITIES'];
+  const rows = window.PacVuDXFR12.createRows(['CUT', 'FOLD', 'BLEED', 'PERFORATION']);
   const addLine = (a, b, layer) => rows.push(
     '0', 'LINE', '8', layer,
     '10', B002_num(a.x), '20', B002_num(-a.y), '30', '0',
@@ -175,6 +175,5 @@ function B002_buildDXF(cfg) {
     const points = B002_sampleElement(element).map(point => B002_transformPoint(point, layout.transform));
     addPath(points, 'FOLD', false);
   });
-  rows.push('0', 'ENDSEC', '0', 'EOF');
-  return rows.join('\n');
+  return window.PacVuDXFR12.finish(rows);
 }
