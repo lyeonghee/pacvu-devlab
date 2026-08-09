@@ -332,7 +332,7 @@ function T002_buildExportSVG(cfg) {
 
 function T002_buildDXF(cfg) {
   const layout = T002_getLayout(cfg.W, cfg.D, cfg.H);
-  const rows = ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  const rows = window.PacVuDXFR12.createRows(['CUT', 'FOLD', 'BLEED']);
   function line(x1, y1, x2, y2, layer) {
     rows.push('0','LINE','8',layer,'10',String(T002_num(x1)),'20',String(T002_num(-y1)),'30','0','11',String(T002_num(x2)),'21',String(T002_num(-y2)),'31','0');
   }
@@ -355,6 +355,5 @@ function T002_buildDXF(cfg) {
     Number(T001_attr(element, 'x2')), Number(T001_attr(element, 'y2')), 'FOLD'
   ));
   path(layout.bleedPath, 'BLEED');
-  rows.push('0','ENDSEC','0','EOF');
-  return rows.join('\n');
+  return window.PacVuDXFR12.finish(rows);
 }
