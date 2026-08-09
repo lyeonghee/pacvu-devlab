@@ -81,9 +81,44 @@
   }
   function M003_renderSVG(cfg,state){return svg(root.M003_getLayout(cfg),state,false);}
   function M003_buildExportSVG(cfg){return svg(root.M003_getLayout(cfg),{},true);}
+  function M003_flattenPath(d){
+    const tokens=d.match(/[A-Za-z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:e[-+]?\d+)?/gi)||[];
+    const points=[];let i=0,cmd='',current={x:0,y:0},start=null;
+    const read=()=>Number(tokens[i++]),isCommand=value=>/[A-Za-z]/.test(value||'');
+    const push=point=>{current=point;points.push(point);};
+    const cubic=(p0,p1,p2,p3,t)=>{const m=1-t;return{x:m*m*m*p0.x+3*m*m*t*p1.x+3*m*t*t*p2.x+t*t*t*p3.x,y:m*m*m*p0.y+3*m*m*t*p1.y+3*m*t*t*p2.y+t*t*t*p3.y};};
+    while(i<tokens.length){
+      if(isCommand(tokens[i]))cmd=tokens[i++];
+      const upper=cmd.toUpperCase();
+      if(upper==='Z'){if(start)push({x:start.x,y:start.y});cmd='';continue;}
+      if(upper==='M'||upper==='L'){
+        const point={x:read(),y:read()};push(point);if(upper==='M'){start=point;cmd='L';}
+      }else if(upper==='C'){
+        const from=current,c1={x:read(),y:read()},c2={x:read(),y:read()},to={x:read(),y:read()};
+        const length=Math.hypot(c1.x-from.x,c1.y-from.y)+Math.hypot(c2.x-c1.x,c2.y-c1.y)+Math.hypot(to.x-c2.x,to.y-c2.y);
+        const steps=Math.max(8,Math.min(48,Math.ceil(length/18)));
+        for(let step=1;step<=steps;step+=1)push(cubic(from,c1,c2,to,step/steps));
+      }else throw new Error('Unsupported M003 DXF path command: '+cmd);
+    }
+    return points;
+  }
+  function M003_buildDXF(cfg){
+    const layout=root.M003_getLayout(cfg),w=warpers(layout.config),rows=root.PacVuDXFR12.createRows(['CUT','FOLD','BLEED','HOLE']);
+    const mm=value=>n(value/SOURCE_UNITS_PER_MM);
+    const addLine=(a,b,layer)=>rows.push('0','LINE','8',layer,'10',String(mm(a.x)),'20',String(mm(-a.y)),'30','0','11',String(mm(b.x)),'21',String(mm(-b.y)),'31','0');
+    const addPoints=(points,layer)=>{for(let index=1;index<points.length;index+=1)addLine(points[index-1],points[index],layer);};
+    const addPath=(d,layer)=>addPoints(M003_flattenPath(warpPath(d,w)),layer);
+    layout.cut.forEach(item=>item.type==='line'
+      ? addLine({x:w.x(item.x1),y:w.y(item.y1)},{x:w.x(item.x2),y:w.y(item.y2)},'CUT')
+      : addPath(item.d,'CUT'));
+    layout.fold.forEach(item=>addLine({x:w.x(item.x1),y:w.y(item.y1)},{x:w.x(item.x2),y:w.y(item.y2)},'FOLD'));
+    layout.holes.forEach(hole=>rows.push('0','CIRCLE','8','HOLE','10',String(mm(w.x(hole.cx))),'20',String(mm(-w.y(hole.cy))),'30','0','40',String(mm(hole.r))));
+    addPath(layout.bleedPath,'BLEED');
+    return root.PacVuDXFR12.finish(rows);
+  }
   root.M003_renderSVG=M003_renderSVG;
   root.M003_buildExportSVG=M003_buildExportSVG;
   root.M003_getDisplayMetrics=M003_getDisplayMetrics;
-  root.M003_buildDXF=()=>'';
+  root.M003_buildDXF=M003_buildDXF;
   root.M003_buildPDF=()=>'';
 })(typeof window!=='undefined'?window:globalThis);
