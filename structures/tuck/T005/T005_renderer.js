@@ -41,12 +41,12 @@ function T005_buildExportSVG(cfg){
 
 function T005_buildDXF(cfg){
   const layout=T005_getLayout(cfg.W,cfg.D,cfg.H);
-  const rows=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  const rows=window.PacVuDXFR12.createRows(['CUT','FOLD','BLEED','PUNCH']);
   const line=(a,b,layer)=>rows.push('0','LINE','8',layer,'10',String(T005_num(a.x)),'20',String(T005_num(-a.y)),'30','0','11',String(T005_num(b.x)),'21',String(T005_num(-b.y)),'31','0');
   const path=(d,layer,close)=>{let p=T001_flattenPathD(d);for(let i=0;i<p.length-1;i+=1)line(p[i],p[i+1],layer);if(close&&p.length>2&&T001_distance(p[0],p[p.length-1])>.001)line(p[p.length-1],p[0],layer);};
   path(layout.fillPath,'CUT',true);
   layout.shortCutElements.forEach(el=>path(T001_elementToPathD(el),'CUT',false));
   layout.foldElements.forEach(el=>line({x:Number(T001_attr(el,'x1')),y:Number(T001_attr(el,'y1'))},{x:Number(T001_attr(el,'x2')),y:Number(T001_attr(el,'y2'))},'FOLD'));
   path(layout.capsuleHole.path,'PUNCH',true);path(layout.bleedPath,'BLEED',true);
-  rows.push('0','ENDSEC','0','EOF');return rows.join('\n');
+  return window.PacVuDXFR12.finish(rows);
 }
