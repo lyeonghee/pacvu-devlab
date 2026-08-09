@@ -36,7 +36,7 @@
     return out.join(' ');
   }
   function dxf(layout,extraCutPaths){
-    var rows=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+    var rows=root.PacVuDXFR12.createRows(['CUT','FOLD','BLEED']);
     function line(a,b,layer){rows.push('0','LINE','8',layer,'10',n(a.x),'20',n(-a.y),'30','0','11',n(b.x),'21',n(-b.y),'31','0');}
     function path(d,layer){
       if(!d||typeof document==='undefined')return;
@@ -51,7 +51,7 @@
     cuts.concat(extraCutPaths||[]).forEach(function(d){path(d,'CUT');});
     (layout.foldLines||[]).forEach(function(f){line({x:f.x1,y:f.y1},{x:f.x2,y:f.y2},'FOLD');});
     path(layout.bleedPathDMm||layout.bleedPathD,'BLEED');
-    rows.push('0','ENDSEC','0','EOF');return rows.join('\n');
+    return root.PacVuDXFR12.finish(rows);
   }
   root.PacVuShipping=Object.freeze({STYLE:STYLE,panels:panels,styleBlock:styleBlock,mapPath:mapPath,buildDXF:dxf,num:n});
 })(window);
