@@ -81,7 +81,7 @@ function S001_buildDXF(cfg, options) {
   const exportCfg = Object.assign({}, cfg || {}, { productFitPreset: 'baseline' });
   const layout = S001_getLayout(exportCfg, exportCfg);
   const unit = typeof S001_UNIT_PER_MM !== 'undefined' ? S001_UNIT_PER_MM : 1;
-  const rows = ['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  const rows = window.PacVuDXFR12.createRows(['CUT','FOLD','BLEED']);
   const num = value => (Number(value) / unit).toFixed(4);
   const addPath = (d, part, layer) => {
     const points = S001_flattenPathD(d || '');
@@ -101,8 +101,7 @@ function S001_buildDXF(cfg, options) {
     (part.foldElements || []).forEach(element => addPath(element.d, part, 'FOLD'));
     (part.holeElements || []).forEach(element => addPath(element.d, part, 'CUT'));
   });
-  rows.push('0','ENDSEC','0','EOF');
-  return rows.join('\n');
+  return window.PacVuDXFR12.finish(rows);
 }
 
 if (typeof window !== 'undefined') {
