@@ -109,7 +109,7 @@
 
   // Exporters receive the already-computed layout; they do not rebuild geometry.
   function M001_buildDXF(cfg) {
-    const l=root.M001_getLayout(cfg), a=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+    const l=root.M001_getLayout(cfg), a=root.PacVuDXFR12.createRows(['CUT','FOLD','BLEED','SLOT','HOLE']);
     const addLine=(x1,y1,x2,y2,layer)=>a.push('0','LINE','8',layer,'10',num(x1),'20',num(-y1),'30','0','11',num(x2),'21',num(-y2),'31','0');
     const addArc=(arc,layer)=>a.push('0','ARC','8',layer,'10',num(arc.center.x),'20',num(-arc.center.y),'30','0','40',num(arc.r),'50',num((360-arc.endAngle)%360),'51',num((360-arc.startAngle)%360));
     const addPolyline=(points,layer)=>{for(let i=1;i<points.length;i++)addLine(points[i-1].x,points[i-1].y,points[i].x,points[i].y,layer);};
@@ -118,7 +118,7 @@
     l.fold.forEach(f=>addLine(f.a.x,f.a.y,f.b.x,f.b.y,'FOLD'));
     l.slots.forEach(s=>s.segments.forEach(segment=>segment.type==='arc'?addArc(segment,'SLOT'):addLine(segment.a.x,segment.a.y,segment.b.x,segment.b.y,'SLOT')));
     l.holes.forEach(h=>a.push('0','CIRCLE','8','HOLE','10',num(h.cx),'20',num(-h.cy),'30','0','40',num(h.r)));
-    a.push('0','ENDSEC','0','EOF'); return a.join('\n');
+    return root.PacVuDXFR12.finish(a);
   }
 
   function M001_buildPDF(cfg) {
