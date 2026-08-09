@@ -368,12 +368,12 @@ function M002_roundRectPoints(item, steps) {
 }
 
 function M002_buildDXF(cfg) {
-  var l=M002_getLayout(cfg.W,cfg.D,cfg.H),out=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  var l=M002_getLayout(cfg.W,cfg.D,cfg.H),out=window.PacVuDXFR12.createRows(['CUT','FOLD','BLEED','SLOT','HOLE']);
   function line(a,b,layer){out.push('0','LINE','8',layer,'10',M002_num(a.x),'20',M002_num(-a.y),'30','0','11',M002_num(b.x),'21',M002_num(-b.y),'31','0');}
   function poly(points,layer){for(var i=1;i<points.length;i++)line(points[i-1],points[i],layer);}
   l.cut.forEach(function(item){poly(item.points,'CUT');});l.bleed.forEach(function(item){poly(item.points,'BLEED');});l.fold.forEach(function(item){line(item.a,item.b,'FOLD');});
   l.slots.forEach(function(item){poly(M002_roundRectPoints(item,5),'SLOT');});l.holes.forEach(function(item){poly(M002_roundRectPoints({x:item.cx-item.width/2,y:item.cy-item.height/2,width:item.width,height:item.height,radius:item.radius},8),'HOLE');});
-  out.push('0','ENDSEC','0','EOF');return out.join('\n');
+  return window.PacVuDXFR12.finish(out);
 }
 
 function M002_buildPDF(cfg) {
