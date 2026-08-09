@@ -279,7 +279,7 @@ function TR001_dxfAddCircle(arr, hole, t, layer) {
 
 function TR001_buildDXF(cfg) {
   const layout = TR001_getLayout(cfg.W, cfg.D, cfg.H, cfg);
-  const arr = ['0', 'SECTION', '2', 'HEADER', '9', '$INSUNITS', '70', '4', '0', 'ENDSEC', '0', 'SECTION', '2', 'ENTITIES'];
+  const arr = window.PacVuDXFR12.createRows(['CUT', 'FOLD', 'BLEED', 'PERFORATION', 'HOLE']);
   const addElements = (elements, layer) => {
     elements.forEach(el => TR001_elementSegments(el, layout.transform).forEach(seg => TR001_dxfAddLine(arr, seg, layer)));
   };
@@ -288,8 +288,7 @@ function TR001_buildDXF(cfg) {
   addElements(layout.foldElements, 'FOLD');
   addElements(layout.staticPerforationElements, 'PERFORATION');
   layout.holes.forEach(hole => TR001_dxfAddCircle(arr, hole, layout.transform, 'HOLE'));
-  arr.push('0', 'ENDSEC', '0', 'EOF');
-  return arr.join('\n');
+  return window.PacVuDXFR12.finish(arr);
 }
 
 function TR001_pdfNum(value) {
