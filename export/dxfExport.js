@@ -8,17 +8,37 @@ function _dxfNum(v) {
   return Number.isFinite(+v) ? (+v).toFixed(4) : '0';
 }
 
+const PacVuDXFR12 = Object.freeze({
+  createRows(layers) {
+    const colors = { CUT: 1, FOLD: 5, BLEED: 5, SLOT: 3, HOLE: 3, PUNCH: 3, PERFORATION: 3 };
+    const names = ['0'].concat(Array.from(new Set(layers || [])));
+    const rows = [
+      '0', 'SECTION', '2', 'HEADER',
+      '9', '$ACADVER', '1', 'AC1009',
+      '0', 'ENDSEC',
+      '0', 'SECTION', '2', 'TABLES',
+      '0', 'TABLE', '2', 'LTYPE', '70', '1',
+      '0', 'LTYPE', '2', 'CONTINUOUS', '70', '0', '3', 'Solid line', '72', '65', '73', '0', '40', '0.0',
+      '0', 'ENDTAB',
+      '0', 'TABLE', '2', 'LAYER', '70', String(names.length)
+    ];
+    names.forEach(name => rows.push(
+      '0', 'LAYER', '2', name, '70', '0', '62', String(name === '0' ? 7 : (colors[name] || 7)), '6', 'CONTINUOUS'
+    ));
+    rows.push('0', 'ENDTAB', '0', 'ENDSEC', '0', 'SECTION', '2', 'ENTITIES');
+    return rows;
+  },
+  finish(rows) {
+    rows.push('0', 'ENDSEC', '0', 'EOF');
+    return rows.join('\r\n') + '\r\n';
+  }
+});
+
+window.PacVuDXFR12 = PacVuDXFR12;
+
 function M_buildDXF(cfg, builders) {
   const geo = M_buildExportGeometry(cfg, builders);
-  const arr = [
-    '0', 'SECTION',
-    '2', 'HEADER',
-    '9', '$INSUNITS',
-    '70', '4',
-    '0', 'ENDSEC',
-    '0', 'SECTION',
-    '2', 'ENTITIES'
-  ];
+  const arr = PacVuDXFR12.createRows(['FOLD', 'SLOT', 'HOLE']);
 
   const addLine = (x1, y1, x2, y2, layer) => {
     arr.push(
@@ -56,8 +76,7 @@ function M_buildDXF(cfg, builders) {
   });
   geo.holes.forEach(hole => addCircle(hole.cx, hole.cy, hole.r, 'HOLE'));
 
-  arr.push('0', 'ENDSEC', '0', 'EOF');
-  return arr.join('\n');
+  return PacVuDXFR12.finish(arr);
 }
 
 function buildDXF_M001(cfg) {
