@@ -5,12 +5,16 @@
 // ============================================================
 
 function downloadFile(name, content, type) {
+  const href = URL.createObjectURL(new Blob([content], { type }));
   const a = Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(new Blob([content], { type })),
+    href,
     download: name
   });
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(href), 1000);
 }
 
 function _exportNum(v) {
@@ -83,7 +87,7 @@ function M_buildCleanExportSVG(cfg, builders) {
   return _hasExportContent(out) ? out : '';
 }
 
-function M001_buildExportSVG(cfg) {
+function M001_buildLegacyExportSVG(cfg) {
   return M_buildCleanExportSVG(cfg, {
     getGrid: M001_getGrid,
     buildOuterPath,
@@ -103,11 +107,17 @@ function _buildT001ExportSVG(cfg) {
 }
 
 function buildExportSVG(cfg, engineKey) {
-  if (engineKey === 'gbox') return M001_buildExportSVG(cfg);
+  if (engineKey === 'gbox') {
+    return typeof window.M001_buildExportSVG === 'function'
+      ? window.M001_buildExportSVG(cfg)
+      : M001_buildLegacyExportSVG(cfg);
+  }
   if (engineKey === 'bbox') return _buildT001ExportSVG(cfg);
   return '';
 }
 
 window.M_buildExportGeometry = M_buildExportGeometry;
 window.M_buildCleanExportSVG = M_buildCleanExportSVG;
-window.M001_buildExportSVG = M001_buildExportSVG;
+if (typeof window.M001_buildExportSVG !== 'function') {
+  window.M001_buildExportSVG = M001_buildLegacyExportSVG;
+}
