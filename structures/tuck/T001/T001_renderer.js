@@ -393,6 +393,40 @@ function T001_buildExportSVG(cfg) {
   return out;
 }
 
-function T001_buildDXF() {
-  return '';
+function T001_buildDXF(cfg) {
+  const layout = T001_getLayout(cfg.W, cfg.D, cfg.H);
+  const rows = [
+    '0', 'SECTION', '2', 'HEADER',
+    '9', '$ACADVER', '1', 'AC1009',
+    '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'TABLES',
+    '0', 'TABLE', '2', 'LTYPE', '70', '1',
+    '0', 'LTYPE', '2', 'CONTINUOUS', '70', '0', '3', 'Solid line', '72', '65', '73', '0', '40', '0.0',
+    '0', 'ENDTAB',
+    '0', 'TABLE', '2', 'LAYER', '70', '4',
+    '0', 'LAYER', '2', '0', '70', '0', '62', '7', '6', 'CONTINUOUS',
+    '0', 'LAYER', '2', 'CUT', '70', '0', '62', '1', '6', 'CONTINUOUS',
+    '0', 'LAYER', '2', 'FOLD', '70', '0', '62', '5', '6', 'CONTINUOUS',
+    '0', 'LAYER', '2', 'BLEED', '70', '0', '62', '5', '6', 'CONTINUOUS',
+    '0', 'ENDTAB',
+    '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'ENTITIES'
+  ];
+  const addLine = (a, b, layer) => rows.push(
+    '0', 'LINE', '8', layer,
+    '10', String(T001_num(a.x)), '20', String(T001_num(-a.y)), '30', '0',
+    '11', String(T001_num(b.x)), '21', String(T001_num(-b.y)), '31', '0'
+  );
+  const addPath = (d, layer) => {
+    const points = T001_flattenPathD(d || '');
+    for (let index = 1; index < points.length; index += 1) {
+      addLine(points[index - 1], points[index], layer);
+    }
+  };
+
+  layout.cutElements.forEach(element => addPath(T001_elementToPathD(element), 'CUT'));
+  layout.foldElements.forEach(element => addPath(T001_elementToPathD(element), 'FOLD'));
+  addPath(T001_elementToPathD(layout.bleedElement), 'BLEED');
+  rows.push('0', 'ENDSEC', '0', 'EOF');
+  return rows.join('\r\n') + '\r\n';
 }
