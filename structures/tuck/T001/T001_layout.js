@@ -22,8 +22,14 @@ function T001_piecewise(value, sourceAnchors, targetAnchors) {
 function T001_createMapper(spec) {
   const src = spec.source;
   const grid = spec.grid;
-  const sx = [src.xGlueL, src.xFrontL, src.xFrontR, src.xSideLR, src.xBackR, src.xSideRR];
-  const tx = [grid.xGlueL, grid.xFrontL, grid.xFrontR, grid.xSideLR, grid.xBackR, grid.xSideRR];
+  const notchHalfWidth = (678.397 - 627.373) * src.unitToMm / 2;
+  const panelCenter = (grid.xSideLR + grid.xBackR) / 2;
+  const sx = T001_hasThumbNotch(spec)
+    ? [src.xGlueL, src.xFrontL, src.xFrontR, src.xSideLR, 627.373, 678.397, src.xBackR, src.xSideRR]
+    : [src.xGlueL, src.xFrontL, src.xFrontR, src.xSideLR, src.xBackR, src.xSideRR];
+  const tx = T001_hasThumbNotch(spec)
+    ? [grid.xGlueL, grid.xFrontL, grid.xFrontR, grid.xSideLR, panelCenter - notchHalfWidth, panelCenter + notchHalfWidth, grid.xBackR, grid.xSideRR]
+    : [grid.xGlueL, grid.xFrontL, grid.xFrontR, grid.xSideLR, grid.xBackR, grid.xSideRR];
   const sy = [src.yTop, src.yLidFold, src.yBodyTop, src.yBodyBottom, src.yBottomLockBend, src.yBottomLockEnd];
   const ty = [grid.yTop, grid.yLidFold, grid.yBodyTop, grid.yBodyBottom, grid.yBottomLockBend, grid.yBottomLockEnd];
 
@@ -644,6 +650,18 @@ function T001_isThumbNotchCutElement(el) {
   return /d="M627\.373,309\.538c1\.527,12\.936/.test(el);
 }
 
+function T001_transformThumbNotchElement(el, mapper, spec) {
+  const fixedMapper = {
+    point(x, y) {
+      return {
+        x: mapper.x(x),
+        y: spec.grid.yBodyTop + (y - spec.source.yBodyTop) * spec.source.unitToMm
+      };
+    }
+  };
+  return '<path d="' + T001_transformPathD(T001_attr(el, 'd'), fixedMapper) + '"/>';
+}
+
 function T001_noNotchCutBridgeElement() {
   return '<line x1="627.373" y1="309.538" x2="678.397" y2="309.538" fill="none" stroke="#ee3924" stroke-miterlimit="2.613"/>';
 }
@@ -709,7 +727,9 @@ function T001_getLayout(W, D, H, sourceSvg) {
   const sourceBleedElement = T001_hasThumbNotch(spec)
     ? sourceElements.bleedElement
     : T001_noNotchBleedElement(sourceElements.bleedElement);
-  const cutElements = sourceCutElements.map(el => T001_transformElement(el, mapper));
+  const cutElements = sourceCutElements.map(el => T001_isThumbNotchCutElement(el)
+    ? T001_transformThumbNotchElement(el, mapper, spec)
+    : T001_transformElement(el, mapper));
   const foldElements = sourceElements.foldElements
     .filter(el => !T001_isAuxiliaryFoldElement(el))
     .map(el => T001_transformElement(el, mapper));

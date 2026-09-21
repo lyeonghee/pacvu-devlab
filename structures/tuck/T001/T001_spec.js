@@ -112,7 +112,7 @@ function T001_getSpec(input) {
 }
 
 function T001_hasThumbNotch(spec) {
-  return spec.W < 100 && spec.D < 100;
+  return spec.W < 100;
 }
 if (window.PacVuExportHeader) {
   window.PacVuExportHeader.register('T001', context => {

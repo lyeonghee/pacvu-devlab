@@ -62,6 +62,42 @@
           "D": 90,
           "H": 344
         }
+      },
+      {
+        "label": "T007 Tissue Dispensing Tuck Box",
+        "koreanName": "티슈 토출구 턱박스",
+        "fefcoCode": "T007",
+        "engineKey": "bbox7",
+        "variantKey": "T007",
+        "defaultDims": {
+          "W": 110,
+          "D": 80,
+          "H": 225
+        }
+      },
+      {
+        "label": "T008 Rabbit Ear Tuck Box",
+        "koreanName": "토끼귀 턱박스",
+        "fefcoCode": "T008",
+        "engineKey": "bbox8",
+        "variantKey": "T008",
+        "defaultDims": {
+          "W": 80,
+          "D": 52,
+          "H": 216
+        }
+      },
+      {
+        "label": "T009 Equal Bottom Rabbit Ear Tuck Box",
+        "koreanName": "토끼귀 동일길이 하단 턱박스",
+        "fefcoCode": "T009",
+        "engineKey": "bbox9",
+        "variantKey": "T009",
+        "defaultDims": {
+          "W": 99,
+          "D": 59,
+          "H": 256
+        }
       }
     ]
   },

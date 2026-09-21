@@ -100,7 +100,9 @@
     T002:Object.freeze({ratio:((378.344-301.241)*(25.4/72))/81,sourceDepth:(378.344-301.241)*(25.4/72)}),
     T003:Object.freeze({ratio:((137.764-92.126)*(25.4/72))/86.5,sourceDepth:(137.764-92.126)*(25.4/72)}),
     T004:Object.freeze({ratio:((277.507-217.98)*(25.4/72))/65,sourceDepth:(277.507-217.98)*(25.4/72),min:15}),
-    T005:Object.freeze({ratio:28.92/90,sourceDepth:28.92})
+    T005:Object.freeze({ratio:28.92/90,sourceDepth:28.92}),
+    T008:Object.freeze({ratio:((288.04-225.677)*(25.4/72))/52,sourceDepth:(288.04-225.677)*(25.4/72)}),
+    T009:Object.freeze({ratio:((374.589-297.487)*(25.4/72))/59,sourceDepth:(374.589-297.487)*(25.4/72)})
   });
   const upperTuckLimits=Object.freeze({min:8,max:45});
   const upperTuckState=Object.create(null);

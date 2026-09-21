@@ -131,6 +131,16 @@ function getCfgT001() {
   };
 }
 
+function getT001Core() {
+  const core = window.PacVuTemplateCore && window.PacVuTemplateCore.T001;
+  if (!core) throw new Error('PacVu T001 Core is not loaded.');
+  const upperTuckState = window.PacVuUpperTuckRule?.getState?.('T001');
+  if (upperTuckState && core.upperTuckRule?.setState) {
+    core.upperTuckRule.setState('T001', upperTuckState);
+  }
+  return core;
+}
+
 function getCfgT002() {
   return {
     W: dimensionVal('baseW', 126),
@@ -169,6 +179,32 @@ function getCfgT005() {
     D: dimensionVal('baseD', 90),
     H: dimensionVal('panelH', 344),
     capsuleHoleEnabled: state.showHoles !== false
+  };
+}
+
+function getCfgT007() {
+  return {
+    W: dimensionVal('baseW', 110),
+    D: dimensionVal('baseD', 80),
+    H: dimensionVal('panelH', 225),
+    tearOffEnabled: document.getElementById('t007TearOffEnabled')?.checked !== false,
+    liftTabsEnabled: document.getElementById('t007LiftTabsEnabled')?.checked !== false
+  };
+}
+
+function getCfgT008() {
+  return {
+    W: dimensionVal('baseW', 80),
+    D: dimensionVal('baseD', 52),
+    H: dimensionVal('panelH', 216)
+  };
+}
+
+function getCfgT009() {
+  return {
+    W: dimensionVal('baseW', 99),
+    D: dimensionVal('baseD', 59),
+    H: dimensionVal('panelH', 256)
   };
 }
 
@@ -404,7 +440,7 @@ function render(forceFit = false, visualReason = 'initial-render') {
   let svgStr = '';
   const eng = selectedBoxMeta.engineKey;
   updateUpperTuckCustomizeUi();
-  if (eng !== 'gbox' && eng !== 'gbox2' && eng !== 'gbox3' && eng !== 'bbox' && eng !== 'bbox2' && eng !== 'bbox3' && eng !== 'bbox4' && eng !== 'bbox5' && eng !== 'tr001' && eng !== 'tr002' && eng !== 'tr003') updateT001DielineSizeInfo(null);
+  if (eng !== 'gbox' && eng !== 'gbox2' && eng !== 'gbox3' && eng !== 'bbox' && eng !== 'bbox2' && eng !== 'bbox3' && eng !== 'bbox4' && eng !== 'bbox5' && eng !== 'bbox7' && eng !== 'bbox8' && eng !== 'bbox9' && eng !== 'tr001' && eng !== 'tr002' && eng !== 'tr003') updateT001DielineSizeInfo(null);
 
   if (eng === 'gbox') {
     const cfg = getCfg();
@@ -428,8 +464,9 @@ function render(forceFit = false, visualReason = 'initial-render') {
 
   } else if (eng === 'bbox') {
     const c = getCfgT001();
-    svgStr = T001_renderSVG(c, state);
-    updateT001DielineSizeInfo(T001_getLayout(c.W, c.D, c.H));
+    const core = getT001Core();
+    svgStr = core.renderSVG(c, state);
+    updateT001DielineSizeInfo(core.getLayout(c.W, c.D, c.H));
 
   } else if (eng === 'bbox2') {
     const c = getCfgT002();
@@ -450,6 +487,21 @@ function render(forceFit = false, visualReason = 'initial-render') {
     const c = getCfgT005();
     svgStr = T005_renderSVG(c, state);
     updateT001DielineSizeInfo(T005_getLayout(c.W, c.D, c.H));
+
+  } else if (eng === 'bbox7') {
+    const c = getCfgT007();
+    svgStr = T007_renderSVG(c, state);
+    updateT001DielineSizeInfo(T007_getLayout(c));
+
+  } else if (eng === 'bbox8') {
+    const c = getCfgT008();
+    svgStr = T008_renderSVG(c, state);
+    updateT001DielineSizeInfo(T008_getLayout(c.W, c.D, c.H));
+
+  } else if (eng === 'bbox9') {
+    const c = getCfgT009();
+    svgStr = T009_renderSVG(c, state);
+    updateT001DielineSizeInfo(T009_getLayout(c.W, c.D, c.H));
 
   } else if (eng === 'gable1') {
     const c = getCfgGA001();
@@ -628,7 +680,7 @@ function fitToScreen(visualReason = 'fit') {
         : M003_getLayout(cfg).bounds;
     } else if (eng === 'bbox') {
       const c = getCfgT001();
-      const layout = T001_getLayout(c.W, c.D, c.H);
+      const layout = getT001Core().getLayout(c.W, c.D, c.H);
       bounds = layout.bounds;
     } else if (eng === 'bbox2') {
       const c = getCfgT002();
@@ -645,6 +697,16 @@ function fitToScreen(visualReason = 'fit') {
     } else if (eng === 'bbox5') {
       const c = getCfgT005();
       const layout = T005_getLayout(c.W, c.D, c.H);
+      bounds = layout.bounds;
+    } else if (eng === 'bbox7') {
+      bounds = T007_getLayout(getCfgT007()).bounds;
+    } else if (eng === 'bbox8') {
+      const c = getCfgT008();
+      const layout = T008_getLayout(c.W, c.D, c.H);
+      bounds = layout.bounds;
+    } else if (eng === 'bbox9') {
+      const c = getCfgT009();
+      const layout = T009_getLayout(c.W, c.D, c.H);
       bounds = layout.bounds;
     } else if (eng === 'gable1') {
       const layout = GA001_getLayout(getCfgGA001());
@@ -767,9 +829,7 @@ function buildExportSVG(cfg, eng) {
   }
 
   if (eng === 'bbox') {
-    return typeof T001_buildExportSVG === 'function'
-      ? T001_buildExportSVG(cfg)
-      : '';
+    return getT001Core().buildExportSVG(cfg);
   }
 
   if (eng === 'bbox2') {
@@ -793,6 +853,18 @@ function buildExportSVG(cfg, eng) {
   if (eng === 'bbox5') {
     return typeof T005_buildExportSVG === 'function'
       ? T005_buildExportSVG(cfg)
+      : '';
+  }
+
+  if (eng === 'bbox7') return typeof T007_buildExportSVG === 'function' ? T007_buildExportSVG(cfg) : '';
+  if (eng === 'bbox8') {
+    return typeof T008_buildExportSVG === 'function'
+      ? T008_buildExportSVG(cfg)
+      : '';
+  }
+  if (eng === 'bbox9') {
+    return typeof T009_buildExportSVG === 'function'
+      ? T009_buildExportSVG(cfg)
       : '';
   }
 
@@ -869,11 +941,14 @@ function buildDXF(cfg, eng) {
   if (eng === 'gbox') return typeof M001_buildDXF === 'function' ? M001_buildDXF(cfg) : '';
   if (eng === 'gbox2') return typeof M002_buildDXF === 'function' ? M002_buildDXF(cfg) : '';
   if (eng === 'gbox3') return typeof M003_buildDXF === 'function' ? M003_buildDXF(cfg) : '';
-  if (eng === 'bbox') return typeof T001_buildDXF === 'function' ? T001_buildDXF(cfg) : '';
+  if (eng === 'bbox') return getT001Core().buildDXF(cfg);
   if (eng === 'bbox2') return typeof T002_buildDXF === 'function' ? T002_buildDXF(cfg) : '';
   if (eng === 'bbox3') return typeof T003_buildDXF === 'function' ? T003_buildDXF(cfg) : '';
   if (eng === 'bbox4') return typeof T004_buildDXF === 'function' ? T004_buildDXF(cfg) : '';
   if (eng === 'bbox5') return typeof T005_buildDXF === 'function' ? T005_buildDXF(cfg) : '';
+  if (eng === 'bbox7') return typeof T007_buildDXF === 'function' ? T007_buildDXF(cfg) : '';
+  if (eng === 'bbox8') return typeof T008_buildDXF === 'function' ? T008_buildDXF(cfg) : '';
+  if (eng === 'bbox9') return typeof T009_buildDXF === 'function' ? T009_buildDXF(cfg) : '';
   if (eng === 'rbox') return typeof R001_buildDXF === 'function' ? R001_buildDXF(cfg) : '';
   if (eng === 'rbox2') return typeof R002_buildDXF === 'function' ? R002_buildDXF(cfg) : '';
   if (eng === 'rbox3') return typeof R003_buildDXF === 'function' ? R003_buildDXF(cfg) : '';
@@ -1194,6 +1269,18 @@ const PACVU_TEMPLATE_RULES = {
     name: 'Upper Tuck',
     descriptions: ['Width follows W', 'Depth and profile follow the approved PacVu rule.']
   },
+  bbox8: {
+    ariaLabel: 'T008 rabbit-ear cut and Upper Tuck rule',
+    kicker: 'Structure Rule',
+    name: 'Rabbit Ear Tuck',
+    descriptions: ['The independent rabbit-ear Cut follows the approved source SVG.', 'No optional structure feature is registered.']
+  },
+  bbox9: {
+    ariaLabel: 'T009 equal-bottom rabbit-ear tuck rule',
+    kicker: 'Structure Rule',
+    name: 'Equal Bottom Rabbit Ear Tuck',
+    descriptions: ['T001 panel order with the approved rabbit-ear Upper Tuck.', 'All four Bottom panels keep the same source length.']
+  },
   gable1: {
     ariaLabel: 'GA001 Gable Box structure rule',
     kicker: 'ⓘ Structure Rule',
@@ -1501,7 +1588,7 @@ function ensurePacVuTemplateRule() {
 
 function getSelectedUpperTuckTemplateId() {
   return {
-    bbox: 'T001', bbox2: 'T002', bbox3: 'T003', bbox4: 'T004', bbox5: 'T005'
+    bbox: 'T001', bbox2: 'T002', bbox3: 'T003', bbox4: 'T004', bbox5: 'T005', bbox8: 'T008', bbox9: 'T009'
   }[selectedBoxMeta.engineKey] || '';
 }
 
@@ -1898,6 +1985,11 @@ function setupPanelUi() {
     '<div class="row"><label>\uac04\uaca9</label><input id="holeGap" type="number" step="1" value="70"></div>',
     '<div class="row"><label>Y \uc704\uce58</label><input id="holeOffsetY" type="number" step="0.5" value="45"></div>',
     '</details>',
+    '<details class="sub-group perforation-item" data-engines="bbox7" open>',
+    '<summary>T007 Tissue Box Options</summary>',
+    '<div class="row"><label>Tear-off + Finger Hole</label><input id="t007TearOffEnabled" type="checkbox" data-render-input checked></div>',
+    '<div class="row"><label>Tissue Lift Tabs</label><input id="t007LiftTabsEnabled" type="checkbox" data-render-input checked></div>',
+    '</details>',
     '<details class="sub-group perforation-item" data-engines="bbox3" open>',
     '<summary>\ubcd1\ubaa9\ud640 / Bottle Neck Hole</summary>',
     '<div class="row"><label>\uc0ac\uc6a9</label><input id="t003BottleNeckHoleEnabled" type="checkbox" data-render-input checked></div>',
@@ -2051,6 +2143,9 @@ function bindAll() {
       : eng === 'bbox3' ? getCfgT003()
       : eng === 'bbox4' ? getCfgT004()
       : eng === 'bbox5' ? getCfgT005()
+      : eng === 'bbox7' ? getCfgT007()
+      : eng === 'bbox8' ? getCfgT008()
+      : eng === 'bbox9' ? getCfgT009()
       : eng === 'rbox' ? getCfgR001()
       : eng === 'rbox2' ? getCfgR002()
       : eng === 'rbox3' ? getCfgR003()
@@ -2089,6 +2184,9 @@ function bindAll() {
       : eng === 'bbox3' ? getCfgT003()
       : eng === 'bbox4' ? getCfgT004()
       : eng === 'bbox5' ? getCfgT005()
+      : eng === 'bbox7' ? getCfgT007()
+      : eng === 'bbox8' ? getCfgT008()
+      : eng === 'bbox9' ? getCfgT009()
       : eng === 'rbox' ? getCfgR001()
       : eng === 'rbox2' ? getCfgR002()
       : eng === 'rbox3' ? getCfgR003()
@@ -2124,6 +2222,9 @@ function bindAll() {
       : eng === 'bbox3' ? getCfgT003()
       : eng === 'bbox4' ? getCfgT004()
       : eng === 'bbox5' ? getCfgT005()
+      : eng === 'bbox7' ? getCfgT007()
+      : eng === 'bbox8' ? getCfgT008()
+      : eng === 'bbox9' ? getCfgT009()
       : eng === 'rbox' ? getCfgR001()
       : eng === 'rbox2' ? getCfgR002()
       : eng === 'rbox3' ? getCfgR003()
