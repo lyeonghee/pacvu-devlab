@@ -304,6 +304,7 @@
       });
       const geometry = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: 48 });
       geometry.translate(0, 0, -thickness / 2);
+      global.PacVuWhitePaperboard?.applyPhysicalUV(THREE, geometry, { offsetX: cx, offsetY: cy });
       Viewer.assignBoardFaceMaterials(geometry, thickness, 'interior');
       geometry.computeVertexNormals();
       return { geometry, cx, cy };
@@ -402,9 +403,12 @@
     // T003 while retaining the real panel geometry and folding axes.
     materials[2].color.setHex(0xf2f0ed);
     materials[2].name = 'T003 light paper fold edge';
-    function materialsFor(definition) {
-      if (definition.role !== 'bottomLock' && definition.role !== 'adhesiveLock') return materials;
-      const layered = materials.map(material => material.clone());
+    const whitePaperboard = global.PacVuWhitePaperboard?.createMaterials(THREE, renderer, { sourceMaterials: materials });
+    const baseMaterialSets = { existing: materials, white: whitePaperboard?.materials || materials };
+    let materialMode = 'existing';
+    function materialsFor(definition, sourceMaterials) {
+      if (definition.role !== 'bottomLock' && definition.role !== 'adhesiveLock') return sourceMaterials;
+      const layered = sourceMaterials.map(material => material.clone());
       // A 180-degree bottom fold creates intentional paper-on-paper contact.
       // Bias the matte exterior face toward the camera and the kraft interior
       // face away from it so coplanar faces never flicker or reveal kraft on
@@ -425,7 +429,11 @@
     const pieces = new Map();
     contract.panels.forEach(def => {
       const made = geometryFor(def);
-      const mesh = new THREE.Mesh(made.geometry, materialsFor(def));
+      const materialSets = {
+        existing: materialsFor(def, baseMaterialSets.existing),
+        white: materialsFor(def, baseMaterialSets.white)
+      };
+      const mesh = new THREE.Mesh(made.geometry, materialSets[materialMode]);
       const isBottomLayer = def.role === 'bottomLock' || def.role === 'adhesiveLock';
       mesh.name = def.id;
       // Coplanar paper layers should receive the box/environment shadow but
@@ -436,7 +444,7 @@
       // layers from receiving each other's zero-distance shadow pattern.
       mesh.receiveShadow = !isBottomLayer;
       mesh.position.set(made.cx - center.x, center.y - made.cy, def.role === 'adhesiveLock' ? thickness * 0.55 : 0);
-      pieces.set(def.id, { mesh, flatCenter: mesh.position.clone(), role: def.role });
+      pieces.set(def.id, { mesh, flatCenter: mesh.position.clone(), role: def.role, materialSets });
     });
     const front = pieces.get('front');
     if (!front) throw new Error('T003 3D front panel is unavailable.');
@@ -637,9 +645,15 @@
       modal.querySelectorAll('.assembly-labels span').forEach((node, index) => node.classList.toggle('active', index <= stateIndex));
     }
 
+    const whiteStudio = global.PacVuWhiteStudio?.create({ scene, camera, controls, renderer, root, sun, floor, grid }) || null;
     function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
     function view(type) {
-      if (type !== 'bottom') { Viewer.fitObject(root, camera, controls, type); return; }
+      if (type !== 'bottom') {
+        camera.up.set(0, 0, 1);
+        Viewer.fitObject(root, camera, controls, type);
+        if (type === 'iso') whiteStudio?.view();
+        return;
+      }
       root.updateMatrixWorld(true);
       const bottomMeshes = ['bottomA', 'bottomB', 'bottomL', 'bottomR']
         .map(id => pieces.get(id)?.mesh).filter(Boolean);
@@ -662,10 +676,36 @@
       camera.updateProjectionMatrix(); controls.update();
     }
     const slider = modal.querySelector('input');
+    function setMaterialMode(mode) {
+      materialMode = mode === 'white' ? 'white' : 'existing';
+      pieces.forEach(piece => { piece.mesh.material = piece.materialSets[materialMode]; });
+      bondCopies.forEach(link => {
+        link.copy.material = pieces.get(link.original.name)?.materialSets[materialMode] || link.original.material;
+      });
+      modal.querySelectorAll('[data-material-mode]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.materialMode === materialMode));
+      });
+    }
+    const materialControls = document.createElement('div');
+    materialControls.className = 'm001-3d-views pacvu-viewer__views t003-material-controls';
+    materialControls.style.right = '118px';
+    materialControls.innerHTML = '<button type="button" class="btn light" data-material-mode="existing" aria-pressed="true">Existing Material</button><button type="button" class="btn light" data-material-mode="white" aria-pressed="false">White Paperboard</button>';
+    stage.append(materialControls);
+    materialControls.querySelectorAll('[data-material-mode]').forEach(button => {
+      button.onclick = () => setMaterialMode(button.dataset.materialMode);
+    });
     slider.oninput = () => pose(Number(slider.value) / 100);
-    slider.onchange = () => view('iso');
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => view(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
+    let gridVisible = true;
+    const gridButton = modal.querySelector('[data-grid]');
+    gridButton.setAttribute('aria-pressed', 'true');
+    gridButton.onclick = event => {
+      gridVisible = !gridVisible;
+      grid.visible = gridVisible;
+      event.currentTarget.setAttribute('aria-pressed', String(gridVisible));
+      event.currentTarget.textContent = gridVisible ? 'Grid On' : 'Grid Off';
+    };
     let shadows = true;
     const shadowButton = modal.querySelector('[data-shadow]');
     shadowButton.setAttribute('aria-pressed', 'true');
@@ -674,6 +714,7 @@
       renderer.shadowMap.enabled = shadows;
       sun.castShadow = shadows;
       floor.visible = shadows;
+      whiteStudio?.setShadows(shadows);
       sun.shadow.needsUpdate = true;
       event.currentTarget.setAttribute('aria-pressed', String(shadows));
       event.currentTarget.textContent = shadows ? 'Shadows On' : 'Shadows Off';
@@ -682,7 +723,8 @@
       if (!blob) return; const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'T003_3D_' + slider.value + '.png'; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     });
     const observer = new ResizeObserver(resize); observer.observe(stage);
-    resize(); pose(0); view('iso');
+    resize(); pose(0);
+    let hasInitialView = false;
     let live = true, frameId = 0;
     (function animate() { if (!live) return; frameId = requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
     return {
@@ -692,10 +734,13 @@
         const target = contract.states[state] ?? Number(slider.value) / 100;
         slider.value = String(Math.round(target * 100));
         if (target > 0.90) pose(0.90);
-        pose(target); resize(); view('iso');
+        pose(target); resize();
+        if (!hasInitialView) { view('iso'); hasInitialView = true; }
       },
-      setState(state) { const target = contract.states[state] ?? 0; slider.value = String(Math.round(target * 100)); if (target > 0.90) pose(0.90); pose(target); view('iso'); },
-      destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); controls.dispose?.(); renderer.dispose(); modal.remove(); }
+      setState(state) { const target = contract.states[state] ?? 0; slider.value = String(Math.round(target * 100)); if (target > 0.90) pose(0.90); pose(target); },
+      setMaterialMode,
+      get materialMode() { return materialMode; },
+      destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); controls.dispose?.(); whiteStudio?.dispose(); whitePaperboard?.dispose(); renderer.dispose(); modal.remove(); }
     };
   }
 

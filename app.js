@@ -178,7 +178,8 @@ function getCfgT005() {
     W: dimensionVal('baseW', 286),
     D: dimensionVal('baseD', 90),
     H: dimensionVal('panelH', 344),
-    capsuleHoleEnabled: state.showHoles !== false
+    capsulePunchEnabled: state.showPerforation !== false,
+    capsuleTorn: document.getElementById('t005TearState')?.value === 'torn'
   };
 }
 
@@ -2037,6 +2038,10 @@ function setupPanelUi() {
     '<div class="row"><label>Tear-off + Finger Hole</label><input id="t007TearOffEnabled" type="checkbox" data-render-input checked></div>',
     '<div class="row"><label>Tissue Lift Tabs</label><input id="t007LiftTabsEnabled" type="checkbox" data-render-input checked></div>',
     '</details>',
+    '<details class="sub-group perforation-item" data-engines="bbox5" open>',
+    '<summary>T005 Tear-open Option</summary>',
+    '<div class="row"><label>State</label><select id="t005TearState" data-render-input><option value="intact" selected>Not Torn / 안 뜯음</option><option value="torn">Torn / 뜯음</option></select></div>',
+    '</details>',
     '<details class="sub-group perforation-item" data-engines="bbox3" open>',
     '<summary>\ubcd1\ubaa9\ud640 / Bottle Neck Hole</summary>',
     '<div class="row"><label>\uc0ac\uc6a9</label><input id="t003BottleNeckHoleEnabled" type="checkbox" data-render-input checked></div>',
@@ -2158,6 +2163,9 @@ function bindAll() {
     });
   });
   document.querySelectorAll('input[type=checkbox][data-render-input]').forEach(
+    el => el.addEventListener('change', scheduleRender)
+  );
+  document.querySelectorAll('select[data-render-input]').forEach(
     el => el.addEventListener('change', scheduleRender)
   );
 

@@ -114,8 +114,11 @@ function T005_capsulePrimitive(spec) {
   const cx=(g.xBackR+g.xSideLR)/2,cy=(g.yBodyTop+g.yBodyBottom)/2;
   const x=cx-width/2,y=cy-height/2;
   const k=.5522847498,ry=rx;
-  const d=[`M ${x+rx} ${y}`,`L ${x+width-rx} ${y}`,`C ${x+width-rx+rx*k} ${y} ${x+width} ${y+ry-ry*k} ${x+width} ${y+ry}`,`L ${x+width} ${y+height-ry}`,`C ${x+width} ${y+height-ry+ry*k} ${x+width-rx+rx*k} ${y+height} ${x+width-rx} ${y+height}`,`L ${x+rx} ${y+height}`,`C ${x+rx-rx*k} ${y+height} ${x} ${y+height-ry+ry*k} ${x} ${y+height-ry}`,`L ${x} ${y+ry}`,`C ${x} ${y+ry-ry*k} ${x+rx-rx*k} ${y} ${x+rx} ${y}`,'Z'].join(' ');
-  return Object.freeze({id:'capsuleHole',panel:'Side(L)',cx,cy,x,y,width,height,rx,ry,path:d,ratio:width/height,element:'<path d="'+d+'"/>'});
+  const cutPath=[`M ${x} ${y+ry}`,`C ${x} ${y+ry-ry*k} ${x+rx-rx*k} ${y} ${x+rx} ${y}`,`L ${x+width-rx} ${y}`,`C ${x+width-rx+rx*k} ${y} ${x+width} ${y+ry-ry*k} ${x+width} ${y+ry}`].join(' ');
+  const punchPath=[`M ${x+width} ${y+ry}`,`L ${x+width} ${y+height-ry}`,`C ${x+width} ${y+height-ry+ry*k} ${x+width-rx+rx*k} ${y+height} ${x+width-rx} ${y+height}`,`L ${x+rx} ${y+height}`,`C ${x+rx-rx*k} ${y+height} ${x} ${y+height-ry+ry*k} ${x} ${y+height-ry}`,`L ${x} ${y+ry}`].join(' ');
+  const closedPath=[`M ${x} ${y+ry}`,`C ${x} ${y+ry-ry*k} ${x+rx-rx*k} ${y} ${x+rx} ${y}`,`L ${x+width-rx} ${y}`,`C ${x+width-rx+rx*k} ${y} ${x+width} ${y+ry-ry*k} ${x+width} ${y+ry}`,`L ${x+width} ${y+height-ry}`,`C ${x+width} ${y+height-ry+ry*k} ${x+width-rx+rx*k} ${y+height} ${x+width-rx} ${y+height}`,`L ${x+rx} ${y+height}`,`C ${x+rx-rx*k} ${y+height} ${x} ${y+height-ry+ry*k} ${x} ${y+height-ry}`,`L ${x} ${y+ry}`,'Z'].join(' ');
+  const path=cutPath+' '+punchPath;
+  return Object.freeze({id:'capsulePunch',panel:'Side(L)',cx,cy,x,y,width,height,rx,ry,path,closedPath,cutPath,punchPath,ratio:width/height,cutElement:'<path d="'+cutPath+'"/>',punchElement:'<path d="'+punchPath+'"/>',element:'<path d="'+punchPath+'"/>'});
 }
 
 function T005_segmentIntersection(a,b,c,d) {

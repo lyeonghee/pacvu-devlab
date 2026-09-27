@@ -237,7 +237,7 @@
       const shape=makeShape(def.polygon),shapes=[shape].concat(def.patches.map(makeShape));
       def.holes.forEach(points=>{const hole=new THREE.Path();points.forEach((p,i)=>i?hole.lineTo(p.x-cx,cy-p.y):hole.moveTo(p.x-cx,cy-p.y));hole.closePath();shape.holes.push(hole);});
       const geometry=new THREE.ExtrudeGeometry(shapes,{depth:thickness,bevelEnabled:false,curveSegments:48});
-      geometry.translate(0,0,-thickness/2);Viewer.assignBoardFaceMaterials(geometry,thickness,'interior');geometry.computeVertexNormals();
+      geometry.translate(0,0,-thickness/2);global.PacVuWhitePaperboard?.applyPhysicalUV(THREE,geometry,{offsetX:cx,offsetY:cy});Viewer.assignBoardFaceMaterials(geometry,thickness,'interior');geometry.computeVertexNormals();
       return {geometry,cx,cy};
     }
 
@@ -253,8 +253,10 @@
     const floor=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800),new THREE.ShadowMaterial({color:0x3f3933,opacity:.34}));floor.receiveShadow=true;floor.position.z=global.PacVu3DTheme.floor.z;scene.add(floor);
     const grid=new THREE.GridHelper(global.PacVu3DTheme.grid.size,global.PacVu3DTheme.grid.divisions,global.PacVu3DTheme.grid.centerColor,global.PacVu3DTheme.grid.lineColor);grid.rotation.x=Math.PI/2;grid.position.z=global.PacVu3DTheme.grid.z;scene.add(grid);Viewer.standardizeEnvironment({renderer,scene,controls,floor,grid});
     const materials=Viewer.createBoardMaterials(THREE);materials[2].color.setHex(0xf2f0ed);materials[2].name='T007 light paper fold edge';
+    const whitePaperboard=global.PacVuWhitePaperboard?.createMaterials(THREE,renderer,{sourceMaterials:materials});
+    const materialSets={existing:materials,white:whitePaperboard?.materials||materials};let materialMode='existing';
     const root=new THREE.Group();root.name='T007 Opposite Tuck Master';root.rotation.x=Math.PI;scene.add(root);const pieces=new Map();
-    contract.panels.forEach(def=>{const made=geometryFor(def),mesh=new THREE.Mesh(made.geometry,materials);mesh.name=def.id;mesh.castShadow=true;mesh.receiveShadow=true;mesh.position.set(made.cx-center.x,center.y-made.cy,0);pieces.set(def.id,{mesh,flatCenter:mesh.position.clone(),cx:made.cx,cy:made.cy});});
+    contract.panels.forEach(def=>{const made=geometryFor(def),mesh=new THREE.Mesh(made.geometry,materialSets[materialMode]);mesh.name=def.id;mesh.castShadow=true;mesh.receiveShadow=true;mesh.position.set(made.cx-center.x,center.y-made.cy,0);pieces.set(def.id,{mesh,flatCenter:mesh.position.clone(),cx:made.cx,cy:made.cy});});
 
     const front=pieces.get('front');if(!front)throw new Error('T007 3D front panel is unavailable.');
     const glue=pieces.get('glue');
@@ -420,12 +422,16 @@
       const active=progress<.14?0:progress<.36?1:progress<.74?2:progress<.99?3:4;
       modal.querySelectorAll('.assembly-labels span').forEach((node,index)=>node.classList.toggle('active',index<=active));
     }
-    function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}function view(type){Viewer.fitObject(root,camera,controls,type);}
+    const whiteStudio=global.PacVuWhiteStudio?.create({scene,camera,controls,renderer,root,sun,floor,grid})||null;
+    function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}function view(type){Viewer.fitObject(root,camera,controls,type);if(type==='iso')whiteStudio?.view();}
+    function setMaterialMode(mode){materialMode=mode==='white'?'white':'existing';pieces.forEach(piece=>{piece.mesh.material=materialSets[materialMode];});modal.querySelectorAll('[data-material-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.materialMode===materialMode)));}
+    const materialControls=document.createElement('div');materialControls.className='m001-3d-views pacvu-viewer__views t007-material-controls';materialControls.style.right='118px';materialControls.innerHTML='<button type="button" class="btn light" data-material-mode="existing" aria-pressed="true">Existing Material</button><button type="button" class="btn light" data-material-mode="white" aria-pressed="false">White Paperboard</button>';stage.append(materialControls);materialControls.querySelectorAll('[data-material-mode]').forEach(button=>{button.onclick=()=>setMaterialMode(button.dataset.materialMode);});
     const slider=modal.querySelector('input');slider.oninput=()=>pose(Number(slider.value)/100);slider.onchange=()=>pose(Number(slider.value)/100);modal.querySelectorAll('[data-view]').forEach(button=>{button.onclick=()=>view(button.dataset.view);});modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');
-    let shadows=true;const shadowButton=modal.querySelector('[data-shadow]');shadowButton.setAttribute('aria-pressed','true');shadowButton.onclick=event=>{shadows=!shadows;renderer.shadowMap.enabled=shadows;sun.castShadow=shadows;floor.visible=shadows;sun.shadow.needsUpdate=true;event.currentTarget.setAttribute('aria-pressed',String(shadows));event.currentTarget.textContent=shadows?'Shadows On':'Shadows Off';};
+    let gridVisible=true;const gridButton=modal.querySelector('[data-grid]');gridButton.setAttribute('aria-pressed','true');gridButton.onclick=event=>{gridVisible=!gridVisible;grid.visible=gridVisible;event.currentTarget.setAttribute('aria-pressed',String(gridVisible));event.currentTarget.textContent=gridVisible?'Grid On':'Grid Off';};
+    let shadows=true;const shadowButton=modal.querySelector('[data-shadow]');shadowButton.setAttribute('aria-pressed','true');shadowButton.onclick=event=>{shadows=!shadows;renderer.shadowMap.enabled=shadows;sun.castShadow=shadows;floor.visible=shadows;whiteStudio?.setShadows(shadows);sun.shadow.needsUpdate=true;event.currentTarget.setAttribute('aria-pressed',String(shadows));event.currentTarget.textContent=shadows?'Shadows On':'Shadows Off';};
     modal.querySelector('[data-download]').onclick=()=>Viewer.downloadPNG({renderer,scene,camera,controls,filename:'T007_3D_'+slider.value+'.png'});
     const observer=new ResizeObserver(resize);observer.observe(stage);resize();pose(0);view('iso');let live=true,frameId=0;(function animate(){if(!live)return;frameId=requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
-    return {contract,signature:[C.W,C.D,C.H,contract.options.tearOffEnabled?1:0,contract.options.liftTabsEnabled?1:0].join(':'),open(state){modal.classList.add('open');const target=contract.states[state]??Number(slider.value)/100;slider.value=String(Math.round(target*100));pose(target);resize();view('iso');},setState(state){const target=contract.states[state]??0;slider.value=String(Math.round(target*100));pose(target);view('iso');},destroy(){live=false;cancelAnimationFrame(frameId);observer.disconnect();if(controls.dispose)controls.dispose();renderer.dispose();modal.remove();}};
+    return {contract,signature:[C.W,C.D,C.H,contract.options.tearOffEnabled?1:0,contract.options.liftTabsEnabled?1:0].join(':'),open(state){modal.classList.add('open');const target=contract.states[state]??Number(slider.value)/100;slider.value=String(Math.round(target*100));pose(target);resize();view('iso');},setState(state){const target=contract.states[state]??0;slider.value=String(Math.round(target*100));pose(target);view('iso');},setMaterialMode,get materialMode(){return materialMode;},destroy(){live=false;cancelAnimationFrame(frameId);observer.disconnect();if(controls.dispose)controls.dispose();whiteStudio?.dispose();whitePaperboard?.dispose();renderer.dispose();modal.remove();}};
   }
   let master=null;
   function open(state,input){const cfg=input||(typeof global.getCfgT007==='function'?global.getCfgT007():{W:110,D:80,H:225,tearOffEnabled:true,liftTabsEnabled:true}),signature=[cfg.W,cfg.D,cfg.H,cfg.tearOffEnabled!==false?1:0,cfg.liftTabsEnabled!==false?1:0].join(':');if(!master||master.signature!==signature){if(master)master.destroy();master=createMaster(cfg);}master.open(state||'flat');return master;}
