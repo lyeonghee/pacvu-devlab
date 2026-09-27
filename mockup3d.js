@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const legacyButtonIds = ['m0013dBtn', 'm0023dBtn', 'm0033dBtn', 't001-3d-btn', 't003-3d-btn', 't004-3d-btn', 't005-3d-btn', 'ga001-3d-btn', 'b001-3d-btn', 'b002-3d-btn', 'c001-3d-btn', 'r001-3d-btn', 'r002-3d-btn', 'r003-3d-btn', 'r004-3d-btn', 'tr001-3d-btn', 'tr002-3d-btn', 'tr003-3d-btn', 's001-3d-btn'];
+  const legacyButtonIds = ['m0013dBtn', 'm0023dBtn', 'm0033dBtn', 't001-3d-btn', 't003-3d-btn', 't004-3d-btn', 't005-3d-btn', 't007-3d-btn', 't008-3d-btn', 't009-3d-btn', 't010-3d-btn', 'ga001-3d-btn', 'b001-3d-btn', 'b002-3d-btn', 'c001-3d-btn', 'r001-3d-btn', 'r002-3d-btn', 'r003-3d-btn', 'r004-3d-btn', 'tr001-3d-btn', 'tr002-3d-btn', 'tr003-3d-btn', 's001-3d-btn'];
   const mockupButtonByEngine = {
     gbox: 'm0013dBtn',
     gbox2: 'm0023dBtn',
@@ -11,6 +11,11 @@
     bbox3: 't003-3d-btn',
     bbox4: 't004-3d-btn',
     bbox5: 't005-3d-btn',
+    bbox6: 't006-3d-btn',
+    bbox7: 't007-3d-btn',
+    bbox8: 't008-3d-btn',
+    bbox9: 't009-3d-btn',
+    bbox10: 't010-3d-btn',
     gable1: 'ga001-3d-btn',
     b001: 'b001-3d-btn',
     b002: 'b002-3d-btn',

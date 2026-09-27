@@ -13,7 +13,7 @@
       divisions: 24,
       centerColor: 0x8f8a83,
       lineColor: 0xaaa59e,
-      opacity: 0.34,
+      opacity: 0.16,
       z: -1.5
     }),
     material: Object.freeze({

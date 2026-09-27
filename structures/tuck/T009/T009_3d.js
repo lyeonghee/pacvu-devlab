@@ -452,34 +452,13 @@
       shadows = !shadows; floor.visible = shadows; sun.castShadow = shadows;
       event.currentTarget.textContent = shadows ? 'Shadows On' : 'Shadows Off';
     };
-    const downloadCurrentView = () => {
-      const hidden = [];
-      const background = scene.background;
-      const clearColor = renderer.getClearColor(new THREE.Color()).clone();
-      const clearAlpha = renderer.getClearAlpha();
-      scene.traverse(object => {
-        if (object === floor || object.isGridHelper || object.type === 'GridHelper' || object.material?.isShadowMaterial) {
-          hidden.push([object, object.visible]);
-          object.visible = false;
-        }
-      });
-      scene.background = null;
-      renderer.setClearColor(0x000000, 0);
-      renderer.render(scene, camera);
-      renderer.domElement.toBlob(blob => {
-        hidden.forEach(([object, visible]) => { object.visible = visible; });
-        scene.background = background;
-        renderer.setClearColor(clearColor, clearAlpha);
-        renderer.render(scene, camera);
-        if (!blob) return;
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'T009_3D_' + Math.round(Number(slider.value)) + '.png';
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-      }, 'image/png');
-    };
-    modal.querySelector('[data-download]').onclick = downloadCurrentView;
+    modal.querySelector('[data-download]').onclick = () => Viewer.downloadPNG({
+      renderer,
+      scene,
+      camera,
+      controls,
+      filename: 'T009_3D_' + Math.round(Number(slider.value)) + '.png'
+    });
     const observer = new ResizeObserver(resize);
     observer.observe(stage);
     resize(); pose(0); view('iso');

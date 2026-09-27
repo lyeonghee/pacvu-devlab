@@ -258,6 +258,15 @@
 
     const front=pieces.get('front');if(!front)throw new Error('T007 3D front panel is unavailable.');
     const glue=pieces.get('glue');
+    const bottomOuter=pieces.get('bottomGlue');
+    const bottomInner=pieces.get('bottomBack');
+    const topOuter=pieces.get('topGlue');
+    const topInner=pieces.get('topBack');
+    // The source top receiver crease sits farther out than the cover crease.
+    // Include that mapped distance in the cover stack clearance.
+    const topCreaseClearance=Math.max(0,
+      linePoints(contract.layout.foldElements[11])[1]-
+      linePoints(contract.layout.foldElements[10])[1]);
     if(contract.tearOff.outer.length>2){
       const scaled=(points,factor)=>{
         const center=points.reduce((sum,p)=>({x:sum.x+p.x,y:sum.y+p.y}),{x:0,y:0});
@@ -314,6 +323,64 @@
     const sheet=new THREE.Group();root.add(sheet);sheet.add(front.mesh);
     const frames=new Map([['front',sheet]]),hinges=[];
     contract.folds.forEach(relation=>{const parent=frames.get(relation.parentId),piece=pieces.get(relation.childId);if(!parent||!piece)throw new Error('T007 3D fold hierarchy failed at '+relation.id);const a=point(relation.axis.a),b=point(relation.axis.b),hinge=new THREE.Group();hinge.name=relation.id;hinge.position.copy(a);parent.add(hinge);const frame=new THREE.Group();frame.position.copy(a).multiplyScalar(-1);hinge.add(frame);frame.add(piece.mesh);frames.set(relation.childId,frame);const axis=b.clone().sub(a).normalize(),radial=piece.flatCenter.clone().sub(a),sign=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;hinges.push({object:hinge,axis,radians:THREE.MathUtils.degToRad(relation.angle)*sign,range:relation.phase,id:relation.id});});
+    // A paper crease must span the stack clearance instead of leaving an
+    // open edge when its end panel moves outward. Keep both surface skins.
+    const creaseLinks=contract.folds.filter(r=>['bottom.glue','top.glue','bottom.back','top.back'].includes(r.id)).map(r=>{
+      const axisA=point(r.axis.a),axisB=point(r.axis.b),direction=axisB.clone().sub(axisA).normalize();
+      const span=id=>{
+        const polygon=contract.panels.find(p=>p.id===id).polygon;
+        const onCrease=polygon.map(point).filter(p=>new THREE.Vector3().crossVectors(p.clone().sub(axisA),direction).length()<.002);
+        const distances=onCrease.map(p=>p.clone().sub(axisA).dot(direction));
+        return distances.length>1?[Math.min(...distances),Math.max(...distances)]:[0,axisA.distanceTo(axisB)];
+      };
+      const parentSpan=span(r.parentId),childSpan=span(r.childId);
+      const a=axisA.clone().addScaledVector(direction,Math.max(parentSpan[0],childSpan[0]));
+      const b=axisA.clone().addScaledVector(direction,Math.min(parentSpan[1],childSpan[1]));
+      const steps=12,skinCount=(steps+1)*2,indices=[];
+      for(let side=0;side<2;side++)for(let i=0;i<steps;i++){
+        const k=side*skinCount+i*2;
+        indices.push(k,k+1,k+3,k,k+3,k+2);
+      }
+      // Separate cap vertices keep the end faces from distorting skin normals.
+      for(let end=0;end<2;end++)for(let i=0;i<steps;i++){
+        const k=skinCount*2+end*skinCount+i*2;
+        indices.push(k,k+1,k+3,k,k+3,k+2);
+      }
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(skinCount*4*3),3));
+      geometry.setIndex(indices);
+      geometry.addGroup(0,steps*6,0);geometry.addGroup(steps*6,steps*6,1);geometry.addGroup(steps*12,steps*12,2);
+      const creaseMaterials=materials.map(m=>{const copy=m.clone();copy.side=THREE.DoubleSide;return copy;});
+      const mesh=new THREE.Mesh(geometry,creaseMaterials);mesh.name=r.id+'.paper-crease';mesh.frustumCulled=false;root.add(mesh);
+      return {r,mesh,a,b,steps,skinCount};
+    });
+    function updateCreaseLinks(){
+      root.updateMatrixWorld(true);
+      creaseLinks.forEach(({r,mesh,a,b,steps,skinCount})=>{
+        const child=pieces.get(r.childId),parent=frames.get(r.parentId),frame=frames.get(r.childId);
+        const offset=child.mesh.position.z-child.flatCenter.z;
+        mesh.visible=Math.abs(offset)>1e-6;
+        if(!mesh.visible)return;
+        const vertices=[],childDef=contract.panels.find(p=>p.id===r.childId);
+        const middle=childDef.polygon.reduce((v,p)=>v.add(point(p)),new THREE.Vector3()).multiplyScalar(1/childDef.polygon.length);
+        const axis=b.clone().sub(a).normalize(),outward=middle.sub(a);
+        outward.addScaledVector(axis,-outward.dot(axis)).normalize();
+        const parentTangent=outward.clone().transformDirection(parent.matrixWorld),childTangent=outward.clone().transformDirection(frame.matrixWorld);
+        [-thickness/2,thickness/2].forEach(z=>{
+          const curves=[a,b].map(p=>{
+            const start=parent.localToWorld(p.clone().setZ(z)),finish=frame.localToWorld(p.clone().setZ(z+offset));
+            const handle=start.distanceTo(finish)*.42;
+            return new THREE.CubicBezierCurve3(start,start.clone().addScaledVector(parentTangent,handle),finish.clone().addScaledVector(childTangent,-handle),finish);
+          });
+          for(let i=0;i<=steps;i++)curves.forEach(curve=>vertices.push(...root.worldToLocal(curve.getPoint(i/steps)).toArray()));
+        });
+        for(let end=0;end<2;end++)for(let i=0;i<=steps;i++)for(let side=0;side<2;side++){
+          const k=(side*skinCount+i*2+end)*3;vertices.push(vertices[k],vertices[k+1],vertices[k+2]);
+        }
+        mesh.geometry.attributes.position.array.set(vertices);mesh.geometry.attributes.position.needsUpdate=true;
+        mesh.geometry.computeVertexNormals();mesh.geometry.computeBoundingSphere();
+      });
+    }
     function pose(value){
       const progress=clamp(value,0,1);
       hinges.forEach(hinge=>{
@@ -325,8 +392,25 @@
         const seamSeating=phase(progress,[.16,.26]);
         glue.mesh.position.z=glue.flatCenter.z+thickness*.9*seamSeating;
       }
+      const bottomSeating=phase(progress,[.58,.68]);
+      // Exterior is local -Z at both ends. Dust, receiver, cover stack outward.
+      if(bottomOuter)bottomOuter.mesh.position.z=bottomOuter.flatCenter.z-thickness*2.1*bottomSeating;
+      if(bottomInner){
+        bottomInner.mesh.position.z=bottomInner.flatCenter.z-thickness*1.05*phase(progress,[.46,.56]);
+      }
+      const topSeating=phase(progress,[.92,1]);
+      if(topOuter)topOuter.mesh.position.z=topOuter.flatCenter.z-(thickness*2.1+topCreaseClearance)*topSeating;
+      if(topInner){
+        topInner.mesh.position.z=topInner.flatCenter.z-thickness*1.05*phase(progress,[.82,.90]);
+      }
+      // Contact shadows between paper layers amplify the tiny relief edges
+      // into stripes. Keep scene shadows, but stop these seated end layers
+      // receiving their immediate neighbours' shadow-map samples.
+      [bottomOuter,bottomInner].forEach(p=>{if(p)p.mesh.receiveShadow=bottomSeating<.99;});
+      [topOuter,topInner].forEach(p=>{if(p)p.mesh.receiveShadow=topSeating<.99;});
 
       root.position.z=0;
+      updateCreaseLinks();
       root.updateMatrixWorld(true);
       const modelBounds=new THREE.Box3().setFromObject(root);
       if(!modelBounds.isEmpty())root.position.z=grid.position.z+thickness/2-modelBounds.min.z;
@@ -337,9 +421,9 @@
       modal.querySelectorAll('.assembly-labels span').forEach((node,index)=>node.classList.toggle('active',index<=active));
     }
     function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}function view(type){Viewer.fitObject(root,camera,controls,type);}
-    const slider=modal.querySelector('input');slider.oninput=()=>pose(Number(slider.value)/100);slider.onchange=()=>view('iso');modal.querySelectorAll('[data-view]').forEach(button=>{button.onclick=()=>view(button.dataset.view);});modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');
+    const slider=modal.querySelector('input');slider.oninput=()=>pose(Number(slider.value)/100);slider.onchange=()=>pose(Number(slider.value)/100);modal.querySelectorAll('[data-view]').forEach(button=>{button.onclick=()=>view(button.dataset.view);});modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');
     let shadows=true;const shadowButton=modal.querySelector('[data-shadow]');shadowButton.setAttribute('aria-pressed','true');shadowButton.onclick=event=>{shadows=!shadows;renderer.shadowMap.enabled=shadows;sun.castShadow=shadows;floor.visible=shadows;sun.shadow.needsUpdate=true;event.currentTarget.setAttribute('aria-pressed',String(shadows));event.currentTarget.textContent=shadows?'Shadows On':'Shadows Off';};
-    modal.querySelector('[data-download]').onclick=()=>renderer.domElement.toBlob(blob=>{if(!blob)return;const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='T007_3D_'+slider.value+'.png';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);});
+    modal.querySelector('[data-download]').onclick=()=>Viewer.downloadPNG({renderer,scene,camera,controls,filename:'T007_3D_'+slider.value+'.png'});
     const observer=new ResizeObserver(resize);observer.observe(stage);resize();pose(0);view('iso');let live=true,frameId=0;(function animate(){if(!live)return;frameId=requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
     return {contract,signature:[C.W,C.D,C.H,contract.options.tearOffEnabled?1:0,contract.options.liftTabsEnabled?1:0].join(':'),open(state){modal.classList.add('open');const target=contract.states[state]??Number(slider.value)/100;slider.value=String(Math.round(target*100));pose(target);resize();view('iso');},setState(state){const target=contract.states[state]??0;slider.value=String(Math.round(target*100));pose(target);view('iso');},destroy(){live=false;cancelAnimationFrame(frameId);observer.disconnect();if(controls.dispose)controls.dispose();renderer.dispose();modal.remove();}};
   }

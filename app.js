@@ -182,6 +182,10 @@ function getCfgT005() {
   };
 }
 
+function getCfgT006() {
+  return { W: dimensionVal('baseW', 100), D: dimensionVal('baseD', 40), H: dimensionVal('panelH', 220) };
+}
+
 function getCfgT007() {
   return {
     W: dimensionVal('baseW', 110),
@@ -206,6 +210,10 @@ function getCfgT009() {
     D: dimensionVal('baseD', 59),
     H: dimensionVal('panelH', 256)
   };
+}
+
+function getCfgT010() {
+  return { W: dimensionVal('baseW', 80), D: dimensionVal('baseD', 72), H: dimensionVal('panelH', 190) };
 }
 
 function getCfgGA001() {
@@ -440,7 +448,7 @@ function render(forceFit = false, visualReason = 'initial-render') {
   let svgStr = '';
   const eng = selectedBoxMeta.engineKey;
   updateUpperTuckCustomizeUi();
-  if (eng !== 'gbox' && eng !== 'gbox2' && eng !== 'gbox3' && eng !== 'bbox' && eng !== 'bbox2' && eng !== 'bbox3' && eng !== 'bbox4' && eng !== 'bbox5' && eng !== 'bbox7' && eng !== 'bbox8' && eng !== 'bbox9' && eng !== 'tr001' && eng !== 'tr002' && eng !== 'tr003') updateT001DielineSizeInfo(null);
+  if (eng !== 'gbox' && eng !== 'gbox2' && eng !== 'gbox3' && eng !== 'bbox' && eng !== 'bbox2' && eng !== 'bbox3' && eng !== 'bbox4' && eng !== 'bbox5' && eng !== 'bbox6' && eng !== 'bbox7' && eng !== 'bbox8' && eng !== 'bbox9' && eng !== 'bbox10' && eng !== 'tr001' && eng !== 'tr002' && eng !== 'tr003') updateT001DielineSizeInfo(null);
 
   if (eng === 'gbox') {
     const cfg = getCfg();
@@ -488,6 +496,11 @@ function render(forceFit = false, visualReason = 'initial-render') {
     svgStr = T005_renderSVG(c, state);
     updateT001DielineSizeInfo(T005_getLayout(c.W, c.D, c.H));
 
+  } else if (eng === 'bbox6') {
+    const c = getCfgT006();
+    svgStr = T006_renderSVG(c, state);
+    updateT001DielineSizeInfo(T006_getLayout(c.W, c.D, c.H));
+
   } else if (eng === 'bbox7') {
     const c = getCfgT007();
     svgStr = T007_renderSVG(c, state);
@@ -502,6 +515,11 @@ function render(forceFit = false, visualReason = 'initial-render') {
     const c = getCfgT009();
     svgStr = T009_renderSVG(c, state);
     updateT001DielineSizeInfo(T009_getLayout(c.W, c.D, c.H));
+
+  } else if (eng === 'bbox10') {
+    const c = getCfgT010();
+    svgStr = T010_renderSVG(c, state);
+    updateT001DielineSizeInfo(T010_getLayout(c.W, c.D, c.H));
 
   } else if (eng === 'gable1') {
     const c = getCfgGA001();
@@ -698,6 +716,9 @@ function fitToScreen(visualReason = 'fit') {
       const c = getCfgT005();
       const layout = T005_getLayout(c.W, c.D, c.H);
       bounds = layout.bounds;
+    } else if (eng === 'bbox6') {
+      const c = getCfgT006();
+      bounds = T006_getLayout(c.W, c.D, c.H).bounds;
     } else if (eng === 'bbox7') {
       bounds = T007_getLayout(getCfgT007()).bounds;
     } else if (eng === 'bbox8') {
@@ -708,6 +729,9 @@ function fitToScreen(visualReason = 'fit') {
       const c = getCfgT009();
       const layout = T009_getLayout(c.W, c.D, c.H);
       bounds = layout.bounds;
+    } else if (eng === 'bbox10') {
+      const c = getCfgT010();
+      bounds = T010_getLayout(c.W, c.D, c.H).bounds;
     } else if (eng === 'gable1') {
       const layout = GA001_getLayout(getCfgGA001());
       bounds = layout.bounds;
@@ -856,6 +880,7 @@ function buildExportSVG(cfg, eng) {
       : '';
   }
 
+  if (eng === 'bbox6') return typeof T006_buildExportSVG === 'function' ? T006_buildExportSVG(cfg) : '';
   if (eng === 'bbox7') return typeof T007_buildExportSVG === 'function' ? T007_buildExportSVG(cfg) : '';
   if (eng === 'bbox8') {
     return typeof T008_buildExportSVG === 'function'
@@ -867,6 +892,8 @@ function buildExportSVG(cfg, eng) {
       ? T009_buildExportSVG(cfg)
       : '';
   }
+
+  if (eng === 'bbox10') return typeof T010_buildExportSVG === 'function' ? T010_buildExportSVG(cfg) : '';
 
   if (eng === 'rbox') {
     return typeof R001_buildExportSVG === 'function'
@@ -946,9 +973,11 @@ function buildDXF(cfg, eng) {
   if (eng === 'bbox3') return typeof T003_buildDXF === 'function' ? T003_buildDXF(cfg) : '';
   if (eng === 'bbox4') return typeof T004_buildDXF === 'function' ? T004_buildDXF(cfg) : '';
   if (eng === 'bbox5') return typeof T005_buildDXF === 'function' ? T005_buildDXF(cfg) : '';
+  if (eng === 'bbox6') return typeof T006_buildDXF === 'function' ? T006_buildDXF(cfg) : '';
   if (eng === 'bbox7') return typeof T007_buildDXF === 'function' ? T007_buildDXF(cfg) : '';
   if (eng === 'bbox8') return typeof T008_buildDXF === 'function' ? T008_buildDXF(cfg) : '';
   if (eng === 'bbox9') return typeof T009_buildDXF === 'function' ? T009_buildDXF(cfg) : '';
+  if (eng === 'bbox10') return typeof T010_buildDXF === 'function' ? T010_buildDXF(cfg) : '';
   if (eng === 'rbox') return typeof R001_buildDXF === 'function' ? R001_buildDXF(cfg) : '';
   if (eng === 'rbox2') return typeof R002_buildDXF === 'function' ? R002_buildDXF(cfg) : '';
   if (eng === 'rbox3') return typeof R003_buildDXF === 'function' ? R003_buildDXF(cfg) : '';
@@ -1269,6 +1298,18 @@ const PACVU_TEMPLATE_RULES = {
     name: 'Upper Tuck',
     descriptions: ['Width follows W', 'Depth and profile follow the approved PacVu rule.']
   },
+  bbox6: {
+    ariaLabel: 'T006 tear-open tuck box structure rule',
+    kicker: 'Structure Rule',
+    name: 'Tear-Open Tuck Box',
+    descriptions: ['The tear-open geometry follows the approved T006 structure.', 'W, D, and H use the registered T006 dimensions.']
+  },
+  bbox7: {
+    ariaLabel: 'T007 tissue dispensing tuck box structure rule',
+    kicker: 'Structure Rule',
+    name: 'Tissue Dispensing Tuck Box',
+    descriptions: ['Tear-off and finger-hole geometry follow the approved T007 structure.', 'Tissue lift tabs use the registered T007 options.']
+  },
   bbox8: {
     ariaLabel: 'T008 rabbit-ear cut and Upper Tuck rule',
     kicker: 'Structure Rule',
@@ -1280,6 +1321,12 @@ const PACVU_TEMPLATE_RULES = {
     kicker: 'Structure Rule',
     name: 'Equal Bottom Rabbit Ear Tuck',
     descriptions: ['T001 panel order with the approved rabbit-ear Upper Tuck.', 'All four Bottom panels keep the same source length.']
+  },
+  bbox10: {
+    ariaLabel: 'T010 slot lock and automatic bottom rule',
+    kicker: 'Structure Rule',
+    name: 'Slot Lock Auto-Lock',
+    descriptions: ['Approved Slot and Lock punch geometry follows the source SVG.', 'Automatic bottom panels retain the approved assembly geometry.']
   },
   gable1: {
     ariaLabel: 'GA001 Gable Box structure rule',
@@ -2080,7 +2127,7 @@ function bindAll() {
   setupMobileViewerLayout();
   ensureDimensionUnitControl();
 
-  fetch('./data/boxLibrary.json')
+  fetch('./data/boxLibrary.json?v=20260927-t006-t010-registry1')
     .then(r => r.json())
     .then(data => {
       BOX_LIBRARY = data;
@@ -2143,9 +2190,11 @@ function bindAll() {
       : eng === 'bbox3' ? getCfgT003()
       : eng === 'bbox4' ? getCfgT004()
       : eng === 'bbox5' ? getCfgT005()
+      : eng === 'bbox6' ? getCfgT006()
       : eng === 'bbox7' ? getCfgT007()
       : eng === 'bbox8' ? getCfgT008()
       : eng === 'bbox9' ? getCfgT009()
+      : eng === 'bbox10' ? getCfgT010()
       : eng === 'rbox' ? getCfgR001()
       : eng === 'rbox2' ? getCfgR002()
       : eng === 'rbox3' ? getCfgR003()
@@ -2184,9 +2233,11 @@ function bindAll() {
       : eng === 'bbox3' ? getCfgT003()
       : eng === 'bbox4' ? getCfgT004()
       : eng === 'bbox5' ? getCfgT005()
+      : eng === 'bbox6' ? getCfgT006()
       : eng === 'bbox7' ? getCfgT007()
       : eng === 'bbox8' ? getCfgT008()
       : eng === 'bbox9' ? getCfgT009()
+      : eng === 'bbox10' ? getCfgT010()
       : eng === 'rbox' ? getCfgR001()
       : eng === 'rbox2' ? getCfgR002()
       : eng === 'rbox3' ? getCfgR003()
@@ -2222,9 +2273,11 @@ function bindAll() {
       : eng === 'bbox3' ? getCfgT003()
       : eng === 'bbox4' ? getCfgT004()
       : eng === 'bbox5' ? getCfgT005()
+      : eng === 'bbox6' ? getCfgT006()
       : eng === 'bbox7' ? getCfgT007()
       : eng === 'bbox8' ? getCfgT008()
       : eng === 'bbox9' ? getCfgT009()
+      : eng === 'bbox10' ? getCfgT010()
       : eng === 'rbox' ? getCfgR001()
       : eng === 'rbox2' ? getCfgR002()
       : eng === 'rbox3' ? getCfgR003()

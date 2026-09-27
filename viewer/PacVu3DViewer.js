@@ -52,7 +52,7 @@
     const renderer = new THREE.WebGLRenderer({
       antialias: options.antialias !== false,
       alpha: options.alpha !== false,
-      preserveDrawingBuffer: options.preserveDrawingBuffer === true,
+      preserveDrawingBuffer: options.preserveDrawingBuffer !== false,
       logarithmicDepthBuffer: true
     });
     renderer.setPixelRatio(Math.min(global.devicePixelRatio || 1, 2));
@@ -62,6 +62,28 @@
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE[THEME.renderer.shadowMapType];
     return renderer;
+  }
+
+  function downloadPNG({ renderer, scene, camera, controls, filename = 'PacVu_3D.png' } = {}) {
+    if (!renderer || !scene || !camera) return Promise.resolve(false);
+    controls?.update?.();
+    scene.updateMatrixWorld(true);
+    camera.updateMatrixWorld(true);
+    renderer.render(scene, camera);
+    return new Promise(resolve => {
+      renderer.domElement.toBlob(blob => {
+        if (!blob) {
+          resolve(false);
+          return;
+        }
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        resolve(true);
+      }, 'image/png');
+    });
   }
 
   function createOverlayMaterial(THREE, options = {}) {
@@ -133,6 +155,7 @@
             <button type="button" class="btn light" data-view="iso">Isometric</button>
             <button type="button" class="btn light" data-view="front">Front</button>
             <button type="button" class="btn light" data-view="top">Top</button>
+            <button type="button" class="btn light" data-grid aria-pressed="true">Grid On</button>
             <button type="button" class="btn light" data-shadow data-action="shadow">Shadows On</button>
           </div>
           <div class="m001-3d-controls pacvu-viewer__controls">
@@ -234,7 +257,7 @@
     if (!views && stage) {
       views = document.createElement('div');
       views.className = 'm001-3d-views pacvu-viewer__views';
-      views.innerHTML = '<button type="button" class="btn light" data-view="iso">Isometric</button><button type="button" class="btn light" data-view="front">Front</button><button type="button" class="btn light" data-view="top">Top</button><button type="button" class="btn light" data-shadow>Shadows On</button>';
+      views.innerHTML = '<button type="button" class="btn light" data-view="iso">Isometric</button><button type="button" class="btn light" data-view="front">Front</button><button type="button" class="btn light" data-view="top">Top</button><button type="button" class="btn light" data-grid aria-pressed="true">Grid On</button><button type="button" class="btn light" data-shadow>Shadows On</button>';
       stage.append(views);
     }
     if (views) {
@@ -245,6 +268,8 @@
       });
       const shadow = views.querySelector('[data-shadow], [data-action="shadow"]');
       if (shadow) shadow.textContent = 'Shadows On';
+      const grid = views.querySelector('[data-grid]');
+      if (grid) grid.textContent = 'Grid On';
       if (stage && views.parentElement !== stage) stage.append(views);
     }
     if (stage && controls && controls.parentElement !== stage) stage.append(controls);
@@ -433,6 +458,7 @@
     createModal,
     createEnvironment,
     createRenderer,
+    downloadPNG,
     createPerspectiveCamera,
     createOverlayMaterial,
     syncProgress,

@@ -64,6 +64,18 @@
         }
       },
       {
+        "label": "T006 Tear-Open Tuck Box",
+        "koreanName": "뜯어 여는 턱 박스",
+        "fefcoCode": "T006",
+        "engineKey": "bbox6",
+        "variantKey": "T006",
+        "defaultDims": {
+          "W": 100,
+          "D": 40,
+          "H": 220
+        }
+      },
+      {
         "label": "T007 Tissue Dispensing Tuck Box",
         "koreanName": "티슈 토출구 턱박스",
         "fefcoCode": "T007",
@@ -97,6 +109,18 @@
           "W": 99,
           "D": 59,
           "H": 256
+        }
+      },
+      {
+        "label": "T010 Slot Lock Auto-Lock Tuck Box",
+        "koreanName": "?? ? ?? ?? ???",
+        "fefcoCode": "T010",
+        "engineKey": "bbox10",
+        "variantKey": "T010",
+        "defaultDims": {
+          "W": 80,
+          "D": 72,
+          "H": 190
         }
       }
     ]
@@ -249,8 +273,16 @@
         "engineKey": "sSeries",
         "variantKey": "S001-1",
         "type": "component",
-        "defaultDims": { "W": 298, "D": 61, "H": 292 },
-        "defaultProductSize": { "W": 298, "D": 61, "H": 292 }
+        "defaultDims": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        },
+        "defaultProductSize": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        }
       },
       {
         "label": "S001 Inner Tray",
@@ -259,8 +291,16 @@
         "engineKey": "sSeries",
         "variantKey": "S001-2",
         "type": "component",
-        "defaultDims": { "W": 298, "D": 61, "H": 292 },
-        "defaultProductSize": { "W": 298, "D": 61, "H": 292 }
+        "defaultDims": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        },
+        "defaultProductSize": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        }
       },
       {
         "label": "S001 Insert Pad",
@@ -269,8 +309,16 @@
         "engineKey": "sSeries",
         "variantKey": "S001-3",
         "type": "component",
-        "defaultDims": { "W": 298, "D": 61, "H": 292 },
-        "defaultProductSize": { "W": 298, "D": 61, "H": 292 }
+        "defaultDims": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        },
+        "defaultProductSize": {
+          "W": 298,
+          "D": 61,
+          "H": 292
+        }
       }
     ]
   },

@@ -156,9 +156,18 @@
       ['bottomR', 'bottomLock', rect(g.xFrontR, g.yBodyBottom, g.xSideRR, g.yBottomMax)]
     ];
     let panels = regions.map(def => {
-      const polygon = def[0] === 'upperTuck'
+      let polygon = def[0] === 'upperTuck'
         ? upperTuckPolygon.slice()
         : clipRect(outline, def[2]);
+      if (def[0] === 'lidTop') {
+        // Stitch closes the two relief-cut tips below the crease. That
+        // artificial closing edge is not a cut across the central paper web.
+        const reliefTipY = mapper.point(692.822, 290.874).y;
+        polygon = polygon.map(p =>
+          p.x >= upperLeftFold.x - EPS && p.x <= upperRightFold.x + EPS &&
+          Math.abs(p.y - reliefTipY) < EPS
+            ? { x: p.x, y: g.yLidFold } : p);
+      }
       return panel(def[0], def[1], polygon, []);
     })
       .filter(item => item.polygon.length >= 3 && area(item.polygon) > EPS);
@@ -563,9 +572,7 @@
       event.currentTarget.setAttribute('aria-pressed', String(shadows));
       event.currentTarget.textContent = shadows ? 'Shadows On' : 'Shadows Off';
     };
-    modal.querySelector('[data-download]').onclick = () => renderer.domElement.toBlob(blob => {
-      if (!blob) return; const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'T008_3D_' + slider.value + '.png'; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    });
+    modal.querySelector('[data-download]').onclick = () => Viewer.downloadPNG({ renderer, scene, camera, controls, filename: 'T008_3D_' + slider.value + '.png' });
     const observer = new ResizeObserver(resize); observer.observe(stage);
     resize(); pose(0); view('iso');
     let live = true, frameId = 0;

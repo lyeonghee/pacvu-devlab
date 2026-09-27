@@ -164,7 +164,7 @@ function T007_renderSVG(cfg, state) {
     '<g id="viewportGroup">' +
 
       '<g id="layer-fill">' +
-        '<path class="cut-area" d="' + l.fillPath + '"/>' +
+        '<path class="cut-area" d="' + l.previewFillPath + '"/>' +
       '</g>' +
 
       '<g id="layer-glue-fill">' +

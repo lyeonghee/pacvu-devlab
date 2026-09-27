@@ -109,8 +109,10 @@
     import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js/+esm';
     window.PacVuOrbitControls = OrbitControls;
   </script>
-  <script src="./viewer/PacVu3DTheme.js?v=20260725-white1"></script>
-  <script src="./viewer/PacVu3DViewer.js"></script>
+  <script src="./viewer/PacVu3DTheme.js?v=20260926-grid-opacity1"></script>
+  <script src="./viewer/PacVu3DViewer.js?v=20260927-download1"></script>
+  <script src="./viewer/PacVuWhitePaperboard.js?v=20260926-v1"></script>
+  <script src="./viewer/PacVuWhiteStudio.js?v=20260926-grid1"></script>
   <script src="./shared/PacVuUnits.js"></script>
   <script src="./shared/PacVu2DVisualProfiles.js?v=20260802-tray-internal-gap1"></script>
   <script src="./shared/PacVu2DVisualContract.js?v=20260802-r001-responsive1"></script>
@@ -128,14 +130,14 @@
 
   <!-- M002: G-style Mailer 2 -->
   <script src="./structures/mailer/M002/M002_spec.js"></script>
-  <script src="./structures/mailer/M002/M002_layout.js?v=20260730-insertdepth1"></script>
-  <script src="./structures/mailer/M002/M002_renderer.js?v=20260730-svgmaster2"></script>
+  <script src="./structures/mailer/M002/M002_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/mailer/M002/M002_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/mailer/M002/M002_3d.js?v=20260730-brandshadow2"></script>
 
   <!-- M003: PacVu Master G Box -->
   <script src="./structures/mailer/M003/M003_spec.js"></script>
-  <script src="./structures/mailer/M003/M003_layout.js"></script>
-  <script src="./structures/mailer/M003/M003_renderer.js?v=20260730-overallgap1"></script>
+  <script src="./structures/mailer/M003/M003_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/mailer/M003/M003_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/mailer/M003/M003_3d_test.js?v=20260802-m003-slider-hitarea1"></script>
 
   <!-- T001: B-Type Tuck current working template -->
@@ -170,53 +172,66 @@
   <script src="./structures/tuck/T005/T005_renderer.js"></script>
   <script src="./structures/tuck/T005/T005_3d.js"></script>
 
+  <!-- T006: Tear-Open Tuck Box -->
+  <script src="./structures/tuck/T006/T006_spec.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T006/T006_layout.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T006/T006_renderer.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T006/T006_3d.js?v=20260927-t006-t010-registry1"></script>
+
   <!-- T007: Tissue Dispensing Tuck Box -->
-  <script src="./structures/tuck/T007/T007_source.js"></script>
-  <script src="./structures/tuck/T007/T007_spec.js"></script>
-  <script src="./structures/tuck/T007/T007_layout.js"></script>
-  <script src="./structures/tuck/T007/T007_renderer.js"></script>
-  <script src='./structures/tuck/T007/T007_3d.js?v=20260911-opposite-flaps-3'></script>
+  <script src="./structures/tuck/T007/T007_source.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T007/T007_spec.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T007/T007_layout.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T007/T007_renderer.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T007/T007_3d.js?v=20260927-t006-t010-registry1"></script>
   <!-- T008: Rabbit Ear Tuck Box -->
-  <script src="./structures/tuck/T008/T008_spec.js"></script>
-  <script src="./structures/tuck/T008/T008_layout.js"></script>
-  <script src="./structures/tuck/T008/T008_renderer.js"></script>
-  <script src="./structures/tuck/T008/T008_3d.js"></script>
+  <script src="./structures/tuck/T008/T008_spec.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T008/T008_layout.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T008/T008_renderer.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T008/T008_3d.js?v=20260927-t006-t010-registry1"></script>
 
   <!-- T009: Equal Bottom Rabbit Ear Tuck Box -->
-  <script src="./structures/tuck/T009/T009_spec.js"></script>
-  <script src="./structures/tuck/T009/T009_layout.js"></script>
-  <script src="./structures/tuck/T009/T009_renderer.js"></script>
-  <script src="./structures/tuck/T009/T009_3d.js"></script>
+  <script src="./structures/tuck/T009/T009_spec.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T009/T009_layout.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T009/T009_renderer.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T009/T009_3d.js?v=20260927-t006-t010-registry1"></script>
+
+  <!-- T010: Slot Lock Auto-Lock Tuck Box -->
+  <script src="./structures/tuck/T010/T010_source.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T010/T010_spec.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T010/T010_layout.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T010/T010_renderer.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./structures/tuck/T010/T010_3d.js?v=20260927-t006-t010-registry1"></script>
 
   <!-- GA001: Gable Lock Box master -->
   <script src="./structures/gable/common/Gable2DVisualCommon.js?v=20260802-ga001-spacing2"></script>
   <script src="./structures/gable/GA001/GA001_spec.js?v=20260802-safety1"></script>
-  <script src="./structures/gable/GA001/GA001_layout.js?v=20260802-handle-size1"></script>
-  <script src="./structures/gable/GA001/GA001_renderer.js?v=20260802-ga001-spacing2"></script>
+  <script src="./structures/gable/GA001/GA001_layout.js?v=20260924-gluebleed1"></script>
+  <script src="./structures/gable/GA001/GA001_renderer.js?v=20260924-gluebleed3"></script>
   <script src="./structures/gable/GA001/GA001_3d_test.js"></script>
 
   <!-- R001: A-Type RSC Shipping -->
   <script src="./structures/shipping/rsc/R001/R001_spec.js"></script>
-  <script src="./structures/shipping/rsc/R001/R001_layout.js"></script>
-  <script src="./structures/shipping/rsc/R001/R001_renderer.js?v=20260730-r001overall5"></script>
+  <script src="./structures/shipping/rsc/R001/R001_layout.js?v=20260923-gluewhite3"></script>
+  <script src="./structures/shipping/rsc/R001/R001_renderer.js?v=20260923-gluewhite3"></script>
   <script src="./structures/shipping/rsc/R001/R001_3d.js?v=20260731-r001assembly1"></script>
 
   <!-- R002: A-Type RSC Shipping 2 -->
   <script src="./structures/shipping/rsc/R002/R002_spec.js"></script>
-  <script src="./structures/shipping/rsc/R002/R002_layout.js"></script>
-  <script src="./structures/shipping/rsc/R002/R002_renderer.js"></script>
+  <script src="./structures/shipping/rsc/R002/R002_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/shipping/rsc/R002/R002_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/shipping/rsc/R002/R002_3d.js?v=20260731-r002assembly1"></script>
 
   <!-- R003: A-Type RSC Shipping 3 -->
   <script src="./structures/shipping/rsc/R003/R003_spec.js"></script>
-  <script src="./structures/shipping/rsc/R003/R003_layout.js"></script>
-  <script src="./structures/shipping/rsc/R003/R003_renderer.js?v=20260802-vertical-dim1"></script>
+  <script src="./structures/shipping/rsc/R003/R003_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/shipping/rsc/R003/R003_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/shipping/rsc/R003/R003_3d.js?v=20260731-r003assembly1"></script>
 
   <!-- R004: A-Type RSC Shipping 4 with handle cut -->
   <script src="./structures/shipping/rsc/R004/R004_spec.js"></script>
-  <script src="./structures/shipping/rsc/R004/R004_layout.js"></script>
-  <script src="./structures/shipping/rsc/R004/R004_renderer.js?v=20260802-vertical-dim1"></script>
+  <script src="./structures/shipping/rsc/R004/R004_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/shipping/rsc/R004/R004_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/shipping/rsc/R004/R004_3d.js?v=20260731-r004assembly1"></script>
 
   <!-- S001: S-Series Sleeve & Slide set -->
@@ -226,8 +241,8 @@
   <script src="./structures/sleeve_slide/S001/product_fit/S001_product_instances.js"></script>
   <script src="./structures/sleeve_slide/S001/product_fit/S001_product_placement.js"></script>
   <script src="./structures/sleeve_slide/S001/product_fit/S001_product_fit_scenarios.js"></script>
-  <script src="./structures/sleeve_slide/S001/S001_layout.js"></script>
-  <script src="./structures/sleeve_slide/S001/S001_renderer.js"></script>
+  <script src="./structures/sleeve_slide/S001/S001_layout.js?v=20260924-gluebleed1"></script>
+  <script src="./structures/sleeve_slide/S001/S001_renderer.js?v=20260924-insertpadfill1"></script>
   <script src="./structures/sleeve_slide/S001/S001_export.js"></script>
   <script src="./structures/sleeve_slide/S001/S001_inner_3d.js?v=20260804-inner-bottom-direction7"></script>
   <script src="./structures/sleeve_slide/S001/S001_insert_3d.js?v=20260804-insert-svg-guides4"></script>
@@ -238,8 +253,8 @@
   <!-- B001: Bakery Box -->
   <script src="./structures/bakery/common/Bakery2DVisualCommon.js?v=20260802-b001-ui1"></script>
   <script src="./structures/bakery/B001/B001_spec.js"></script>
-  <script src="./structures/bakery/B001/B001_layout.js"></script>
-  <script src="./structures/bakery/B001/B001_renderer.js"></script>
+  <script src="./structures/bakery/B001/B001_layout.js?v=20260924-gluebleed2"></script>
+  <script src="./structures/bakery/B001/B001_renderer.js?v=20260924-gluebleed2"></script>
   <script src="./structures/bakery/B001/B001_3d_test.js?v=20260726-test"></script>
 
   <!-- B002: Bakery Handle Box -->
@@ -250,9 +265,9 @@
 
   <!-- C001: Cake Box -->
   <script src="./structures/cake/C001/C001_spec.js"></script>
-  <script src="./structures/cake/C001/C001_layout.js"></script>
+  <script src="./structures/cake/C001/C001_layout.js?v=20260924-gluebleed1"></script>
   <script src="./structures/cake/common/Cake2DVisualCommon.js"></script>
-  <script src="./structures/cake/C001/C001_renderer.js"></script>
+  <script src="./structures/cake/C001/C001_renderer.js?v=20260924-gluebleed4"></script>
   <script src="./structures/cake/C001/C001_export.js"></script>
   <script src="./structures/cake/C001/C001_3d.js"></script>
 
@@ -265,14 +280,14 @@
 
   <!-- TR002: EB Tray Box -->
   <script src="./structures/tray/TR002/TR002_spec.js"></script>
-  <script src="./structures/tray/TR002/TR002_layout.js"></script>
-  <script src="./structures/tray/TR002/TR002_renderer.js?v=20260802-tray-profile1"></script>
+  <script src="./structures/tray/TR002/TR002_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/tray/TR002/TR002_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/tray/TR002/TR002_3d.js?v=20260802-tr002-assembly1"></script>
 
   <!-- TR003: Tray Box -->
   <script src="./structures/tray/TR003/TR003_spec.js"></script>
-  <script src="./structures/tray/TR003/TR003_layout.js"></script>
-  <script src="./structures/tray/TR003/TR003_renderer.js?v=20260802-tray-profile1"></script>
+  <script src="./structures/tray/TR003/TR003_layout.js?v=20260923-previewfill1"></script>
+  <script src="./structures/tray/TR003/TR003_renderer.js?v=20260923-previewfill1"></script>
   <script src="./structures/tray/TR003/TR003_3d.js?v=20260802-tr003-four-semicircles5"></script>
 
   <!-- export -->
@@ -280,8 +295,8 @@
   <script src="./export/dxfExport.js"></script>
 
   <!-- app (entry point) -->
-<script src="./app.js?v=20260809-upper-tuck-master2"></script>
-  <script src="./mockup3d.js?v=20260802-tr002-assembly1"></script>
+<script src="./app.js?v=20260927-t006-t010-registry1"></script>
+  <script src="./mockup3d.js?v=20260927-t006-t010-registry1"></script>
   <script src="./shared/PacVu2DWatermarkOverlay.js?v=20260802-m001-screen2"></script>
 </body>
 </html>
