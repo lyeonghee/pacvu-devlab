@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // C001_layout.js - SVG-extracted C001 Cake Box layout data
 // Base source: C001_277x275x140_(cutpath,bleedpath,foldingline).svg
 // ============================================================
@@ -151,6 +151,8 @@ function C001_getLayout(input) {
 
   const dielineBounds = mappedBounds(C001_DIELINE_SOURCE_BOUNDS);
   const bleedBounds = mappedBounds(C001_BLEED_SOURCE_BOUNDS);
+  const glueFoldTop = C001_mapSource(mapLayout, 460.09, 487.02);
+  const glueFoldBottom = C001_mapSource(mapLayout, 460.09, 1266.546);
   return {
     cfg,
     bounds,
@@ -165,6 +167,11 @@ function C001_getLayout(input) {
     cutElements: C001_CUT_ELEMENTS,
     foldElements: C001_FOLD_ELEMENTS,
     bleedElements: C001_BLEED_ELEMENTS,
+    previewFillElements: C001_BLEED_ELEMENTS,
+    previewGlueBleedLine: {
+      x1: C001_layoutNum(glueFoldTop.x - 3), y1: glueFoldTop.y,
+      x2: C001_layoutNum(glueFoldBottom.x - 3), y2: glueFoldBottom.y
+    },
     guideElements: C001_GUIDE_ELEMENTS
   };
 }

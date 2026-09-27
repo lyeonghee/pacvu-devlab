@@ -171,7 +171,7 @@ function T005_validateLayout(layout) {
     ['bodyHeight',g.yBodyBottom-g.yBodyTop,s.H],['upperLidDepth',g.yBodyTop-g.yUpperFold,s.D],
     ['lowerLidDepth',g.yLowerFold-g.yBodyBottom,s.D],['glueWidth',g.xBackL-g.xGlueL,Math.max(15,Math.min(25,s.D*.23132))],
     ['capsuleCenterX',c.cx,(g.xBackR+g.xSideLR)/2],['capsuleCenterY',c.cy,(g.yBodyTop+g.yBodyBottom)/2],
-    ['capsuleRatio',c.ratio,46/240],['bleedWidth',layout.bleedBounds.width-layout.dielineBounds.width,6],
+    ['capsuleRatio',c.ratio,46/240],['bleedGlueBoundary',layout.bleedBounds.minX-(g.xBackL-3),0],['bleedRight',layout.bleedBounds.maxX-layout.dielineBounds.maxX,3],
     ['bleedHeight',layout.bleedBounds.height-layout.dielineBounds.height,6]
   ];
   const failures=checks.filter(v=>Math.abs(v[1]-v[2])>t).map(v=>({id:v[0],actual:v[1],expected:v[2]}));
@@ -192,7 +192,9 @@ function T005_getLayout(W,D,H) {
   let points=T001_flattenPathD(cut.outline).filter((p,i,a)=>i===0||T001_distance(p,a[i-1])>.001);
   if(points.length>1&&T001_distance(points[0],points[points.length-1])>.001)points.push({...points[0]});
   const raw=T001_polygonBounds(points),dielineBounds={minX:raw.minX,minY:raw.minY,maxX:raw.maxX,maxY:raw.maxY,width:raw.maxX-raw.minX,height:raw.maxY-raw.minY};
-  const bleedPoints=T001_offsetPolygonWithClipper(points.slice(0,-1),3);
+  const offsetBleedPoints=T001_offsetPolygonWithClipper(points.slice(0,-1),3);
+  const glueBleedX=spec.grid.xBackL-3;
+  const bleedPoints=T001_clipPolygonAtMinX(offsetBleedPoints,glueBleedX);
   if(!bleedPoints||!bleedPoints.length)throw new Error('T005 final Cut 3 mm bleed generation failed.');
   const bleedPath=T001_polygonToPath(bleedPoints),rb=T001_polygonBounds(bleedPoints),bleedBounds={minX:rb.minX,minY:rb.minY,maxX:rb.maxX,maxY:rb.maxY,width:rb.maxX-rb.minX,height:rb.maxY-rb.minY};
   const g=spec.grid,labelData=[
@@ -205,10 +207,10 @@ function T005_getLayout(W,D,H) {
     ['lowerDustFlap(R)',(g.xFrontR+g.xSideRR)/2,(g.yBodyBottom+g.yLowerFold)/2]
   ];
   const labels=labelData.map(v=>({name:v[0],x:v[1],y:v[2]}));
-  const glueFillPoints=T005_clipPolygonAtMaxX(points.slice(0,-1),g.xBackL);
+  const glueFillPoints=T005_clipPolygonAtMaxX(points.slice(0,-1),glueBleedX);
   if(glueFillPoints.length<3)throw new Error('T005 final Cut glue fill extraction failed.');
   const glueFillPath=T001_polygonToPath(glueFillPoints);
-  const layout={spec,grid:g,mapper,fillPath:cut.outline,cutElements:cut.cutElements,shortCutElements:cut.shortCuts,tuckMetrics:T005_shortCutMetrics(cut.shortCuts),foldElements,labels,capsuleHole,optionElements:[capsuleHole.element],glueFillPath,glueFillPoints,bleedPath,bleedElement:'<path d="'+bleedPath+'"/>',dielineBounds,bleedBounds,bounds:dielineBounds,selfIntersection:T005_hasSelfIntersection(points)};
+  const layout={spec,grid:g,mapper,fillPath:cut.outline,previewFillPath:bleedPath,cutElements:cut.cutElements,shortCutElements:cut.shortCuts,tuckMetrics:T005_shortCutMetrics(cut.shortCuts),foldElements,labels,capsuleHole,optionElements:[capsuleHole.element],glueFillPath,glueFillPoints,bleedPath,bleedElement:'<path d="'+bleedPath+'"/>',dielineBounds,bleedBounds,bounds:dielineBounds,selfIntersection:T005_hasSelfIntersection(points)};
   layout.validation=T005_validateLayout(layout);
   if(!layout.validation.ok)throw new Error('T005 Opposite Tuck contract failed: '+JSON.stringify(layout.validation.failures));
   return layout;

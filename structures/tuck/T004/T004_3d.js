@@ -614,7 +614,6 @@
     }
     const slider = modal.querySelector('input');
     slider.oninput = () => pose(Number(slider.value) / 100);
-    slider.onchange = () => view('iso');
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => view(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
     let shadows = true;
@@ -633,7 +632,8 @@
       if (!blob) return; const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'T004_3D_' + slider.value + '.png'; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     });
     const observer = new ResizeObserver(resize); observer.observe(stage);
-    resize(); pose(0); view('iso');
+    resize(); pose(0);
+    let hasInitialView = false;
     let live = true, frameId = 0;
     (function animate() { if (!live) return; frameId = requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
     return {
@@ -643,9 +643,10 @@
         const target = contract.states[state] ?? Number(slider.value) / 100;
         slider.value = String(Math.round(target * 100));
         if (target > 0.90) pose(0.90);
-        pose(target); resize(); view('iso');
+        pose(target); resize();
+        if (!hasInitialView) { view('iso'); hasInitialView = true; }
       },
-      setState(state) { const target = contract.states[state] ?? 0; slider.value = String(Math.round(target * 100)); if (target > 0.90) pose(0.90); pose(target); view('iso'); },
+      setState(state) { const target = contract.states[state] ?? 0; slider.value = String(Math.round(target * 100)); if (target > 0.90) pose(0.90); pose(target); },
       destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); controls.dispose?.(); renderer.dispose(); modal.remove(); }
     };
   }

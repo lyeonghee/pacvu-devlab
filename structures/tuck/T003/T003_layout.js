@@ -207,7 +207,7 @@ function T003_validateLayout(layout) {
     ['lidTopDepth', g.yBodyTop - g.yLidFold, s.D],
     ['glueWidth', g.glueWidth, Math.min(25, s.D * (25 / 81))],
     ['bottomLockBend', g.yBottomBend - g.yBodyBottom, s.D * 0.5],
-    ['bleedWidth', layout.bleedBounds.width - layout.dielineBounds.width, 6],
+    ['bleedGlueBoundary', layout.bleedBounds.minX - (g.xFrontL - 3), 0], ['bleedRight', layout.bleedBounds.maxX - layout.dielineBounds.maxX, 3],
     ['bleedHeight', layout.bleedBounds.height - layout.dielineBounds.height, 6]
   ];
   const failures = checks.filter(item => Math.abs(item[1] - item[2]) > tolerance)
@@ -252,7 +252,9 @@ function T003_getLayout(W, D, H) {
     minX: rawBounds.minX, minY: rawBounds.minY, maxX: rawBounds.maxX, maxY: rawBounds.maxY,
     width: rawBounds.maxX - rawBounds.minX, height: rawBounds.maxY - rawBounds.minY
   };
-  const bleedPoints = T001_offsetPolygonWithClipper(cutPoints, 3);
+  const offsetBleedPoints = T001_offsetPolygonWithClipper(cutPoints, 3);
+  const glueBleedX = grid.xFrontL - 3;
+  const bleedPoints = T001_clipPolygonAtMinX(offsetBleedPoints, glueBleedX);
   if (!bleedPoints || !bleedPoints.length) throw new Error('T003 3 mm bleed generation failed.');
   const bleedPath = T001_polygonToPath(bleedPoints);
   const rawBleed = T001_polygonBounds(bleedPoints);
@@ -274,10 +276,10 @@ function T003_getLayout(W, D, H) {
     return { name: item[0], ...mapper.point(item[1], item[2]) };
   });
   const glueTop = mapper.point(258.789,392.199), glueBottom = mapper.point(258.789,1159.37);
-  const glueFillPath = `M ${grid.xFrontL} ${grid.yBodyTop} L ${glueTop.x} ${glueTop.y} L ${glueBottom.x} ${glueBottom.y} L ${grid.xFrontL} ${grid.yBodyBottom} Z`;
+  const glueFillPath = `M ${glueBleedX} ${grid.yBodyTop} L ${glueTop.x} ${glueTop.y} L ${glueBottom.x} ${glueBottom.y} L ${glueBleedX} ${grid.yBodyBottom} Z`;
   const layout = {
     spec, grid, mapper, fillPath, cutElements, foldElements, labels, glueFillPath,
-    bleedPath, bleedElement: '<path d="' + bleedPath + '"/>',
+    bleedPath, previewFillPath: bleedPath, bleedElement: '<path d="' + bleedPath + '"/>',
     bounds: dielineBounds, dielineBounds, bleedBounds,
     transform: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }
   };

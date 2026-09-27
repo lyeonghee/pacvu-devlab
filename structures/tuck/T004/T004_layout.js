@@ -155,7 +155,7 @@ function T004_validateLayout(layout) {
     ['bodyHeight',g.yBodyBottom-g.yBodyTop,s.H],['lidTopDepth',g.yBodyTop-g.yLidFold,s.D],
     ['glueWidth',g.glueWidth,Math.min(25,s.D*(25/81))],
     ['bottomLockBend',g.yBottomBend-g.yBodyBottom,s.D*0.5],
-    ['bleedWidth',layout.bleedBounds.width-layout.dielineBounds.width,6],
+    ['bleedGlueBoundary',layout.bleedBounds.minX-(g.xFrontL-3),0],['bleedRight',layout.bleedBounds.maxX-layout.dielineBounds.maxX,3],
     ['bleedHeight',layout.bleedBounds.height-layout.dielineBounds.height,6]
   ];
   const failures=checks.filter(v=>Math.abs(v[1]-v[2])>tolerance).map(v=>({id:v[0],actual:v[1],expected:v[2]}));
@@ -190,7 +190,9 @@ function T004_getLayout(W,D,H) {
   const foldElements=T004_sourceFoldElements().map(v=>{const a=mapper.point(v[0],v[1]),b=mapper.point(v[2],v[3]);return T002_lineElement(a.x,a.y,b.x,b.y);});
   const cutPoints=T001_flattenPathD(fillPath), raw=T001_polygonBounds(cutPoints);
   const dielineBounds={minX:raw.minX,minY:raw.minY,maxX:raw.maxX,maxY:raw.maxY,width:raw.maxX-raw.minX,height:raw.maxY-raw.minY};
-  const bleedPoints=T001_offsetPolygonWithClipper(cutPoints,3);
+  const offsetBleedPoints=T001_offsetPolygonWithClipper(cutPoints,3);
+  const glueBleedX=grid.xFrontL-3;
+  const bleedPoints=T001_clipPolygonAtMinX(offsetBleedPoints,glueBleedX);
   if(!bleedPoints||!bleedPoints.length) throw new Error('T004 3 mm bleed generation failed.');
   const bleedPath=T001_polygonToPath(bleedPoints), rb=T001_polygonBounds(bleedPoints);
   const bleedBounds={minX:rb.minX,minY:rb.minY,maxX:rb.maxX,maxY:rb.maxY,width:rb.maxX-rb.minX,height:rb.maxY-rb.minY};
@@ -204,8 +206,8 @@ function T004_getLayout(W,D,H) {
     return {name:v[0],...mapper.point(v[1],v[2])};
   });
   const gt=mapper.point(256.011,474.115),gb=mapper.point(256.011,940.814);
-  const glueFillPath=`M ${grid.xFrontL} ${grid.yBodyTop} L ${gt.x} ${gt.y} L ${gb.x} ${gb.y} L ${grid.xFrontL} ${grid.yBodyBottom} Z`;
-  const layout={spec,grid,mapper,fillPath,cutElements,foldElements,labels,glueFillPath,bleedPath,bleedElement:'<path d="'+bleedPath+'"/>',bounds:dielineBounds,dielineBounds,bleedBounds,transform:{a:1,b:0,c:0,d:1,e:0,f:0}};
+  const glueFillPath=`M ${glueBleedX} ${grid.yBodyTop} L ${gt.x} ${gt.y} L ${gb.x} ${gb.y} L ${glueBleedX} ${grid.yBodyBottom} Z`;
+  const layout={spec,grid,mapper,fillPath,previewFillPath:bleedPath,cutElements,foldElements,labels,glueFillPath,bleedPath,bleedElement:'<path d="'+bleedPath+'"/>',bounds:dielineBounds,dielineBounds,bleedBounds,transform:{a:1,b:0,c:0,d:1,e:0,f:0}};
   layout.validation=T004_validateLayout(layout);
   if(!layout.validation.ok) throw new Error('T004 geometry contract failed: '+JSON.stringify(layout.validation.failures));
   return layout;

@@ -241,7 +241,7 @@ function T004_renderSVG(cfg, appState) {
   let svg='<svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" viewBox="'+[vbX,vbY,vbW,vbH].map(T004_num).join(' ')+'" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">\n';
   svg+='<defs>'+T001_arrowMarkerDef(visual.arrowMarkerSize)+T001_overallArrowMarkerDefs(visual.arrowMarkerSize)+T001_watermarkDef(visual)+T001_styleBlock()+'</defs>\n';
   svg+='<rect x="'+T004_num(vbX)+'" y="'+T004_num(vbY)+'" width="'+T004_num(vbW)+'" height="'+T004_num(vbH)+'" fill="#d0d0d0"/>\n<g id="viewportGroup">\n';
-  svg+='<g id="layer-fill"><path class="cut-area" d="'+layout.fillPath+'"/></g>\n';
+  svg+='<g id="layer-fill"><path class="cut-area" d="'+layout.previewFillPath+'"/></g>\n';
   svg+='<g id="layer-glue-fill"><path class="glue-area" d="'+layout.glueFillPath+'"/></g>\n';
   if(!appState||appState.showBleed) svg+='<g id="layer-bleed">'+T004_restyleElement(layout.bleedElement,'bleed')+'</g>\n';
   if(!appState||appState.showCut) svg+='<g id="layer-cut">'+layout.cutElements.map(el=>T004_restyleElement(el,'cut-fill')).join('')+'</g>\n';

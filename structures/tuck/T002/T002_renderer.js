@@ -251,7 +251,7 @@ function T002_renderSVG(cfg, appState) {
   svg += '<defs>' + T001_arrowMarkerDef(visual.arrowMarkerSize) + T001_overallArrowMarkerDefs(visual.arrowMarkerSize) + T001_watermarkDef(visual) + T001_styleBlock() + '</defs>\n';
   svg += '<rect x="' + T002_num(vbX) + '" y="' + T002_num(vbY) + '" width="' + T002_num(vbW) + '" height="' + T002_num(vbH) + '" fill="#d0d0d0" stroke="none"/>\n';
   svg += '<g id="viewportGroup">\n';
-  svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.fillPath + '"/></g>\n';
+  svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.previewFillPath + '"/></g>\n';
   svg += '  <g id="layer-glue-fill"><path class="glue-area" d="' + layout.glueFillPath + '"/></g>\n';
   if (!appState || appState.showBleed) {
     svg += '  <g id="layer-bleed">' + T002_restyleElement(layout.bleedElement, 'bleed') + '</g>\n';

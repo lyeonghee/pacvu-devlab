@@ -22,7 +22,7 @@ function T005_renderSVG(cfg,appState){
   let svg='<svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" viewBox="'+[x,y,w,h].map(T005_num).join(' ')+'" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">';
   svg+='<defs>'+T001_arrowMarkerDef(visual.arrowMarkerSize)+T001_overallArrowMarkerDefs(visual.arrowMarkerSize)+T001_watermarkDef(visual)+T001_styleBlock()+T005_extraStyle()+'</defs>';
   svg+='<rect x="'+T005_num(x)+'" y="'+T005_num(y)+'" width="'+T005_num(w)+'" height="'+T005_num(h)+'" fill="#d0d0d0"/><g id="viewportGroup">';
-  svg+='<g id="layer-fill"><path class="cut-area" d="'+layout.fillPath+'"/></g><g id="layer-glue-fill"><path class="glue-area" d="'+layout.glueFillPath+'"/></g>';
+  svg+='<g id="layer-fill"><path class="cut-area" d="'+layout.previewFillPath+'"/><path class="hole-area" fill="#d0d0d0" d="'+layout.capsuleHole.path+'"/></g><g id="layer-glue-fill"><path class="glue-area" d="'+layout.glueFillPath+'"/></g>';
   if(!appState||appState.showBleed)svg+='<g id="layer-bleed">'+T005_restyle(layout.bleedElement,'bleed')+'</g>';
   if(!appState||appState.showCut)svg+='<g id="layer-cut">'+layout.cutElements.map(el=>T005_restyle(el,'cut-fill')).join('')+'</g>';
   if(!appState||appState.showHoles!==false)svg+='<g id="layer-punch">'+T005_restyle(layout.capsuleHole.element,'punch')+'</g>';

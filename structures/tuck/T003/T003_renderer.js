@@ -335,7 +335,7 @@ function T003_renderSVG(cfg, appState) {
   svg += '<defs>' + T001_arrowMarkerDef(visual.arrowMarkerSize) + T001_overallArrowMarkerDefs(visual.arrowMarkerSize) + T001_watermarkDef(visual) + T001_styleBlock() + '</defs>\n';
   svg += '<rect x="' + T003_num(vbX) + '" y="' + T003_num(vbY) + '" width="' + T003_num(vbW) + '" height="' + T003_num(vbH) + '" fill="#d0d0d0"/>\n';
   svg += '<g id="viewportGroup">\n';
-  svg += '<g id="layer-fill"><path class="cut-area" d="' + layout.fillPath + '"/>' + T003_holeFillCircles(layout,cfg) + '</g>\n';
+  svg += '<g id="layer-fill"><path class="cut-area" d="' + layout.previewFillPath + '"/>' + T003_holeFillCircles(layout,cfg) + '</g>\n';
   svg += '<g id="layer-glue-fill"><path class="glue-area" d="' + layout.glueFillPath + '"/></g>\n';
   if (!appState || appState.showBleed) svg += '<g id="layer-bleed">' + T003_restyleElement(layout.bleedElement,'bleed') + '</g>\n';
   if (!appState || appState.showCut) svg += '<g id="layer-cut">' + layout.cutElements.map(el=>T003_restyleElement(el,'cut-fill')).join('') + T003_holeCircles(layout,cfg) + '</g>\n';

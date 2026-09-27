@@ -245,10 +245,11 @@ function T001_formatLength(valueMm) {
 }
 
 function T001_glueFillPath(grid) {
+  const glueBleedX = grid.xFrontL - T001_BLEED_OFFSET;
   return [
     'M ' + T001_num(grid.xGlueL) + ' ' + T001_num(grid.yBodyTop),
-    'L ' + T001_num(grid.xFrontL) + ' ' + T001_num(grid.yBodyTop),
-    'L ' + T001_num(grid.xFrontL) + ' ' + T001_num(grid.yBodyBottom),
+    'L ' + T001_num(glueBleedX) + ' ' + T001_num(grid.yBodyTop),
+    'L ' + T001_num(glueBleedX) + ' ' + T001_num(grid.yBodyBottom),
     'L ' + T001_num(grid.xGlueL) + ' ' + T001_num(grid.yBodyBottom),
     'Z'
   ].join(' ');
@@ -356,9 +357,11 @@ function T001_renderSVG(cfg, appState) {
   svg += '<defs>' + T001_arrowMarkerDef(visual.arrowMarkerSize) + T001_arrowMarkerDef(internalVisual.arrowMarkerSize, 'internal-dimension-arrow', 'userSpaceOnUse') + T001_overallArrowMarkerDefs(overallVisual.arrowMarkerSize) + T001_watermarkDef(visual) + T001_styleBlock() + '</defs>\n';
   svg += '<rect x="' + T001_num(vbX) + '" y="' + T001_num(vbY) + '" width="' + T001_num(vbW) + '" height="' + T001_num(vbH) + '" fill="#d0d0d0" stroke="none"/>\n';
   svg += '<g id="viewportGroup">\n';
-  svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.fillPath + '"/></g>\n';
+  svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.previewFillPath + '"/></g>\n';
   svg += '  <g id="layer-glue-fill"><path class="glue-area" d="' + T001_glueFillPath(layout.grid) + '"/></g>\n';
-  svg += '  <g id="layer-bleed">' + T001_restyleElement(layout.bleedElement, 'bleed') + '</g>\n';
+  if (!appState || appState.showBleed) {
+    svg += '  <g id="layer-bleed">' + T001_restyleElement(layout.bleedElement, 'bleed') + '</g>\n';
+  }
   svg += '  <g id="layer-cut">' + layout.cutElements.map(el => T001_restyleElement(el, 'cut-fill')).join('') + '</g>\n';
   if (!appState || appState.showFolds) {
     svg += '  <g id="layer-fold">' + layout.foldElements.map(el => T001_restyleElement(el, 'fold')).join('') + '</g>\n';

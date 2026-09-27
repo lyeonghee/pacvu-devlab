@@ -227,6 +227,7 @@ function C001_supplementCutElements() {
 
 function C001_styleBlock() {
   return '<style>' +
+    '.preview-fill{fill:#ffffff;stroke:none;fill-rule:evenodd;clip-rule:evenodd;}' +
     '.panel-fill{fill:#ffffff;stroke:none;fill-rule:nonzero;clip-rule:nonzero;}' +
     '.glue-fill{fill:#e6e6e6;stroke:none;fill-rule:nonzero;clip-rule:nonzero;}' +
     '.cut-fill{fill:none;stroke:#cc0000;stroke-width:0.6;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;}' +
@@ -394,7 +395,8 @@ function C001_buildPanelFillLayer(layout) {
     .map(item => {
       const d = typeof item === 'string' ? item : item.d;
       const className = typeof item === 'string' ? 'panel-fill' : item.className;
-      return '<path class="' + className + '" d="' + C001_transformPathD(d, layout) + '"/>';
+      const glueClipAttr = className === 'glue-fill' && layout.previewGlueBleedLine ? ' clip-path="url(#c001-glue-overlay-clip)"' : '';
+      return '<path class="' + className + '"' + glueClipAttr + ' d="' + C001_transformPathD(d, layout) + '"/>';
     })
     .join('');
   return '  <g id="layer-panel-fill">' +
@@ -465,10 +467,21 @@ function C001_renderSVG(cfg, appState) {
   let svg = '<svg id="mainSvg" data-pacvu-preserve-dimension-ends="true" xmlns="http://www.w3.org/2000/svg" viewBox="' +
     C001_num(vbX) + ' ' + C001_num(vbY) + ' ' + C001_num(vbW) + ' ' + C001_num(vbH) +
     '" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">\n';
-  svg += '<defs>' + C001_arrowMarkerDef() + C001_watermarkDef() + C001_styleBlock() + '</defs>\n';
+  const glueBleed = layout.previewGlueBleedLine;
+  const glueFoldX = C001_map(layout, 460.09, 487.02).x;
+  const glueClipDef = glueBleed ? '<clipPath id="c001-glue-overlay-clip"><rect x="' + C001_num(vbX - 10) + '" y="' + C001_num(vbY - 10) + '" width="' + C001_num(glueBleed.x1 - (vbX - 10)) + '" height="' + C001_num(vbH + 20) + '"/></clipPath><clipPath id="c001-glue-white-strip-clip"><rect x="' + C001_num(glueBleed.x1) + '" y="' + C001_num(vbY - 10) + '" width="' + C001_num(glueFoldX - glueBleed.x1) + '" height="' + C001_num(vbH + 20) + '"/></clipPath>' : '';
+  svg += '<defs>' + C001_arrowMarkerDef() + C001_watermarkDef() + C001_styleBlock() + glueClipDef + '</defs>\n';
   svg += '<rect x="' + C001_num(vbX) + '" y="' + C001_num(vbY) + '" width="' + C001_num(vbW) + '" height="' + C001_num(vbH) + '" fill="#d0d0d0" stroke="none"/>\n';
   svg += '<g id="viewportGroup">\n';
+  svg += '  <g id="layer-preview-fill">' + C001_layerElements(layout.previewFillElements || [], 'preview-fill', layout) + '</g>\n';
   svg += C001_buildPanelFillLayer(layout);
+  if (glueBleed) {
+    svg += '  <g id="layer-glue-preview-overlay" clip-path="url(#c001-glue-overlay-clip)">' + C001_layerElements(layout.previewFillElements || [], 'glue-fill', layout) + '</g>\n';
+  }
+  if (glueBleed) {
+    const gluePaper = C001_getPanelPaperPaths()[0];
+    svg += '  <g id="layer-glue-white-strip"><path class="panel-fill" clip-path="url(#c001-glue-white-strip-clip)" d="' + C001_transformPathD(gluePaper.d, layout) + '"/></g>\n';
+  }
   if (appState && appState.showC001Guide) {
     svg += '  <g id="layer-guide" class="guide" transform="' + matrix + '">' +
       C001_visibleElements(layout.guideElements).join('') + '</g>\n';
@@ -476,6 +489,7 @@ function C001_renderSVG(cfg, appState) {
   if (!appState || appState.showBleed) {
     svg += '  <g id="layer-bleed">' +
       C001_layerElements(layout.bleedElements, 'bleed', layout) + '</g>\n';
+    if (glueBleed) svg += '  <line id="layer-glue-bleed" class="bleed" x1="' + C001_num(glueBleed.x1) + '" y1="' + C001_num(glueBleed.y1) + '" x2="' + C001_num(glueBleed.x2) + '" y2="' + C001_num(glueBleed.y2) + '"/>\n';
   }
   if (!appState || appState.showCut) {
     const cutElements = C001_visibleElements(layout.cutElements).concat(C001_supplementCutElements());

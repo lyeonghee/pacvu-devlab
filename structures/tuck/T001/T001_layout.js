@@ -546,6 +546,28 @@ function T001_offsetPolygonWithClipper(points, offset) {
   return result;
 }
 
+function T001_clipPolygonAtMinX(points, minX) {
+  const source = points.length > 1 && T001_distance(points[0], points[points.length - 1]) < 0.001
+    ? points.slice(0, -1)
+    : points.slice();
+  const clipped = [];
+  for (let i = 0; i < source.length; i += 1) {
+    const current = source[i];
+    const next = source[(i + 1) % source.length];
+    const currentInside = current.x >= minX;
+    const nextInside = next.x >= minX;
+    if (currentInside) clipped.push({ x: current.x, y: current.y });
+    if (currentInside !== nextInside) {
+      const t = (minX - current.x) / (next.x - current.x);
+      clipped.push({ x: minX, y: current.y + (next.y - current.y) * t });
+    }
+  }
+  if (clipped.length && T001_distance(clipped[0], clipped[clipped.length - 1]) >= 0.001) {
+    clipped.push({ ...clipped[0] });
+  }
+  return clipped;
+}
+
 function T001_buildBleedPathFromCut(fillPath) {
   const points = T001_flattenPathD(fillPath);
   const offsetPoints = T001_offsetPolygonWithClipper(points, T001_BLEED_OFFSET);
@@ -735,12 +757,19 @@ function T001_getLayout(W, D, H, sourceSvg) {
     .map(el => T001_transformElement(el, mapper));
   const fillPath = T001_buildCutFillPath(cutElements);
   const offsetBleedPath = T001_buildBleedPathFromCut(fillPath);
-  const bleedElement = offsetBleedPath
-    ? '<path d="' + offsetBleedPath + '" fill="none" stroke="#263aed" stroke-miterlimit="10"/>'
+  const glueExcludedBleedPoints = offsetBleedPath
+    ? T001_clipPolygonAtMinX(T001_flattenPathD(offsetBleedPath), spec.grid.xFrontL - T001_BLEED_OFFSET)
+    : [];
+  const glueExcludedBleedPath = glueExcludedBleedPoints.length >= 4
+    ? T001_polygonToPath(glueExcludedBleedPoints)
+    : offsetBleedPath;
+  const bleedElement = glueExcludedBleedPath
+    ? '<path d="' + glueExcludedBleedPath + '" fill="none" stroke="#263aed" stroke-miterlimit="10"/>'
     : T001_transformElement(sourceBleedElement, mapper);
   const allElements = [bleedElement].concat(cutElements, foldElements);
   const dielineBounds = T001_boundsFromElements(cutElements);
   const bleedBounds = T001_boundsFromElements([bleedElement]);
+  const previewFillPath = T001_elementToPathD(bleedElement);
   const renderBounds = T001_boundsFromElements(allElements);
 
   return {
@@ -750,6 +779,7 @@ function T001_getLayout(W, D, H, sourceSvg) {
     cutElements,
     foldElements,
     fillPath,
+    previewFillPath,
     bleedElement,
     labels: T001_buildLabels(spec),
     bounds: dielineBounds,

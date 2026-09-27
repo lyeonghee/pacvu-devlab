@@ -1078,6 +1078,28 @@ function T001_offsetPolygonWithClipper(points, offset) {
   return result;
 }
 
+function T001_clipPolygonAtMinX(points, minX) {
+  const source = points.length > 1 && T001_distance(points[0], points[points.length - 1]) < 0.001
+    ? points.slice(0, -1)
+    : points.slice();
+  const clipped = [];
+  for (let i = 0; i < source.length; i += 1) {
+    const current = source[i];
+    const next = source[(i + 1) % source.length];
+    const currentInside = current.x >= minX;
+    const nextInside = next.x >= minX;
+    if (currentInside) clipped.push({ x: current.x, y: current.y });
+    if (currentInside !== nextInside) {
+      const t = (minX - current.x) / (next.x - current.x);
+      clipped.push({ x: minX, y: current.y + (next.y - current.y) * t });
+    }
+  }
+  if (clipped.length && T001_distance(clipped[0], clipped[clipped.length - 1]) >= 0.001) {
+    clipped.push({ ...clipped[0] });
+  }
+  return clipped;
+}
+
 function T001_buildBleedPathFromCut(fillPath) {
   const points = T001_flattenPathD(fillPath);
   const offsetPoints = T001_offsetPolygonWithClipper(points, T001_BLEED_OFFSET);
@@ -1267,9 +1289,16 @@ function T001_getLayout(W, D, H, sourceSvg) {
     .map(el => T001_transformElement(el, mapper));
   const fillPath = T001_buildCutFillPath(cutElements);
   const offsetBleedPath = T001_buildBleedPathFromCut(fillPath);
-  const bleedElement = offsetBleedPath
-    ? '<path d="' + offsetBleedPath + '" fill="none" stroke="#263aed" stroke-miterlimit="10"/>'
+  const glueExcludedBleedPoints = offsetBleedPath
+    ? T001_clipPolygonAtMinX(T001_flattenPathD(offsetBleedPath), spec.grid.xFrontL - T001_BLEED_OFFSET)
+    : [];
+  const glueExcludedBleedPath = glueExcludedBleedPoints.length >= 4
+    ? T001_polygonToPath(glueExcludedBleedPoints)
+    : offsetBleedPath;
+  const bleedElement = glueExcludedBleedPath
+    ? '<path d="' + glueExcludedBleedPath + '" fill="none" stroke="#263aed" stroke-miterlimit="10"/>'
     : T001_transformElement(sourceBleedElement, mapper);
+  const previewFillPath = T001_elementToPathD(bleedElement);
   const allElements = [bleedElement].concat(cutElements, foldElements);
   const dielineBounds = T001_boundsFromElements(cutElements);
   const bleedBounds = T001_boundsFromElements([bleedElement]);
@@ -1282,6 +1311,7 @@ function T001_getLayout(W, D, H, sourceSvg) {
     cutElements,
     foldElements,
     fillPath,
+    previewFillPath,
     bleedElement,
     labels: T001_buildLabels(spec),
     bounds: dielineBounds,
@@ -1562,10 +1592,11 @@ function T001_formatLength(valueMm) {
 }
 
 function T001_glueFillPath(grid) {
+  const glueBleedX = grid.xFrontL - T001_BLEED_OFFSET;
   return [
     'M ' + T001_num(grid.xGlueL) + ' ' + T001_num(grid.yBodyTop),
-    'L ' + T001_num(grid.xFrontL) + ' ' + T001_num(grid.yBodyTop),
-    'L ' + T001_num(grid.xFrontL) + ' ' + T001_num(grid.yBodyBottom),
+    'L ' + T001_num(glueBleedX) + ' ' + T001_num(grid.yBodyTop),
+    'L ' + T001_num(glueBleedX) + ' ' + T001_num(grid.yBodyBottom),
     'L ' + T001_num(grid.xGlueL) + ' ' + T001_num(grid.yBodyBottom),
     'Z'
   ].join(' ');
@@ -1673,9 +1704,11 @@ function T001_renderSVG(cfg, appState) {
   svg += '<defs>' + T001_arrowMarkerDef(visual.arrowMarkerSize) + T001_arrowMarkerDef(internalVisual.arrowMarkerSize, 'internal-dimension-arrow', 'userSpaceOnUse') + T001_overallArrowMarkerDefs(overallVisual.arrowMarkerSize) + T001_watermarkDef(visual) + T001_styleBlock() + '</defs>\n';
   svg += '<rect x="' + T001_num(vbX) + '" y="' + T001_num(vbY) + '" width="' + T001_num(vbW) + '" height="' + T001_num(vbH) + '" fill="#d0d0d0" stroke="none"/>\n';
   svg += '<g id="viewportGroup">\n';
-  svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.fillPath + '"/></g>\n';
+  svg += '  <g id="layer-fill"><path class="cut-area" d="' + layout.previewFillPath + '"/></g>\n';
   svg += '  <g id="layer-glue-fill"><path class="glue-area" d="' + T001_glueFillPath(layout.grid) + '"/></g>\n';
-  svg += '  <g id="layer-bleed">' + T001_restyleElement(layout.bleedElement, 'bleed') + '</g>\n';
+  if (!appState || appState.showBleed) {
+    svg += '  <g id="layer-bleed">' + T001_restyleElement(layout.bleedElement, 'bleed') + '</g>\n';
+  }
   svg += '  <g id="layer-cut">' + layout.cutElements.map(el => T001_restyleElement(el, 'cut-fill')).join('') + '</g>\n';
   if (!appState || appState.showFolds) {
     svg += '  <g id="layer-fold">' + layout.foldElements.map(el => T001_restyleElement(el, 'fold')).join('') + '</g>\n';

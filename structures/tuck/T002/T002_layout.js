@@ -254,7 +254,7 @@ function T002_validateRuleLayout(layout) {
     ['sideRightWidth', g.xSideRR - g.xBackR, layout.templateOverride ? 79.5002361111 : spec.D],
     ['bodyHeight', g.yBodyBottom - g.yBodyTop, spec.H],
     ['bottomLockBend', g.yBottomBend - g.yBodyBottom, spec.D * 0.5],
-    ['bleedWidth', layout.bleedBounds.width - layout.dielineBounds.width, 6],
+    ['bleedGlueBoundary', layout.bleedBounds.minX - (g.xFrontL - 3), 0], ['bleedRight', layout.bleedBounds.maxX - layout.dielineBounds.maxX, 3],
     ['bleedHeight', layout.bleedBounds.height - layout.dielineBounds.height, 6]
   ];
   const failures = checks.filter(check => Math.abs(check[1] - check[2]) > tolerance)
@@ -402,7 +402,9 @@ function T002_getLayout(W, D, H) {
     minX: cutBounds.minX, minY: cutBounds.minY, maxX: cutBounds.maxX, maxY: cutBounds.maxY,
     width: cutBounds.maxX - cutBounds.minX, height: cutBounds.maxY - cutBounds.minY
   };
-  const bleedPoints = T001_offsetPolygonWithClipper(cutPoints, 3);
+  const offsetBleedPoints = T001_offsetPolygonWithClipper(cutPoints, 3);
+  const glueBleedX = grid.xFrontL - 3;
+  const bleedPoints = T001_clipPolygonAtMinX(offsetBleedPoints, glueBleedX);
   if (!bleedPoints || !bleedPoints.length) throw new Error('T002 3 mm bleed generation failed.');
   const bleedPath = T001_polygonToPath(bleedPoints);
   const generatedBleedElement = '<path d="' + bleedPath + '"/>';
@@ -415,8 +417,8 @@ function T002_getLayout(W, D, H) {
   };
   const glueTop = mapper.point(319.9,620.702);
   const glueBottom = mapper.point(319.9,1403.918);
-  const glueFillPath = 'M ' + grid.xFrontL + ' ' + grid.yBodyTop + ' L ' + glueTop.x + ' ' + glueTop.y +
-    ' L ' + glueBottom.x + ' ' + glueBottom.y + ' L ' + grid.xFrontL + ' ' + grid.yBodyBottom + ' Z';
+  const glueFillPath = 'M ' + glueBleedX + ' ' + grid.yBodyTop + ' L ' + glueTop.x + ' ' + glueTop.y +
+    ' L ' + glueBottom.x + ' ' + glueBottom.y + ' L ' + glueBleedX + ' ' + grid.yBodyBottom + ' Z';
 
   const layout = {
     spec,
@@ -425,6 +427,7 @@ function T002_getLayout(W, D, H) {
     foldElements,
     bleedElement: generatedBleedElement,
     bleedPath,
+    previewFillPath: bleedPath,
     fillPath,
     glueFillPath,
     upperTuckSideCuts,
