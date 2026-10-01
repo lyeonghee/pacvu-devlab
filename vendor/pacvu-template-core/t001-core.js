@@ -412,21 +412,27 @@ const T001_SOURCE_ELEMENTS = {
   "cutElements": [
     "<polyline points=\"890.995 811.27 810.208 863.712 815.798 880.928\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<path d=\"M807.71,892.058c2.725,0,5.276-1.3,6.879-3.504,1.602-2.205,2.051-5.033,1.209-7.626\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<polyline points=\"807.71 892.058 738.878 892.058 738.078 819.951 733.672 811.27 681.232 892.058 681.232 923.239\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<polyline points=\"807.71 892.058 742.176 892.058 742.176 819.774 733.672 811.27 681.232 892.058 681.232 923.239\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<path d=\"M669.893,934.578c6.259,0,11.339-5.08,11.339-11.339\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<line x1=\"669.893\" y1=\"934.578\" x2=\"635.877\" y2=\"934.578\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<path d=\"M624.538,923.239c0,6.259,5.08,11.339,11.339,11.339\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<polyline points=\"624.538 923.239 624.538 892.058 572.098 811.27 567.679 819.719 567.252 892.058 498.248 892.058\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<polyline points=\"624.538 923.239 624.538 892.058 572.098 811.27 563.594 819.774 563.594 892.058 498.248 892.058\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<path d=\"M490.135,881.008c-.811,2.587-.346,5.395,1.259,7.579,1.604,2.186,4.144,3.471,6.854,3.471\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<polyline points=\"490.135 881.008 495.562 863.712 410.523 811.27 405.351 819.156 405.468 934.578 372.255 934.578\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<path d=\"M358.081,923.239c0,6.259,6.252,11.759,14.173,11.339\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<polyline points=\"358.081 923.239 358.081 892.058 301.389 892.058 301.389 923.239\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<path d=\"M287.216,934.578c7.921.42,14.173-5.08,14.173-11.339\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<path d=\"M890.995,811.27v-501.732l-7.087-7.086-3.788-72.284h-105.652c-6.409,0-12.031,4.314-13.69,10.505l-10.098,37.685-11.338,11.339v19.842h-60.945\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<polyline points=\"490.135 881.008 495.562 863.712 410.523 811.27 402.019 819.774 402.019 934.578 372.255 934.578\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M360.916,923.239c0,6.259,5.08,11.339,11.339,11.339\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<polyline points=\"360.916 923.239 360.916 892.058 298.554 892.058 298.554 923.239\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M287.216,934.578c6.259,0,11.338-5.08,11.338-11.339\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M774.468,230.168c-6.409,0-12.031,4.314-13.69,10.505l-10.098,37.685-11.338,11.339v19.842h-60.945\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M880.12,230.168h-105.652\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M890.995,811.27v-501.732l-7.087-7.086-3.788-72.284\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<path d=\"M627.373,309.538c1.527,12.936,12.486,22.678,25.512,22.678s23.984-9.742,25.512-22.678\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<path d=\"M627.373,309.538h-60.945v-19.842l-11.338-11.339-10.098-37.685c-1.659-6.19-7.281-10.505-13.69-10.505h-105.578l-3.87,73.997\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<path d=\"M410.523,303.869c0,3.072,2.449,5.587,5.521,5.667,3.071.08,5.648-2.303,5.809-5.371\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
-    "<path d=\"M287.216,934.578h-32.751v-114.746l-5.518-8.562-70.865-18.988v-463.755l70.865-18.989v-161.574l1.799-34.305c.907-17.317,15.212-30.893,32.554-30.893h92.871c17.341,0,31.646,13.575,32.554,30.893l1.798,34.305v155.905\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M425.724,230.167l-3.87,73.997\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M531.302,230.167h-105.578\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M566.428,309.538v-19.842l-11.338-11.339-10.098-37.685c-1.659-6.19-7.281-10.505-13.69-10.505\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M627.373,309.538h-60.945\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M416.044,309.536c3.071.08,5.648-2.303,5.809-5.371\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M410.523,303.869c0,3.072,2.449,5.587,5.521,5.667\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
+    "<path d=\"M287.216,934.578h-29.765v-114.804l-8.504-8.504-70.865-18.988v-463.755l70.865-18.989v-161.574l1.799-34.305c.907-17.317,15.212-30.893,32.554-30.893h92.871c17.341,0,31.646,13.575,32.554,30.893l1.798,34.305v155.905\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\"/>",
     "<line x1=\"296.234\" y1=\"928.909\" x2=\"300.415\" y2=\"955.799\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\" stroke-width=\".5\"/>",
     "<line x1=\"677.166\" y1=\"931.086\" x2=\"693.693\" y2=\"952.707\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\" stroke-width=\".5\"/>",
     "<line x1=\"814.385\" y1=\"889.985\" x2=\"831.822\" y2=\"910.878\" fill=\"none\" stroke=\"#ee3924\" stroke-miterlimit=\"2.613\" stroke-width=\".5\"/>",
@@ -465,7 +471,7 @@ function T001_getSpec(input) {
   const W = Number(input && input.W) || 57;
   const D = Number(input && input.D) || 57;
   const H = Number(input && input.H) || 177;
-  const glueWidth = 15;
+  const glueWidth = (248.948 - 178.082) * (25.4 / 72);
 
   const source = {
     unitToMm: 25.4 / 72,
@@ -487,20 +493,19 @@ function T001_getSpec(input) {
     ? globalThis.PacVuUpperTuckRule.resolve('T001', D)
     : { depth: Math.max(8, Math.min(45, D * (23 / 57))), mode: 'auto', profile: 'auto', relief: false, scale: D / 57, profileScale: D / 57 };
   const tuckDepth = upperTuckRule.depth;
-  const grid = {
-    xGlueL: 0,
-    xFrontL: glueWidth,
-    xFrontR: glueWidth + W,
-    xSideLR: glueWidth + W + D,
-    xBackR: glueWidth + W + D + W,
-    xSideRR: glueWidth + W + D + W + D,
-    yTop: 0,
-    yLidFold: tuckDepth,
-    yBodyTop: tuckDepth + D,
-    yBodyBottom: tuckDepth + D + H,
-    yBottomLockBend: tuckDepth + D + H + D * 0.5,
-    yBottomLockEnd: tuckDepth + D + H + D * (43.5 / 57)
-  };
+  // Preserve all source span differences; W/D/H scale their own regions.
+  const u = source.unitToMm;
+  const grid = { xGlueL: 0, yTop: 0 };
+  grid.xFrontL = glueWidth;
+  grid.xFrontR = grid.xFrontL + (source.xFrontR-source.xFrontL)*u*W/57;
+  grid.xSideLR = grid.xFrontR + (source.xSideLR-source.xFrontR)*u*D/57;
+  grid.xBackR = grid.xSideLR + (source.xBackR-source.xSideLR)*u*W/57;
+  grid.xSideRR = grid.xBackR + (source.xSideRR-source.xBackR)*u*D/57;
+  grid.yLidFold = (source.yLidFold-source.yTop)*u*tuckDepth/23;
+  grid.yBodyTop = grid.yLidFold + (source.yBodyTop-source.yLidFold)*u*D/57;
+  grid.yBodyBottom = grid.yBodyTop + (source.yBodyBottom-source.yBodyTop)*u*H/177;
+  grid.yBottomLockBend = grid.yBodyBottom + (source.yBottomLockBend-source.yBodyBottom)*u*D/57;
+  grid.yBottomLockEnd = grid.yBodyBottom + (source.yBottomLockEnd-source.yBodyBottom)*u*D/57;
   grid.glueWidth = glueWidth;
 
   return { W, D, H, glueWidth, source, grid, upperTuckRule, exportMeta: T001_EXPORT_META };
@@ -527,7 +532,6 @@ if (window.PacVuExportHeader) {
     };
   });
 }
-
 
 /* structures/tuck/T001/T001_layout.js */
 // ============================================================
@@ -566,12 +570,6 @@ function T001_createMapper(spec) {
   const ty = [grid.yTop, grid.yLidFold, grid.yBodyTop, grid.yBodyBottom, grid.yBottomLockBend, grid.yBottomLockEnd];
 
   function mapX(x, y) {
-    if (y <= src.yLidFold && x >= src.xFrontL && x <= src.xFrontR && globalThis.PacVuUpperTuckRule) {
-      return globalThis.PacVuUpperTuckRule.mapX(
-        x, src.xFrontL, src.xFrontR, grid.xFrontL, grid.xFrontR,
-        src.unitToMm, spec.upperTuckRule.profileScale
-      );
-    }
     return T001_piecewise(x, sx, tx);
   }
   return {
@@ -594,12 +592,12 @@ const T001_COORDINATE_TOLERANCE = 0.001;
 function T001_validateCoordinateContract(spec) {
   const g = spec.grid;
   const checks = [
-    { id: 'frontWidth', actual: g.xFrontR - g.xFrontL, expected: spec.W },
-    { id: 'sideLeftDepth', actual: g.xSideLR - g.xFrontR, expected: spec.D },
-    { id: 'backWidth', actual: g.xBackR - g.xSideLR, expected: spec.W },
-    { id: 'sideRightDepth', actual: g.xSideRR - g.xBackR, expected: spec.D },
-    { id: 'bodyHeight', actual: g.yBodyBottom - g.yBodyTop, expected: spec.H },
-    { id: 'bottomLockBendDepth', actual: g.yBottomLockBend - g.yBodyBottom, expected: spec.D * 0.5 }
+    { id: 'frontWidth', actual: g.xFrontR - g.xFrontL, expected: (spec.source.xFrontR-spec.source.xFrontL)*spec.source.unitToMm*spec.W/57 },
+    { id: 'sideLeftDepth', actual: g.xSideLR - g.xFrontR, expected: (spec.source.xSideLR-spec.source.xFrontR)*spec.source.unitToMm*spec.D/57 },
+    { id: 'backWidth', actual: g.xBackR - g.xSideLR, expected: (spec.source.xBackR-spec.source.xSideLR)*spec.source.unitToMm*spec.W/57 },
+    { id: 'sideRightDepth', actual: g.xSideRR - g.xBackR, expected: (spec.source.xSideRR-spec.source.xBackR)*spec.source.unitToMm*spec.D/57 },
+    { id: 'bodyHeight', actual: g.yBodyBottom - g.yBodyTop, expected: (spec.source.yBodyBottom-spec.source.yBodyTop)*spec.source.unitToMm*spec.H/177 },
+    { id: 'bottomLockBendDepth', actual: g.yBottomLockBend - g.yBodyBottom, expected: (spec.source.yBottomLockBend-spec.source.yBodyBottom)*spec.source.unitToMm*spec.D/57 }
   ].map(check => Object.assign({}, check, {
     error: Math.abs(check.actual - check.expected)
   }));
@@ -1298,10 +1296,10 @@ function T001_getLayout(W, D, H, sourceSvg) {
   const bleedElement = glueExcludedBleedPath
     ? '<path d="' + glueExcludedBleedPath + '" fill="none" stroke="#263aed" stroke-miterlimit="10"/>'
     : T001_transformElement(sourceBleedElement, mapper);
-  const previewFillPath = T001_elementToPathD(bleedElement);
   const allElements = [bleedElement].concat(cutElements, foldElements);
   const dielineBounds = T001_boundsFromElements(cutElements);
   const bleedBounds = T001_boundsFromElements([bleedElement]);
+  const previewFillPath = T001_elementToPathD(bleedElement);
   const renderBounds = T001_boundsFromElements(allElements);
 
   return {
@@ -1342,7 +1340,6 @@ function T001_buildLabels(spec) {
     ? [{ name: 'Thumb Notch', x: (g.xSideLR + g.xBackR) / 2, y: g.yBodyTop + spec.D * (5 / 57) }]
     : []);
 }
-
 
 /* structures/tuck/T001/T001_renderer.js */
 // ============================================================

@@ -34,12 +34,6 @@ function T001_createMapper(spec) {
   const ty = [grid.yTop, grid.yLidFold, grid.yBodyTop, grid.yBodyBottom, grid.yBottomLockBend, grid.yBottomLockEnd];
 
   function mapX(x, y) {
-    if (y <= src.yLidFold && x >= src.xFrontL && x <= src.xFrontR && globalThis.PacVuUpperTuckRule) {
-      return globalThis.PacVuUpperTuckRule.mapX(
-        x, src.xFrontL, src.xFrontR, grid.xFrontL, grid.xFrontR,
-        src.unitToMm, spec.upperTuckRule.profileScale
-      );
-    }
     return T001_piecewise(x, sx, tx);
   }
   return {
@@ -62,12 +56,12 @@ const T001_COORDINATE_TOLERANCE = 0.001;
 function T001_validateCoordinateContract(spec) {
   const g = spec.grid;
   const checks = [
-    { id: 'frontWidth', actual: g.xFrontR - g.xFrontL, expected: spec.W },
-    { id: 'sideLeftDepth', actual: g.xSideLR - g.xFrontR, expected: spec.D },
-    { id: 'backWidth', actual: g.xBackR - g.xSideLR, expected: spec.W },
-    { id: 'sideRightDepth', actual: g.xSideRR - g.xBackR, expected: spec.D },
-    { id: 'bodyHeight', actual: g.yBodyBottom - g.yBodyTop, expected: spec.H },
-    { id: 'bottomLockBendDepth', actual: g.yBottomLockBend - g.yBodyBottom, expected: spec.D * 0.5 }
+    { id: 'frontWidth', actual: g.xFrontR - g.xFrontL, expected: (spec.source.xFrontR-spec.source.xFrontL)*spec.source.unitToMm*spec.W/57 },
+    { id: 'sideLeftDepth', actual: g.xSideLR - g.xFrontR, expected: (spec.source.xSideLR-spec.source.xFrontR)*spec.source.unitToMm*spec.D/57 },
+    { id: 'backWidth', actual: g.xBackR - g.xSideLR, expected: (spec.source.xBackR-spec.source.xSideLR)*spec.source.unitToMm*spec.W/57 },
+    { id: 'sideRightDepth', actual: g.xSideRR - g.xBackR, expected: (spec.source.xSideRR-spec.source.xBackR)*spec.source.unitToMm*spec.D/57 },
+    { id: 'bodyHeight', actual: g.yBodyBottom - g.yBodyTop, expected: (spec.source.yBodyBottom-spec.source.yBodyTop)*spec.source.unitToMm*spec.H/177 },
+    { id: 'bottomLockBendDepth', actual: g.yBottomLockBend - g.yBodyBottom, expected: (spec.source.yBottomLockBend-spec.source.yBodyBottom)*spec.source.unitToMm*spec.D/57 }
   ].map(check => Object.assign({}, check, {
     error: Math.abs(check.actual - check.expected)
   }));

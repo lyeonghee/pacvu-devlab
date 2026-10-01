@@ -33,14 +33,19 @@
   }
 
   function clipPolygon(points, bounds) {
-    let polygon = points.slice();
-    polygon = clipEdge(polygon, p => p.x >= bounds.minX - EPSILON,
+    // Rounded SVG coordinates can fall just outside a partition axis. Snap
+    // those sub-micron differences before clipping, not after triangulation:
+    // accepting outside vertices creates a self-crossing strip at flap roots.
+    const snap = (value, low, high) => Math.abs(value-low) <= EPSILON ? low
+      : Math.abs(value-high) <= EPSILON ? high : value;
+    let polygon = points.map(p => ({x:snap(p.x,bounds.minX,bounds.maxX),y:snap(p.y,bounds.minY,bounds.maxY)}));
+    polygon = clipEdge(polygon, p => p.x >= bounds.minX,
       (a, b) => intersectionAtX(a, b, bounds.minX));
-    polygon = clipEdge(polygon, p => p.x <= bounds.maxX + EPSILON,
+    polygon = clipEdge(polygon, p => p.x <= bounds.maxX,
       (a, b) => intersectionAtX(a, b, bounds.maxX));
-    polygon = clipEdge(polygon, p => p.y >= bounds.minY - EPSILON,
+    polygon = clipEdge(polygon, p => p.y >= bounds.minY,
       (a, b) => intersectionAtY(a, b, bounds.minY));
-    polygon = clipEdge(polygon, p => p.y <= bounds.maxY + EPSILON,
+    polygon = clipEdge(polygon, p => p.y <= bounds.maxY,
       (a, b) => intersectionAtY(a, b, bounds.maxY));
     return polygon;
   }
@@ -109,14 +114,30 @@
     const outline = global.T001_flattenPathD(layout.fillPath);
     if (!outline || outline.length < 3) throw new Error('T001 3D: approved Cut outline is unavailable.');
 
+    // Read actual 2D fold segments. Their endpoint relief is not a panel boundary.
+    const sourceFolds = layout.foldElements.map(el => {
+      const read = key => Number(el.match(new RegExp(key + '="([^"]+)"'))?.[1]);
+      return { a: {x:read('x1'),y:read('y1')}, b: {x:read('x2'),y:read('y2')} };
+    });
+    const findFold = (a,b) => {
+      const vertical = Math.abs(a.x-b.x)<EPSILON;
+      const choices = sourceFolds.filter(f => vertical
+        ? Math.abs(f.a.x-f.b.x)<EPSILON && Math.abs(f.a.x-a.x)<EPSILON
+        : Math.abs(f.a.y-f.b.y)<EPSILON && Math.min(f.a.x,f.b.x)>=Math.min(a.x,b.x)-EPSILON && Math.max(f.a.x,f.b.x)<=Math.max(a.x,b.x)+EPSILON);
+      choices.sort((p,q)=>Math.abs((p.a.y+p.b.y)/2-(a.y+b.y)/2)-Math.abs((q.a.y+q.b.y)/2-(a.y+b.y)/2));
+      if(!choices.length)throw new Error('T001: missing source fold');
+      const f=choices[0];return vertical ? (f.a.y<f.b.y?f:{a:f.b,b:f.a}) : (f.a.x<f.b.x?f:{a:f.b,b:f.a});
+    };
+    const lidBodyFold = findFold({x:g.xFrontL,y:g.yBodyTop},{x:g.xFrontR,y:g.yBodyTop});
+    const lidBodyY = lidBodyFold.a.y;
     const regions = [
       ['glue', 'adhesive', rectangle(g.xGlueL, g.yBodyTop, g.xFrontL, g.yBodyBottom), 'front'],
-      ['front', 'body', rectangle(g.xFrontL, g.yBodyTop, g.xFrontR, g.yBodyBottom), null],
+      ['front', 'body', rectangle(g.xFrontL, lidBodyY, g.xFrontR, g.yBodyBottom), null],
       ['sideLeft', 'body', rectangle(g.xFrontR, g.yBodyTop, g.xSideLR, g.yBodyBottom), 'front'],
       ['back', 'body', rectangle(g.xSideLR, g.yBodyTop, g.xBackR, g.yBodyBottom), 'sideLeft'],
       ['sideRight', 'body', rectangle(g.xBackR, g.yBodyTop, g.xSideRR, g.yBodyBottom), 'back'],
       ['upperTuck', 'topTuck', rectangle(g.xFrontL, g.yTop, g.xFrontR, g.yLidFold), 'lidTop'],
-      ['lidTop', 'top', rectangle(g.xFrontL, g.yLidFold, g.xFrontR, g.yBodyTop), 'front'],
+      ['lidTop', 'top', rectangle(g.xFrontL, g.yLidFold, g.xFrontR, lidBodyY), 'front'],
       ['lidSideLeft', 'dust', rectangle(g.xFrontR, g.yTop, g.xSideLR, g.yBodyTop), 'sideLeft'],
       ['lidSideRight', 'dust', rectangle(g.xBackR, g.yTop, g.xSideRR, g.yBodyTop), 'sideRight'],
       ['bottomFront', 'bottomLock', rectangle(g.xFrontL, g.yBodyBottom, g.xFrontR, g.yBottomLockEnd), 'front'],
@@ -148,6 +169,14 @@
       fold('bottom.back', 'back', 'bottomBack', ...horizontalAxis(g.xSideLR, g.xBackR, g.yBodyBottom), 90, [0.66, 0.74]),
       fold('bottom.back-bend', 'bottomBack', 'bottomBackTip', ...horizontalAxis(g.xSideLR, g.xBackR, g.yBottomLockBend), 105, [0.70, 0.76], true)
     ];
+
+    // All real folds retain their source axis. Only the existing internal
+    // insertion bend has no separate crease in the SVG.
+    for(let i=0;i<foldRelations.length;i++) {
+      const r=foldRelations[i];if(r.internal)continue;
+      const axis=findFold(r.axis.a,r.axis.b);
+      foldRelations[i]=fold(r.id,r.parentId,r.childId,axis.a,axis.b,r.angle,r.phase,false);
+    }
 
     const adhesiveRelations = Object.freeze([
       Object.freeze({
@@ -203,8 +232,8 @@
     }
     if (Math.abs(lockA.axis.a.y - g.yBodyBottom) > EPSILON ||
         Math.abs(lockA.axis.b.y - g.yBodyBottom) > EPSILON ||
-        Math.abs(lockA.axis.a.x - g.xFrontL) > EPSILON ||
-        Math.abs(lockA.axis.b.x - g.xFrontR) > EPSILON) {
+        lockA.axis.a.x < g.xFrontL - EPSILON ||
+        lockA.axis.b.x > g.xFrontR + EPSILON) {
       throw new Error('T001 3D: Front and Bottom Lock A hinge are disconnected.');
     }
 
@@ -427,7 +456,196 @@
     });
     hinges.push({ object: standHinge, axis: new THREE.Vector3(1, 0, 0), radians: Math.PI / 2, range: [0.38, 0.50] });
 
+
+    // T001-only Physical Paper presentation. Original remains the default.
+    let physical=false,paperThickness=thickness,currentProgress=0;
+    const originalPieces=new Map([...pieces].map(([id,p])=>[id,{geometry:p.mesh.geometry,position:p.mesh.position.clone()}]));
+    const originalFrames=new Map([...frames].map(([id,frame])=>[id,frame.position.clone()]));
+    const paperBridges=new THREE.Group();paperBridges.name='T001 physical crease surfaces';root.add(paperBridges);
+    const paperMaterials={existing:(whitePaperboard?.materials||materials).map(m=>m.clone()),white:(whitePaperboard?.materials||materials).map(m=>m.clone())};
+    paperMaterials.existing[0].color.copy(materials[0].color);
+    paperMaterials.existing[1].color.copy(materials[1].color);
+    paperMaterials.existing[2].color.copy(materials[1].color).multiplyScalar(.82);
+    Object.values(paperMaterials).flat().forEach(m=>{if('roughness'in m)m.roughness=.98;if('bumpScale'in m)m.bumpScale=.016;});
+    paperMaterials.existing[0].map=materials[0].map||null;
+    if('bumpScale'in paperMaterials.existing[0])paperMaterials.existing[0].bumpScale=.008;
+    const creaseData=contract.foldRelations.map(relation=>{
+      const a=point(relation.axis.a),b=point(relation.axis.b),axis=b.clone().sub(a).normalize();
+      const v=new THREE.Vector3(-axis.y,axis.x,0);
+      if(v.dot(pieces.get(relation.childId).flatCenter.clone().sub(a))<0)v.negate();
+      return {relation,a,b,axis,v,sourceV:{x:v.x,y:-v.y},length:a.distanceTo(b)};
+    });
+    function disposePhysicalGeometry(){
+      pieces.forEach((piece,id)=>{
+        const original=originalPieces.get(id);
+        if(piece.mesh.geometry!==original.geometry)piece.mesh.geometry.dispose();
+        piece.mesh.geometry=original.geometry;
+      });
+      while(paperBridges.children.length){const mesh=paperBridges.children[0];paperBridges.remove(mesh);mesh.geometry.dispose();}
+    }
+    function clipCrease(points,crease,child,distance){
+      const a=crease.relation.axis.a,v=crease.sourceV,sign=child?1:-1;
+      const value=p=>sign*((p.x-a.x)*v.x+(p.y-a.y)*v.y)-distance;
+      return clipEdge(points,p=>value(p)>=-1e-7,(p,q)=>{const t=value(p)/(value(p)-value(q));return{x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t};});
+    }
+    function creaseIntervals(polygon,crease,child,distance){
+      const a=crease.relation.axis.a,v=crease.sourceV,sign=child?1:-1,axis={x:crease.axis.x,y:-crease.axis.y};
+      const along=p=>(p.x-a.x)*axis.x+(p.y-a.y)*axis.y;
+      const on=p=>Math.abs(sign*((p.x-a.x)*v.x+(p.y-a.y)*v.y)-distance)<2e-5;
+      const ranges=[];
+      polygon.forEach((p,i)=>{const q=polygon[(i+1)%polygon.length];if(on(p)&&on(q)){
+        const low=Math.min(along(p),along(q)),high=Math.max(along(p),along(q));
+        if(high-low>EPSILON)ranges.push([low,high]);
+      }});
+      return ranges;
+    }
+    function paperPanelGeometry(id,polygon,trim){
+      const original=pieces.get(id).flatCenter,cx=original.x+center.x,cy=center.y-original.y;
+      const positions=[],normals=[],groups=[];
+      const emit=(points,normal,material)=>{
+        const start=positions.length/3;
+        points.forEach(p=>{positions.push(p.x,p.y,p.z);normals.push(normal.x,normal.y,normal.z);});
+        groups.push({start,count:points.length,materialIndex:material});
+      };
+      const local=(p,z)=>new THREE.Vector3(p.x-cx,cy-p.y,z);
+      const contour=polygon.map(p=>new THREE.Vector2(p.x-cx,cy-p.y));
+      THREE.ShapeUtils.triangulateShape(contour,[]).forEach(([a,b,c])=>{
+        const p=contour[a],q=contour[b],r=contour[c];if((q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x)<0)[b,c]=[c,b];
+        emit([a,b,c].map(i=>local(polygon[i],paperThickness/2)),new THREE.Vector3(0,0,1),1);
+        emit([c,b,a].map(i=>local(polygon[i],-paperThickness/2)),new THREE.Vector3(0,0,-1),0);
+      });
+      let signed=0;polygon.forEach((p,i)=>{const q=polygon[(i+1)%polygon.length];signed+=p.x*q.y-q.x*p.y;});
+      polygon.forEach((p,i)=>{
+        const q=polygon[(i+1)%polygon.length];
+        const hingeEdge=trim.some(({crease,child,distance})=>{
+          const a=crease.relation.axis.a,v=crease.sourceV,sign=child?1:-1;
+          const on=r=>Math.abs(sign*((r.x-a.x)*v.x+(r.y-a.y)*v.y)-distance)<2e-5;
+          return on(p)&&on(q);
+        });
+        if(hingeEdge)return; // Source-shaped fold strips cover the bank boundary.
+        let a=p,b=q;if(signed>0)[a,b]=[b,a];
+        const a0=local(a,-paperThickness/2),b0=local(b,-paperThickness/2),a1=local(a,paperThickness/2),b1=local(b,paperThickness/2);
+        const normal=new THREE.Vector3().crossVectors(b0.clone().sub(a0),b1.clone().sub(a0)).normalize();
+        emit([a0,b0,b1,a0,b1,a1],normal,2);
+      });
+      const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+      groups.forEach(g=>geometry.addGroup(g.start,g.count,g.materialIndex));
+      global.PacVuWhitePaperboard?.applyPhysicalUV(THREE,geometry,{offsetX:cx,offsetY:cy});
+      return geometry;
+    }
+    function creaseBridge(crease,distance,parentDistance,childDistance,range,angle){
+      const relation=crease.relation,parent=pieces.get(relation.parentId),child=pieces.get(relation.childId);
+      const inverseRoot=new THREE.Matrix4().copy(root.matrixWorld).invert();
+      const direction=(mesh,v)=>v.clone().transformDirection(mesh.matrixWorld).transformDirection(inverseRoot);
+      const axis=direction(parent.mesh,crease.axis),normal=direction(parent.mesh,new THREE.Vector3(0,0,1));
+      const tangent0=direction(parent.mesh,crease.v),tangent1=direction(child.mesh,crease.v);
+      const sign=new THREE.Vector3().crossVectors(axis,tangent0).dot(normal)>=0?1:-1;
+      const h=Math.abs(angle)<1e-5?distance*2/3:distance*(4/3)*Math.tan(Math.abs(angle)/4)/Math.tan(Math.abs(angle)/2);
+      const from=(piece,s,radial)=>{
+        const p=crease.a.clone().addScaledVector(crease.axis,s).addScaledVector(crease.v,radial).sub(piece.flatCenter);
+        return piece.mesh.localToWorld(p).applyMatrix4(inverseRoot);
+      };
+      const positions=[],normals=[],uv=[],groups=[];
+      function vertex(s,u,side){
+        const p0=from(parent,s,-parentDistance),p3=from(child,s,childDistance),p1=p0.clone().addScaledVector(tangent0,h),p2=p3.clone().addScaledVector(tangent1,-h),v=1-u;
+        const p=p0.clone().multiplyScalar(v*v*v).addScaledVector(p1,3*v*v*u).addScaledVector(p2,3*v*u*u).addScaledVector(p3,u*u*u);
+        const tangent=p1.clone().sub(p0).multiplyScalar(3*v*v).addScaledVector(p2.clone().sub(p1),6*v*u).addScaledVector(p3.clone().sub(p2),3*u*u).normalize();
+        const n=new THREE.Vector3().crossVectors(axis,tangent).multiplyScalar(sign).normalize();
+        p.addScaledVector(n,side*paperThickness/2);
+        const flat=crease.a.clone().addScaledVector(crease.axis,s).addScaledVector(crease.v,-parentDistance+(parentDistance+childDistance)*u);
+        return{p,n:n.multiplyScalar(side),uv:[(flat.x+center.x)/32,(center.y-flat.y)/32]};
+      }
+      function triangle(a,b,c,material,overrideNormal){
+        const n=overrideNormal||a.n;
+        if(new THREE.Vector3().crossVectors(b.p.clone().sub(a.p),c.p.clone().sub(a.p)).dot(n)<0)[b,c]=[c,b];
+        const start=positions.length/3;
+        [a,b,c].forEach(v=>{positions.push(...v.p.toArray());normals.push(...(overrideNormal||v.n).toArray());uv.push(...v.uv);});
+        groups.push({start,count:3,materialIndex:material});
+      }
+      // Tessellate the removed source-paper strip itself, including curved and
+      // diagonal ends. A rectangular intersection of bank ranges loses these ends.
+      const project=p=>({s:(p.x-relation.axis.a.x)*crease.axis.x-(p.y-relation.axis.a.y)*crease.axis.y,
+        r:(p.x-relation.axis.a.x)*crease.sourceV.x+(p.y-relation.axis.a.y)*crease.sourceV.y});
+      const total=parentDistance+childDistance;
+      if(total<EPSILON)return;
+      const segments=12;
+      for(const id of [relation.parentId,relation.childId]) {
+        const original=contract.panels.find(p=>p.id===id).polygon;
+        for(let i=0;i<segments;i++) {
+          const lo=-parentDistance+total*i/segments,hi=-parentDistance+total*(i+1)/segments;
+          let poly=clipEdge(original,p=>project(p).r>=lo-1e-8,(a,b)=>{const t=(lo-project(a).r)/(project(b).r-project(a).r);return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};});
+          poly=clipEdge(poly,p=>project(p).r<=hi+1e-8,(a,b)=>{const t=(hi-project(a).r)/(project(b).r-project(a).r);return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};});
+          if(poly.length<3)continue;
+          const mapped=p=>{const v=project(p);return{s:v.s,u:clamp((v.r+parentDistance)/total,0,1)};};
+          const contour=poly.map(p=>new THREE.Vector2(p.x,p.y));
+          for(const [a,b,c] of THREE.ShapeUtils.triangulateShape(contour,[]))for(const side of [-1,1]) {
+            const pts=[a,b,c].map(j=>{const v=mapped(poly[j]);return vertex(v.s,v.u,side);});
+            triangle(...pts,side>0?1:0);
+          }
+          poly.forEach((p,j)=>{
+            const q=poly[(j+1)%poly.length],pr=project(p).r,qr=project(q).r;
+            // Slice banks and the parent/child seam are internal, not cut walls.
+            if(Math.abs(pr-qr)<1e-7 && [lo,hi,0].some(r=>Math.abs(pr-r)<1e-7))return;
+            const a=mapped(p),b=mapped(q),v0=vertex(a.s,a.u,-1),v1=vertex(b.s,b.u,-1),v2=vertex(b.s,b.u,1),v3=vertex(a.s,a.u,1);
+            const n=new THREE.Vector3().crossVectors(v1.p.clone().sub(v0.p),v2.p.clone().sub(v0.p)).normalize();
+            triangle(v0,v1,v2,2,n);triangle(v0,v2,v3,2,n);
+          });
+        }
+      }
+      const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));geometry.setAttribute('uv1',new THREE.Float32BufferAttribute(uv,2));
+      groups.forEach(g=>geometry.addGroup(g.start,g.count,g.materialIndex));
+      const mesh=new THREE.Mesh(geometry,paperMaterials[materialMode]);mesh.name='T001 rounded paper '+relation.id;mesh.castShadow=true;mesh.receiveShadow=true;paperBridges.add(mesh);
+    }
+    function physicalPose(progress){
+      const gap=paperThickness+.025;
+      const layers={bottomSideLeft:1,bottomSideRight:1,bottomBack:2,lidSideLeft:1,lidSideRight:1,upperTuck:1};
+      creaseData.forEach(crease=>{
+        const id=crease.relation.childId,layer=layers[id]||0;
+        const range=crease.relation.phase;
+        if(layer)frames.get(id).position.z+=gap*layer*phase(progress,[range[0]+(range[1]-range[0])*.75,range[1]]);
+      });
+      pieces.get('glue').mesh.position.z=gap*phase(progress,[.30,.44]);
+      const brand=pieces.get('front').mesh.children.find(c=>c.userData.pacvuBrand);
+      if(brand)brand.position.z=-paperThickness/2-.012;
+      root.position.z+=(floor.position.z+paperThickness/2)*phase(progress,[.74,.84]);
+      root.updateMatrixWorld(true);
+      disposePhysicalGeometry();
+      const trims=new Map(contract.panels.map(p=>[p.id,[]]));
+      const creases=creaseData.map(crease=>{
+        const hinge=hinges.find(h=>h.relationId===crease.relation.id),angle=2*Math.acos(clamp(Math.abs(hinge.object.quaternion.w),0,1));
+        const distance=paperThickness*.75*Math.tan(angle/2);
+        let parentDistance=distance,childDistance=distance;
+        if(Math.sin(angle)>1e-5){
+          const parent=pieces.get(crease.relation.parentId),child=pieces.get(crease.relation.childId);
+          const a=crease.v.clone().transformDirection(parent.mesh.matrixWorld),b=crease.v.clone().transformDirection(child.mesh.matrixWorld);
+          const cosine=a.dot(b),sine=Math.sqrt(Math.max(0,1-cosine*cosine)),n=b.clone().addScaledVector(a,-cosine).normalize();
+          const origin=p=>p.mesh.localToWorld(crease.a.clone().sub(p.flatCenter));
+          const delta=origin(child).sub(origin(parent)),along=delta.dot(a),across=delta.dot(n);
+          if(sine>1e-5){parentDistance+=-along+across*cosine/sine;childDistance-=across/sine;}
+          parentDistance=Math.max(0,parentDistance);childDistance=Math.max(0,childDistance);
+        }
+        trims.get(crease.relation.parentId).push({crease,child:false,distance:parentDistance});trims.get(crease.relation.childId).push({crease,child:true,distance:childDistance});
+        return{crease,distance,parentDistance,childDistance,angle};
+      });
+      const polygons=new Map();
+      contract.panels.forEach(def=>{
+        let polygon=def.polygon.slice();trims.get(def.id).forEach(t=>{polygon=clipCrease(polygon,t.crease,t.child,t.distance);});
+        if(polygon.length<3)throw new Error('T001 paper: crease trim removed '+def.id);
+        polygons.set(def.id,polygon);pieces.get(def.id).mesh.geometry=paperPanelGeometry(def.id,polygon,trims.get(def.id));
+      });
+      creases.forEach(({crease,distance,parentDistance,childDistance,angle})=>{
+        if(distance<1e-5)return;
+        const parent=creaseIntervals(polygons.get(crease.relation.parentId),crease,false,parentDistance),child=creaseIntervals(polygons.get(crease.relation.childId),crease,true,childDistance);
+        creaseBridge(crease,distance,parentDistance,childDistance,null,angle);
+      });
+    }
     function pose(value) {
+      currentProgress=clamp(value,0,1);
+      frames.forEach((frame,id)=>frame.position.copy(originalFrames.get(id)));
+      pieces.forEach((piece,id)=>piece.mesh.position.copy(originalPieces.get(id).position));
+      const brand=pieces.get('front').mesh.children.find(c=>c.userData.pacvuBrand);
+      if(brand)brand.position.z=-thickness/2-.012;
+      if(!physical)disposePhysicalGeometry();
       const progress = clamp(value, 0, 1);
       hinges.forEach(hinge => {
         let foldAngle = hinge.radians * phase(progress, hinge.range);
@@ -446,10 +664,36 @@
       const lift = phase(progress, [0.34, 0.44]);
       const lower = phase(progress, [0.72, 0.82]);
       root.position.z = Math.max(C.D, C.H) * 0.75 * lift * (1 - lower);
+      if(physical)physicalPose(progress);
       modal.querySelector('.m001-3d-controls')?.style.setProperty('--progress', Math.round(progress * 100) + '%');
     }
 
     const whiteStudio = global.PacVuWhiteStudio?.create({ scene, camera, controls, renderer, root, sun, floor, grid }) || null;
+    const originalShadow={type:renderer.shadowMap.type,size:sun.shadow.mapSize.clone(),radius:sun.shadow.radius,blurSamples:sun.shadow.blurSamples,bias:sun.shadow.bias,normalBias:sun.shadow.normalBias,
+      camera:{left:sun.shadow.camera.left,right:sun.shadow.camera.right,top:sun.shadow.camera.top,bottom:sun.shadow.camera.bottom}};
+    function setPaperShadows(){
+      renderer.shadowMap.type=originalShadow.type;
+      sun.shadow.map?.dispose();sun.shadow.map=null;sun.shadow.mapPass?.dispose();sun.shadow.mapPass=null;
+      // Preserve the approved studio's soft shadow profile. Physical contact
+      // comes from actual layer spacing and floor placement, not harder light.
+      sun.shadow.mapSize.copy(originalShadow.size);
+      sun.shadow.radius=originalShadow.radius;sun.shadow.blurSamples=originalShadow.blurSamples;
+      sun.shadow.bias=originalShadow.bias;sun.shadow.normalBias=originalShadow.normalBias;
+      Object.assign(sun.shadow.camera,originalShadow.camera);sun.shadow.camera.updateProjectionMatrix();
+      [...materials,...Object.values(paperMaterials).flat(),...(whitePaperboard?.materials||[])].forEach(m=>{m.needsUpdate=true;});
+    }
+    function setPaperMode(enabled){
+      physical=Boolean(enabled);setPaperShadows();setMaterialMode(materialMode);pose(currentProgress);
+      originalButton.setAttribute('aria-pressed',String(!physical));physicalButton.setAttribute('aria-pressed',String(physical));
+      thicknessInput.disabled=!physical;thicknessLabel.style.opacity=physical?'1':'.5';
+      modal.querySelector('.m001-3d-badge').textContent=physical?'T001 · Physical Paper POC':'T001 · PacVu Tuck Box 3D Master';
+      if(physical)view('iso');
+    }
+    function setPaperThickness(value){
+      paperThickness=Math.round(clamp(Number(value)||.45,.25,.8)*100)/100;
+      thicknessInput.value=String(paperThickness);thicknessValue.textContent=paperThickness.toFixed(2)+' mm';
+      if(physical){setPaperShadows();pose(currentProgress);}
+    }
     function resize() {
       const width = stage.clientWidth;
       const height = stage.clientHeight;
@@ -458,12 +702,26 @@
       camera.updateProjectionMatrix();
     }
     function view(type) {
+      if(type==='bottom'){
+        root.updateMatrixWorld(true);const box=new THREE.Box3();
+        ['bottomFront','bottomSideLeft','bottomSideRight','bottomBack','bottomBackTip'].forEach(id=>box.expandByObject(pieces.get(id).mesh));
+        const target=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());target.z=box.min.z+Math.min(3,paperThickness*3);
+        const span=Math.max(size.x/Math.max(.5,camera.aspect),size.y),distance=span*.7/Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+        controls.target.copy(target);camera.position.copy(target).addScaledVector(new THREE.Vector3(1,-1,-1.4).normalize(),distance);
+        camera.near=.05;camera.far=distance+Math.max(C.W,C.D,C.H)*5;camera.updateProjectionMatrix();controls.minDistance=span*.15;controls.update();return;
+      }
       Viewer.fitObject(root, camera, controls, type);
       if (type === 'iso') whiteStudio?.view();
+      if(physical||type==='bottom'){
+        const offset=camera.position.clone().sub(controls.target).multiplyScalar(1.35);
+        if(type==='bottom')offset.copy(new THREE.Vector3(1,-1,-1.4).normalize().multiplyScalar(offset.length()));
+        camera.position.copy(controls.target).add(offset);camera.far*=1.35;camera.updateProjectionMatrix();controls.update();
+      }
     }
     function setMaterialMode(mode) {
       materialMode = mode === 'white' ? 'white' : 'existing';
-      pieces.forEach(piece => { piece.mesh.material = materialSets[materialMode]; });
+      pieces.forEach(piece => { piece.mesh.material = physical?paperMaterials[materialMode]:materialSets[materialMode]; });
+      paperBridges.children.forEach(mesh=>{mesh.material=physical?paperMaterials[materialMode]:materialSets[materialMode];});
       modal.querySelectorAll('[data-material-mode]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.materialMode === materialMode));
       });
@@ -476,7 +734,20 @@
     materialControls.querySelectorAll('[data-material-mode]').forEach(button => {
       button.onclick = () => setMaterialMode(button.dataset.materialMode);
     });
-    const slider = modal.querySelector('input');
+    const paperControls=document.createElement('div');paperControls.className='m001-3d-views pacvu-viewer__views t001-paper-controls';
+    paperControls.style.cssText='right:118px;top:102px;min-width:150px;gap:5px';
+    const originalButton=document.createElement('button'),physicalButton=document.createElement('button'),bottomButton=document.createElement('button');
+    originalButton.type=physicalButton.type=bottomButton.type='button';originalButton.className=physicalButton.className=bottomButton.className='btn light';
+    originalButton.textContent='Original';physicalButton.textContent='Physical Paper POC';bottomButton.textContent='Bottom View';
+    originalButton.setAttribute('aria-pressed','true');physicalButton.setAttribute('aria-pressed','false');
+    originalButton.onclick=()=>setPaperMode(false);physicalButton.onclick=()=>setPaperMode(true);bottomButton.onclick=()=>view('bottom');
+    const thicknessLabel=document.createElement('label'),thicknessValue=document.createElement('span'),thicknessInput=document.createElement('input');
+    thicknessLabel.style.cssText='font-size:11px;background:#fff;padding:8px;border-radius:7px;display:grid;gap:5px;opacity:.5';
+    const thicknessTitle=document.createElement('span');thicknessTitle.textContent='Paper thickness';thicknessValue.textContent='0.45 mm';
+    thicknessInput.type='range';thicknessInput.min='.25';thicknessInput.max='.8';thicknessInput.step='.05';thicknessInput.value='.45';thicknessInput.disabled=true;thicknessInput.setAttribute('aria-label','T001 paper thickness');
+    thicknessInput.oninput=()=>setPaperThickness(thicknessInput.value);
+    thicknessLabel.append(thicknessTitle,thicknessValue,thicknessInput);paperControls.append(originalButton,physicalButton,bottomButton,thicknessLabel);stage.append(paperControls);
+    const slider = modal.querySelector('.m001-3d-controls input');
     slider.oninput = () => {
       pose(Number(slider.value) / 100);
       const step = Number(slider.value) < 34 ? 0 : Number(slider.value) < 90 ? 1 : 2;
@@ -554,12 +825,18 @@
         pose(target);
       },
       setMaterialMode,
+      setPaperMode,
+      setPaperThickness,
+      get paperMode(){return physical?'physical':'original';},
+      get paperThickness(){return paperThickness;},
       get materialMode() { return materialMode; },
       destroy() {
         live = false;
         cancelAnimationFrame(animationFrame);
         observer.disconnect();
         controls.dispose?.();
+        disposePhysicalGeometry();
+        Object.values(paperMaterials).flat().forEach(material=>material.dispose());
         root.traverse(object => {
           object.geometry?.dispose();
           if (object.userData?.pacvuBrand) {
