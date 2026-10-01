@@ -181,10 +181,13 @@
     const adhesiveRelations = Object.freeze([
       Object.freeze({
         id: 'body-glue-seam',
+        type: 'lap-joint',
         from: 'glue',
         to: 'sideRight',
         insidePanel: 'glue',
         outsidePanel: 'sideRight',
+        fromFace: -1,
+        toFace: 1,
         order: Object.freeze(['fold-glue-inward', 'wrap-side-right', 'adhere']),
         phase: Object.freeze([0.36, 0.46])
       })
@@ -596,6 +599,76 @@
       groups.forEach(g=>geometry.addGroup(g.start,g.count,g.materialIndex));
       const mesh=new THREE.Mesh(geometry,paperMaterials[materialMode]);mesh.name='T001 rounded paper '+relation.id;mesh.castShadow=true;mesh.receiveShadow=true;paperBridges.add(mesh);
     }
+    let adhesiveContacts=[];
+    function contactSurface(id,face,polygons){
+      const piece=pieces.get(id);
+      const polygon=polygons?.get(id)||contract.panels.find(p=>p.id===id).polygon;
+      return polygon.map(p=>{
+        const local=point(p).sub(piece.flatCenter);
+        local.z=face*paperThickness/2;
+        return piece.mesh.localToWorld(local);
+      });
+    }
+    // Intersect the actual finite panel faces in the receiver's local plane.
+    // T001's receiver is convex. The source glue polygon includes both bevels.
+    // The outer cut stops short of the corner; the adhesive area is a lap,
+    // never a butt joint between those two unrelated cut edges.
+    function adhesiveOverlap(relation,polygons){
+      const target=pieces.get(relation.to).mesh;
+      const project=p=>{const q=target.worldToLocal(p.clone());return{x:q.x,y:q.y};};
+      const boundary=contactSurface(relation.to,relation.toFace,polygons).map(project);
+      let overlap=contactSurface(relation.from,relation.fromFace,polygons).map(project);
+      const winding=Math.sign(boundary.reduce((sum,a,i)=>{const b=boundary[(i+1)%boundary.length];return sum+a.x*b.y-b.x*a.y;},0));
+      boundary.forEach((a,i)=>{
+        const b=boundary[(i+1)%boundary.length];
+        const side=p=>winding*((b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x));
+        overlap=clipEdge(overlap,p=>side(p)>=-1e-9,(p,q)=>{
+          const fraction=side(p)/(side(p)-side(q));
+          return{x:p.x+(q.x-p.x)*fraction,y:p.y+(q.y-p.y)*fraction};
+        });
+      });
+      return cleanPolygon(overlap);
+    }
+    function recordAdhesiveContacts(polygons){
+      adhesiveContacts=contract.adhesiveRelations.map(relation=>{
+        const moving=pieces.get(relation.from).mesh,target=pieces.get(relation.to).mesh;
+        const n=new THREE.Vector3(0,0,relation.toFace).transformDirection(target.matrixWorld);
+        const fromNormal=new THREE.Vector3(0,0,relation.fromFace).transformDirection(moving.matrixWorld);
+        const polygon=adhesiveOverlap(relation,polygons);
+        const targetPoint=target.localToWorld(new THREE.Vector3(0,0,relation.toFace*paperThickness/2));
+        const gaps=contactSurface(relation.from,relation.fromFace,polygons).map(p=>p.sub(targetPoint).dot(n));
+        return {id:relation.id,type:relation.type,opposedNormalDot:n.dot(fromNormal),
+          overlapAreaMm2:polygonArea(polygon),minGapMm:Math.min(...gaps),maxGapMm:Math.max(...gaps),
+          contactPolygon:polygon.map(p=>target.localToWorld(new THREE.Vector3(p.x,p.y,relation.toFace*paperThickness/2)).toArray())};
+      });
+    }
+    // Seat opposing contact planes in world space, independent of panel axes,
+    // dimensions and thickness. Only the adhesive leaf is translated; its
+    // source outline and fold frame stay intact. Crease surfaces are rebuilt
+    // afterwards from the updated leaf boundary.
+    function seatAdhesiveFaces(progress){
+      for(const relation of contract.adhesiveRelations){
+        const moving=pieces.get(relation.from).mesh,target=pieces.get(relation.to).mesh;
+        const targetNormal=new THREE.Vector3(0,0,relation.toFace).transformDirection(target.matrixWorld);
+        const movingNormal=new THREE.Vector3(0,0,relation.fromFace).transformDirection(moving.matrixWorld);
+        // Assembly must first make the mating faces parallel. Do not pull a
+        // rotating panel toward an infinite plane before it reaches the seam.
+        if(targetNormal.dot(movingNormal)>-1+1e-8)continue;
+        if(polygonArea(adhesiveOverlap(relation))<=EPSILON)continue;
+        const foldEnd=Math.max(...contract.foldRelations.filter(r=>r.childId===relation.from||r.childId===relation.to).map(r=>r.phase[1]));
+        // Complete the lap after wrapping, using the assembly's adhesive phase.
+        const weight=phase(progress,[foldEnd,Math.max(foldEnd+1e-6,relation.phase[1])]);
+        const targetPoint=target.localToWorld(new THREE.Vector3(0,0,relation.toFace*paperThickness/2));
+        const movingPoint=moving.localToWorld(new THREE.Vector3(0,0,relation.fromFace*paperThickness/2));
+        const signedGap=movingPoint.clone().sub(targetPoint).dot(targetNormal);
+        const correction=targetNormal.multiplyScalar(-signedGap*weight);
+        const origin=moving.getWorldPosition(new THREE.Vector3());
+        const localOrigin=moving.parent.worldToLocal(origin.clone());
+        const localTarget=moving.parent.worldToLocal(origin.add(correction));
+        moving.position.add(localTarget.sub(localOrigin));
+        root.updateMatrixWorld(true);
+      }
+    }
     function physicalPose(progress){
       const gap=paperThickness+.025;
       const layers={bottomSideLeft:1,bottomSideRight:1,bottomBack:2,lidSideLeft:1,lidSideRight:1,upperTuck:1};
@@ -609,6 +682,7 @@
       if(brand)brand.position.z=-paperThickness/2-.012;
       root.position.z+=(floor.position.z+paperThickness/2)*phase(progress,[.74,.84]);
       root.updateMatrixWorld(true);
+      seatAdhesiveFaces(progress);
       disposePhysicalGeometry();
       const trims=new Map(contract.panels.map(p=>[p.id,[]]));
       const creases=creaseData.map(crease=>{
@@ -638,6 +712,7 @@
         const parent=creaseIntervals(polygons.get(crease.relation.parentId),crease,false,parentDistance),child=creaseIntervals(polygons.get(crease.relation.childId),crease,true,childDistance);
         creaseBridge(crease,distance,parentDistance,childDistance,null,angle);
       });
+      recordAdhesiveContacts(polygons);
     }
     function pose(value) {
       currentProgress=clamp(value,0,1);
@@ -645,7 +720,7 @@
       pieces.forEach((piece,id)=>piece.mesh.position.copy(originalPieces.get(id).position));
       const brand=pieces.get('front').mesh.children.find(c=>c.userData.pacvuBrand);
       if(brand)brand.position.z=-thickness/2-.012;
-      if(!physical)disposePhysicalGeometry();
+      if(!physical){disposePhysicalGeometry();adhesiveContacts=[];}
       const progress = clamp(value, 0, 1);
       hinges.forEach(hinge => {
         let foldAngle = hinge.radians * phase(progress, hinge.range);
@@ -827,6 +902,7 @@
       setMaterialMode,
       setPaperMode,
       setPaperThickness,
+      getAdhesiveContacts(){return JSON.parse(JSON.stringify(adhesiveContacts));},
       get paperMode(){return physical?'physical':'original';},
       get paperThickness(){return paperThickness;},
       get materialMode() { return materialMode; },
