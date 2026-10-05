@@ -1,0 +1,54 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><base href="../../">
+<title>PacVu — Last four Contract mapping QA</title>
+<style>body{font:14px system-ui;margin:24px;color:#24352e;background:#f5f7f6}h1{font-size:22px}select,button{font:inherit;padding:5px;margin:4px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:white;border:1px solid #d0dbd5;border-radius:8px;padding:12px}.card svg{width:100%;height:400px}h2{font-size:16px}.raw *{fill:none!important;stroke:#b64c42!important;stroke-width:.8!important;vector-effect:non-scaling-stroke}.fold *{stroke:#3d67ba!important;stroke-dasharray:3 2}.guide *{stroke:#258c64!important}#status{background:#e3f0e8;padding:12px;white-space:pre-wrap}#notes{font-size:12px;white-space:pre-wrap}</style>
+<h1>T006 · T010 · GA001 · S001 — Contract 검수</h1>
+<p>원본과 Contract의 제조선·패널 비교. Physical Paper / 조립 동작 미연결.</p>
+<label>구조 <select id="structure"><option>T006</option><option>T010</option><option>GA001</option><option>S001</option></select></label>
+<label>치수 <select id="size"><option>Default</option><option>W only</option><option>D only</option><option>H only</option><option>Combined</option></select></label>
+<label>S001 Part <select id="part"><option>outerSleeve</option><option>innerTray</option><option>insertPad</option></select></label>
+<label>옵션 <select id="option"><option>Default</option><option>GA Handle 65x18</option><option>S001 Holes OFF</option><option>S001 Holes 28/8</option><option>S001 jar3</option><option>S001 hidden parts</option></select></label>
+<button id="run">전체 치수·옵션 검증</button><pre id="status">검증 준비</pre>
+<div class="grid"><section class="card"><h2>원본 Cut / Fold / Guide</h2><div id="original"></div></section><section class="card"><h2>Contract 제조선 / 미확정 Guide</h2><div id="mapped"></div></section><section class="card"><h2>Panel.regions — Part별 독립</h2><div id="regions"></div></section></div>
+<p>빨강 Cut · 파랑 실제 Crease · 초록 punch/guide(미확정). 색 패널은 기존 3D 데이터이며 제조 외곽을 대체하지 않음.</p><div id="notes"></div>
+<script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+<script src="structures/tuck/T001/T001_spec.js"></script><script src="structures/tuck/T001/T001_layout.js"></script>
+<script src="structures/tuck/T006/T006_spec.js"></script><script src="structures/tuck/T006/T006_layout.js"></script><script src="structures/tuck/T006/T006_3d.js"></script>
+<script src="structures/tuck/T010/T010_source.js"></script><script src="structures/tuck/T010/T010_spec.js"></script><script src="structures/tuck/T010/T010_layout.js"></script><script src="structures/tuck/T010/T010_3d.js"></script>
+<script src="structures/gable/GA001/GA001_spec.js"></script><script src="structures/gable/GA001/GA001_layout.js"></script>
+<script src="structures/sleeve_slide/S001/S001_spec.js"></script>
+<script src="structures/sleeve_slide/S001/product_fit/S001_product_profiles.js"></script><script src="structures/sleeve_slide/S001/product_fit/S001_product_cut_paths.js"></script><script src="structures/sleeve_slide/S001/product_fit/S001_product_instances.js"></script><script src="structures/sleeve_slide/S001/product_fit/S001_product_placement.js"></script><script src="structures/sleeve_slide/S001/product_fit/S001_product_fit_scenarios.js"></script>
+<script src="structures/sleeve_slide/S001/S001_layout.js"></script>
+<script src="viewer/PacVu3DContract.js"></script><script src="viewer/PacVu3DContractSpecialRecipes.js"></script><script src="viewer/PacVu3DContractSpecialMapping.js"></script><script src="viewer/PacVu3DContractAdapter.js"></script>
+<script>
+'use strict';
+const el=id=>document.getElementById(id),xy=p=>p.x+' '+p.y,base={T006:{W:100,D:40,H:220},T010:{W:80,D:72,H:190},GA001:{W:241,D:127,H:127},S001:{W:298,D:61,H:292}},scales=[[1,1,1],[1.15,1,1],[1,1.15,1],[1,1,1.15],[.9,1.1,.9]];
+const d=p=>'M'+xy(p.start)+' '+p.segments.map(s=>s.type==='line'?'L'+xy(s.to):'C'+xy(s.control1)+' '+xy(s.control2)+' '+xy(s.to)).join(' ')+(p.closed?' Z':'');
+let suite='옵션 검증 전';
+function cfg(id,index){return Object.fromEntries(['W','D','H'].map((k,i)=>[k,base[id][k]*scales[index][i]]));}
+function render(){try{
+  const id=el('structure').value,input=cfg(id,el('size').selectedIndex),o=el('option').value;
+  if(id==='GA001'&&o==='GA Handle 65x18')Object.assign(input,{handleHoleWidth:65,handleHoleHeight:18});
+  if(id==='S001'){if(o==='S001 Holes OFF')input.outerStringHoleEnabled=false;if(o==='S001 Holes 28/8')Object.assign(input,{outerMainHoleDia:28,outerSmallHoleDia:8,outerHoleOffsetY:5});if(o==='S001 jar3')input.productFitPreset='jar3';if(o==='S001 hidden parts')Object.assign(input,{viewMode:'Outer Only',showInnerTray:false,showInsertPad:false,insertPadEnabled:false});}
+  const x=PacVu3DContractAdapter.convert(id,input),c=x.contract;if(!x.validation.ok)throw new Error(JSON.stringify(x.validation.errors));
+  const l=id==='T010'?T010_getLayout(input.W,input.D,input.H):window[id+'_getLayout'](input,input),pid=id==='S001'?el('part').value:'sheet',unit=c.source.sourceUnitToMm,p=id==='S001'?l.rawParts[pid]:l,b=p.bounds||p.dielineBounds;
+  const svg=content=>'<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+[b.minX*unit-5,b.minY*unit-5,b.width*unit+10,b.height*unit+10].join(' ')+'">'+content+'<\/svg>';
+  const raw=items=>items.map(e=>typeof e==='string'?e:'<path d="'+e.d+'"/>').join('');
+  const group=(items,cls)=>'<g class="raw '+cls+'" transform="scale('+unit+')">'+raw(items)+'</g>';
+  const cuts=id==='GA001'?l.cutPaths.map(d=>({d})):p.cutElements,folds=id==='GA001'?l.foldLines.map(f=>({d:'M'+[f.x1,f.y1,f.x2,f.y2].join(' ').replace(/^(\S+ \S+) /,'$1 L')})):p.foldElements;
+  el('original').innerHTML=svg(group(cuts,'')+group(folds,'fold')+group(id==='S001'?p.holeElements:p.punchElements||[],id==='S001'&&pid==='outerSleeve'?'':'guide'));
+  const get=id=>c.paths.find(p=>p.id===id),draw=(ids,cls)=>'<g class="raw '+cls+'">'+ids.map(id=>'<path d="'+d(get(id))+'"/>').join('')+'</g>';
+  const guideIds=c.source.unresolvedFeatures.filter(f=>f.pathId&&['perforation','punch-perforation','product-cut-guide'].includes(f.kind)&&get(f.pathId).partId===pid).map(f=>f.pathId),foldIds=c.source.sourceFolds.filter(id=>get(id).partId===pid);
+  el('mapped').innerHTML=svg(draw(c.cuts.filter(k=>k.partId===pid).map(k=>k.pathId),'')+draw(foldIds,'fold')+draw(guideIds,'guide'));
+  el('regions').innerHTML=svg(c.panels.filter(p=>p.partId===pid).flatMap((p,i)=>p.regions.map(g=>'<path fill="hsl('+(i*53%360)+' 50% 77%)" stroke="#657369" stroke-width=".25" fill-rule="evenodd" d="'+[d(get(g.outerPathId)),...g.holeIds.map(h=>d(get(c.holes.find(q=>q.id===h).boundaryPathId)))].join(' ')+'"><title>'+p.id+' / '+g.id+'</title></path>')).join('')+draw(foldIds,'fold')+draw(guideIds,'guide'));
+  el('status').textContent=suite+'\n'+id+' Contract PASS · '+Object.values(c.parameters.dimensions).join(' × ')+' mm · '+c.parts.length+' Parts / '+c.panels.length+' Panels / '+c.folds.length+' Folds / '+c.holes.length+' Holes / '+c.slits.length+' Slits\n표시 Part: '+pid+' · 전체 Part: '+c.parts.map(p=>p.id).join(', ');
+  el('notes').textContent=[...new Set(x.diagnostics.map(d=>d.code))].join(' · ');
+}catch(e){el('status').textContent='FAIL '+e.stack;}}
+function run(){let count=0;try{
+  const check=(id,cfg)=>{const x=PacVu3DContractAdapter.convert(id,cfg);if(!x.validation.ok)throw new Error(id+JSON.stringify(x.validation.errors));if(id==='S001'&&x.contract.parts.length!==3)throw new Error('Part loss');count++;return x.contract;};
+  for(const id of Object.keys(base))for(let i=0;i<5;i++)check(id,cfg(id,i));
+  for(const options of [{handleHoleWidth:65,handleHoleHeight:18},{handleHoleWidth:100,handleHoleHeight:30},{W:80,D:90,H:127}])check('GA001',options);
+  for(const options of [{outerStringHoleEnabled:false},{outerMainHoleDia:28,outerSmallHoleDia:8,outerHoleOffsetY:5},{paperThickness:.6,slideGap:2,trayGap:1.5,padGap:1.3,productGap:1.4},...['baseline','bottle3','jar3','bottle1Jar2'].map(productFitPreset=>({productFitPreset})),{viewMode:'Outer Only',showInnerTray:false,showInsertPad:false,insertPadEnabled:false},{viewMode:'Insert Only'},{holeCount:1}])check('S001',options);
+  suite='Native browser SVG '+count+'/'+count+' PASS';
+}catch(e){suite='FAIL after '+count+': '+e.message;}render();}
+document.querySelectorAll('select').forEach(s=>s.addEventListener('change',render));el('run').addEventListener('click',run);run();
+</script></html>

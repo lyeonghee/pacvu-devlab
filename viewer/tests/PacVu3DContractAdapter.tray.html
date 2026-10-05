@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><base href="../../"><title>PacVu Tray Contract — isolated mapping QA</title>
+<style>
+body{font:14px system-ui;margin:24px;background:#f4f6fa;color:#192438}h1{font-size:22px}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccd3dd;padding:5px;text-align:left}.cards{display:flex;gap:16px;margin:18px 0}.card{background:white;padding:12px;flex:1;min-width:0}svg{width:100%;height:270px}h2{font-size:17px;margin:0}.fail{color:#bf1836}.blocked{color:#9a5100}#summary{font-weight:bold}button,select{padding:6px;margin:4px}
+</style>
+<h1>TR001 / TR002 / TR003 · Contract mapping QA</h1>
+<p>Exact Layout Cut/Fold/openings + legacy 3D regions. No Physical Paper, assembly or original-file changes.</p>
+<p id="summary">Running…</p><div class="cards" id="cards"></div>
+<p>Red = original Cut · blue = original Fold · purple = open Slit/U-cut/L-cut · colors = legacy panel regions.<br>Unmatched display boundaries, source endpoint gaps and unknown thickness remain diagnostics. This is not a physical readiness PASS.</p>
+<label>Preview case <select id="case"><option value="0">Default</option><option value="1">W only +20%</option><option value="2">D only -20%</option><option value="3">H only +30%</option><option value="4">Combined W -15% / D +15% / H -25%</option></select></label><button id="preview">Show mapping</button>
+<table><thead><tr><th>Structure / case</th><th>Contract + exact source coordinates</th><th>Panels / Regions / Folds / Holes / Slits</th><th>Diagnostics</th></tr></thead><tbody id="results"></tbody></table>
+<script src="structures/tray/TR001/TR001_spec.js"></script><script src="structures/tray/TR001/TR001_layout.js"></script>
+<script src="structures/tray/TR002/TR002_spec.js"></script><script src="structures/tray/TR002/TR002_layout.js"></script>
+<script src="structures/tray/TR003/TR003_spec.js"></script><script src="structures/tray/TR003/TR003_layout.js"></script>
+<script src="viewer/PacVu3DContract.js"></script><script src="viewer/PacVu3DContractTrayMapping.js"></script><script src="viewer/PacVu3DContractAdapter.js"></script>
+<script>
+'use strict';
+const defaults={TR001:{W:282,D:368,H:140},TR002:{W:200,D:280,H:100},TR003:{W:317.5,D:496.8875,H:133.35}};
+const cases=[['default',{}],['W only',{W:1.2}],['D only',{D:.8}],['H only',{H:1.3}],['combined',{W:.85,D:1.15,H:.75}]];
+const cfgFor=(id,m)=>Object.fromEntries(Object.entries(defaults[id]).map(([k,v])=>[k,v*(m[k]??1)]));
+function pathD(p){return 'M '+p.start.x+' '+p.start.y+' '+p.segments.map(s=>s.type==='arc'?'A '+[s.rx,s.ry,s.rotationDeg,+s.largeArc,+s.sweep,s.to.x,s.to.y].join(' '):s.type==='cubic'?'C '+[s.control1.x,s.control1.y,s.control2.x,s.control2.y,s.to.x,s.to.y].join(' '):s.type==='quadratic'?'Q '+[s.control.x,s.control.y,s.to.x,s.to.y].join(' '):'L '+s.to.x+' '+s.to.y).join(' ')+(p.closed?' Z':'');}
+function picture(id,cfg){
+  const card=document.createElement('div');card.className='card';document.getElementById('cards').append(card);
+  try{
+    const r=PacVu3DContractAdapter.convert(id,cfg),c=r.contract,paths=new Map(c.paths.map(p=>[p.id,p]));
+    const pts=c.panels.flatMap(p=>p.regions.flatMap(r=>{const q=paths.get(r.outerPathId);return[q.start,...q.segments.map(s=>s.to)];})),xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys),w=Math.max(...xs)-x,h=Math.max(...ys)-y;
+    card.innerHTML='<h2>'+id+' · '+[cfg.W,cfg.D,cfg.H].map(n=>Number(n.toFixed(3))).join(' × ')+'</h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="'+[x-5,y-5,w+10,h+10].join(' ')+'">'+
+      c.panels.flatMap((p,i)=>p.regions.map(r=>'<path fill="hsl('+(i*43%360)+' 65% 83%)" stroke="#69788c" stroke-width=".4" fill-rule="evenodd" d="'+pathD(paths.get(r.outerPathId))+' '+r.holeIds.map(id=>pathD(paths.get(c.holes.find(h=>h.id===id).boundaryPathId))).join(' ')+'"/>')).join('')+
+      c.cuts.map(k=>'<path fill="none" stroke="#c52e48" stroke-width="1.2" d="'+pathD(paths.get(k.pathId))+'"/>').join('')+
+      c.source.sourceFolds.map(id=>'<path fill="none" stroke="#2573cf" stroke-width="1.2" stroke-dasharray="3 2" d="'+pathD(paths.get(id))+'"/>').join('')+
+      c.slits.map(s=>'<path fill="none" stroke="#962bd0" stroke-width="1.5" d="'+pathD(paths.get(s.pathId))+'"/>').join('')+'<\/svg><p>'+r.diagnostics.length+' diagnostics retained · complete=false</p>';
+  }catch(e){card.classList.add('blocked');const h=document.createElement('h2');h.textContent=id+' · blocked';card.append(h,document.createTextNode(e.message));}
+}
+function preview(){document.getElementById('cards').replaceChildren();const multipliers=cases[Number(document.getElementById('case').value)][1];Object.keys(defaults).forEach(id=>picture(id,cfgFor(id,multipliers)));}
+document.getElementById('preview').onclick=preview;
+(async()=>{
+  let passed=0,blocked=0,failed=0,total=0;
+  for(const id of Object.keys(defaults)){
+    const checks=cases.map(([name,m])=>[name,cfgFor(id,m)]);
+    if(id==='TR001')checks.push(['minimum Hole counts',{...defaults[id],frontBackHoleCount:2,leftRightHoleCount:3}]);
+    if(id==='TR002')checks.push(['holes OFF',{...defaults[id],frontBackHoleCount:0,leftRightHoleCount:0}],['custom Hole',{...defaults[id],frontBackHoleCount:3,leftRightHoleCount:2,frontBackHoleWidth:38,frontBackHoleHeight:14,leftRightHoleDiameter:12}],['clamped Hole',{...defaults[id],frontBackHoleCount:8,leftRightHoleCount:8,frontBackHoleWidth:999,frontBackHoleHeight:999,leftRightHoleDiameter:999}]);
+    for(const [name,cfg] of checks){total++;const tr=document.createElement('tr');
+      try{
+        const l=window[id+'_getLayout'](cfg.W,cfg.D,cfg.H,cfg),r=PacVu3DContractAdapter.convert(id,cfg),c=r.contract;
+        if(!r.validation.ok||c.panels.length!==(id==='TR003'?9:15)||c.folds.length!==(id==='TR003'?8:14)||c.glues.length||c.insertions.length||c.bonds.length)throw new Error('Contract validation/count failed');
+        for(const [field,prefix] of [['cutElements','source.cut.'],['foldElements','source.fold.']])l[field].forEach((el,i)=>{if(c.paths.find(p=>p.id===prefix+i).source.element!==el)throw new Error('Source coordinates changed');});
+        if(c.holes.length!==l.holes.length+(id==='TR003'?0:2))throw new Error('Hole count changed');
+        if(c.slits.some(s=>c.paths.find(p=>p.id===s.pathId).closed)||id==='TR003'&&c.holes.length)throw new Error('Slit became hole');
+        passed++;tr.innerHTML='<td>'+id+' / '+name+'</td><td>PASS</td><td>'+[c.panels.length,c.panels.reduce((s,p)=>s+p.regions.length,0),c.folds.length,c.holes.length,c.slits.length].join(' / ')+'</td><td>'+r.diagnostics.length+' retained; complete=false</td>';
+      }catch(e){
+        const known=id==='TR001'&&name==='H only'&&/original 3D region is empty: base.region0/.test(e.message);
+        if(known)blocked++;else failed++;tr.className=known?'blocked':'fail';const td=document.createElement('td');td.colSpan=4;td.textContent=id+' / '+name+' — '+(known?'SOURCE BLOCKED (not PASS)':'FAIL')+': '+e.message;tr.append(td);
+      }
+      document.getElementById('results').append(tr);await new Promise(requestAnimationFrame);
+    }
+  }
+  document.getElementById('summary').textContent=passed+' PASS / '+blocked+' source-blocked / '+failed+' unexpected failures · '+total+' browser cases complete';preview();
+})();
+</script></html>

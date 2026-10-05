@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>PacVu Mailer Contract — isolated mapping QA</title>
+<style>
+body{font:15px system-ui;margin:24px;background:#f4f6fa;color:#192438}h1{font-size:22px}p{line-height:1.5}#summary{font-weight:700;color:#067651}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccd3dd;padding:7px;text-align:left}.cards{display:flex;gap:16px;margin-top:18px}.card{background:white;padding:12px;flex:1;min-width:0}svg{width:100%;height:340px}h2{font-size:17px;margin:0}small{color:#586779}.fail{color:#bf1836}
+</style>
+<h1>M001 / M002 / M003 · Contract mapping QA</h1>
+<p>Isolated native-browser SVG test. No existing Viewer or Physical Paper connection.<br>Panel colors = Contract regions · red = source Cut · blue = source Fold. Assembly behavior is not tested.</p>
+<p id="summary">Running…</p><table><thead><tr><th>Structure / case</th><th>Contract</th><th>Panels / Folds / Holes</th><th>Unresolved relations</th><th>Warnings / diagnostics</th></tr></thead><tbody id="results"></tbody></table>
+<div class="cards" id="cards"></div>
+<script src="../../structures/mailer/M001/M001_spec.js"></script><script src="../../structures/mailer/M001/M001_layout.js"></script>
+<script src="../../structures/mailer/M002/M002_spec.js"></script><script src="../../structures/mailer/M002/M002_layout.js"></script>
+<script src="../../structures/mailer/M003/M003_spec.js"></script><script src="../../structures/mailer/M003/M003_layout.js"></script>
+<script src="../PacVu3DContract.js"></script><script src="../PacVu3DContractMailerMapping.js"></script><script src="../PacVu3DContractAdapter.js"></script>
+<script>
+'use strict';
+const defaults={M001:{W:235,D:229,H:91},M002:{W:400,D:308,H:80},M003:{W:205,D:205,H:65}};
+function pathD(p){return 'M '+p.start.x+' '+p.start.y+' '+p.segments.map(s=>s.type==='line'?'L '+s.to.x+' '+s.to.y:s.type==='quadratic'?'Q '+s.control.x+' '+s.control.y+' '+s.to.x+' '+s.to.y:s.type==='arc'?'A '+[s.rx,s.ry,s.rotationDeg,+s.largeArc,+s.sweep,s.to.x,s.to.y].join(' '):'C '+[s.control1.x,s.control1.y,s.control2.x,s.control2.y,s.to.x,s.to.y].join(' ')).join(' ')+(p.closed?' Z':'');}
+function picture(c){
+  const paths=new Map(c.paths.map(p=>[p.id,p])),pts=c.panels.flatMap(p=>{const q=paths.get(p.regions[0].outerPathId);return[q.start,...q.segments.map(s=>s.to)];});
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys),w=Math.max(...xs)-x,h=Math.max(...ys)-y;
+  const div=document.createElement('div');div.className='card';
+  div.innerHTML='<h2>'+c.structureId+'</h2><small>19 regions, base-rooted hierarchy</small><svg xmlns="http://www.w3.org/2000/svg" viewBox="'+[x-8,y-8,w+16,h+16].join(' ')+'">'+
+    c.panels.map((p,i)=>'<path fill="hsl('+(i*43%360)+' 60% 83%)" stroke="#69788c" stroke-width=".3" fill-rule="evenodd" d="'+p.regions.map(r=>pathD(paths.get(r.outerPathId))+' '+r.holeIds.map(id=>pathD(paths.get(c.holes.find(h=>h.id===id).boundaryPathId))).join(' ')).join(' ')+'"/>').join('')+
+    c.cuts.map(k=>'<path fill="none" stroke="#c52e48" stroke-width=".55" d="'+pathD(paths.get(k.pathId))+'"/>').join('')+
+    c.folds.flatMap(f=>f.segments.map(s=>'<path fill="none" stroke="#2573cf" stroke-width=".6" stroke-dasharray="2 1" d="'+pathD(paths.get(s.pathId))+'"/>')).join('')+'</svg>';
+  document.getElementById('cards').append(div);
+}
+let passed=0,total=0;
+for(const [id,base] of Object.entries(defaults)){
+  const cases=[['default',{}],['resize A',{W:base.W*1.2,D:base.D*.85,H:base.H*1.15}],['resize B',{W:base.W*.85,D:base.D*1.15,H:base.H*.8}]];
+  if(id!=='M003')cases.push(['one lock',{D:100}]);if(id==='M001')cases.push(['holes off',{holeEnabled:false}]);
+  for(const [label,input] of cases){total++;const tr=document.createElement('tr');
+    try{const report=PacVu3DContractAdapter.convert(id,input),c=report.contract;
+      if(!report.validation.ok||c.panels.length!==19||c.folds.length!==18||c.glues.length||c.insertions.length||c.bonds.length)throw new Error(JSON.stringify(report.validation.errors));
+      if(!PacVu3DContract.validate(JSON.parse(JSON.stringify(c))).ok)throw new Error('Round trip failed');
+      passed++;tr.innerHTML='<td>'+id+' / '+label+'</td><td>PASS</td><td>'+[c.panels.length,c.folds.length,c.holes.length].join(' / ')+'</td><td>'+report.unresolvedRelations.length+' · retained, not implemented</td><td>'+report.validation.warnings.length+' / '+report.diagnostics.length+'</td>';
+      if(label==='default')picture(c);
+    }catch(error){tr.className='fail';tr.textContent=id+' / '+label+' FAIL: '+error.message;}
+    document.getElementById('results').append(tr);
+  }
+}
+document.getElementById('summary').textContent=passed+' / '+total+' native-browser checks PASS. Warnings remain: stock thickness, legacy partitions and unresolved assembly data.';
+</script></html>

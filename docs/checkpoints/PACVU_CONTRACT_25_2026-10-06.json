@@ -1,0 +1,614 @@
+{
+  "checkpoint": "PacVu Contract mapping 25/25",
+  "date": "2026-10-06",
+  "baseCommit": "f7c3e3f2d66351463a51225c263e63775bb519ae",
+  "scope": "Contract core, adapters, source mapping recipes, tests only; no Physical Paper integration or assembly implementation.",
+  "structureIds": [
+    "T001",
+    "T002",
+    "T003",
+    "T004",
+    "T005",
+    "T006",
+    "T007",
+    "T008",
+    "T009",
+    "T010",
+    "M001",
+    "M002",
+    "M003",
+    "R001",
+    "R002",
+    "R003",
+    "R004",
+    "GA001",
+    "S001",
+    "B001",
+    "B002",
+    "TR001",
+    "TR002",
+    "TR003",
+    "C001"
+  ],
+  "verification": {
+    "environment": "Existing working tree, NOT an isolated checkout of this commit",
+    "node": "v24.14.1",
+    "tests": 258,
+    "pass": 258,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "durationMs": 79359.4476,
+    "command": "node --test viewer/tests/PacVu3DContract.test.cjs viewer/tests/PacVu3DContractAdapter.bakeryCake.test.cjs viewer/tests/PacVu3DContractAdapter.extended.test.cjs viewer/tests/PacVu3DContractAdapter.mailer.test.cjs viewer/tests/PacVu3DContractAdapter.shipping.test.cjs viewer/tests/PacVu3DContractAdapter.special.test.cjs viewer/tests/PacVu3DContractAdapter.test.cjs viewer/tests/PacVu3DContractAdapter.tray.test.cjs",
+    "environmentVariables": {
+      "PACVU_CLIPPER_PATH": "H:\\PACVU\\PacVu_UserApp\\node_modules\\clipper-lib\\clipper.js",
+      "PACVU_SVG_PATH_PROPERTIES": "H:\\PACVU\\PacVu_UserApp\\node_modules\\svg-path-properties\\dist\\main.cjs"
+    },
+    "visualQA": "Previous implementation turn: special browser 33/33 PASS and original/Contract comparison inspected. No UI changes or repeat visual QA in this checkpoint-only turn."
+  },
+  "committedImplementationFiles": [
+    "viewer/PacVu3DContract.js",
+    "viewer/PacVu3DContractAdapter.js",
+    "viewer/PacVu3DContractBakeryCakeMapping.js",
+    "viewer/PacVu3DContractBakeryCakeSource.js",
+    "viewer/PacVu3DContractMailerMapping.js",
+    "viewer/PacVu3DContractShippingMapping.js",
+    "viewer/PacVu3DContractSpecialMapping.js",
+    "viewer/PacVu3DContractSpecialRecipes.js",
+    "viewer/PacVu3DContractTrayMapping.js",
+    "viewer/tests/PacVu3DContract.fixtures.cjs",
+    "viewer/tests/PacVu3DContract.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.bakeryCake.html",
+    "viewer/tests/PacVu3DContractAdapter.bakeryCake.runtime.cjs",
+    "viewer/tests/PacVu3DContractAdapter.bakeryCake.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.extended.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.mailer.html",
+    "viewer/tests/PacVu3DContractAdapter.mailer.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.runtime.cjs",
+    "viewer/tests/PacVu3DContractAdapter.shipping.html",
+    "viewer/tests/PacVu3DContractAdapter.shipping.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.special.html",
+    "viewer/tests/PacVu3DContractAdapter.special.runtime.cjs",
+    "viewer/tests/PacVu3DContractAdapter.special.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.test.cjs",
+    "viewer/tests/PacVu3DContractAdapter.tray.html",
+    "viewer/tests/PacVu3DContractAdapter.tray.test.cjs"
+  ],
+  "limitations": [
+    "Schema validation is not manufacturing or physical assembly certification; unresolved diagnostics remain.",
+    "Existing Spec/Layout/Renderer/3D changes, index.html, Physical Paper/FoldMetadata modules, unrelated docs/POCs/QA artifacts are intentionally excluded.",
+    "Tests read existing source files. The untracked viewer/PacVuPhysicalPaper3D.js is loaded as T001 polygon-helper dependency by the current test runtime, not newly connected by Contract work.",
+    "This is a Contract-only checkpoint, not a self-contained snapshot of the tested working tree. Excluded source content is NOT archived here; hashes identify the tested versions but cannot restore them.",
+    "The repository remains dirty intentionally; excluded user changes must be retained."
+  ],
+  "sourceFingerprintInventory": [
+    {
+      "path": "structures/bakery/B001/B001_3d_test.js",
+      "sha256": "09C1FA92C6765907623ACB0B914C12749ED80B83F1BF3543879894B9DC6342C2"
+    },
+    {
+      "path": "structures/bakery/B001/B001_layout.js",
+      "sha256": "F71E56FC387E3A3B055EA99889E48794D24EF64AE9AD09D298F44E959559E940"
+    },
+    {
+      "path": "structures/bakery/B001/B001_renderer.js",
+      "sha256": "4078875A0667AFA9113A0948114C356750223602141F61ED9CEC8362C0C0D6FE"
+    },
+    {
+      "path": "structures/bakery/B001/B001_spec.js",
+      "sha256": "97498D40AEF7A0E1A88BCA76BD27A9059A61DFA5B97EE82E0CF2CBD4E9FDFBE1"
+    },
+    {
+      "path": "structures/bakery/B002/B002_3d.js",
+      "sha256": "E7253CC2CBC8D780AD8781D6DD292A9B8F717F590B3649F91EC7D7B6C2CBC0B6"
+    },
+    {
+      "path": "structures/bakery/B002/B002_layout.js",
+      "sha256": "36D7D31B72B5057C1AD91D01D5E594B9907D9B3D8CE8BED49599533E4D40920B"
+    },
+    {
+      "path": "structures/bakery/B002/B002_renderer.js",
+      "sha256": "243E7D38F6AA0D9B7E3D3E48BF83571239E498454A8E6BB0663A531B25A5BBA1"
+    },
+    {
+      "path": "structures/bakery/B002/B002_spec.js",
+      "sha256": "1118D824C6B15D2A41E3F578CBA02D9796B4F8FBA51F0228B64D47FF53F62867"
+    },
+    {
+      "path": "structures/bakery/common/Bakery2DVisualCommon.js",
+      "sha256": "4DA63E04769346E5D61117E55B6E5E25484AFC7F1435FBEE148E88E12BEB0B16"
+    },
+    {
+      "path": "structures/cake/C001/C001_3d.js",
+      "sha256": "1080EB692CA37224FDD1ADBB7C12163FD9B208F3DB831E94A370F5964305A541"
+    },
+    {
+      "path": "structures/cake/C001/C001_export.js",
+      "sha256": "B452A6663DE026C8429BE3244BADA2BA49008BED5289C7BAE31D778ED480B343"
+    },
+    {
+      "path": "structures/cake/C001/C001_layout.js",
+      "sha256": "0012A7FF621968F1DEFA4E37519FF4F7786C31C5BEE1675F6A7ACE7E1A1608A7"
+    },
+    {
+      "path": "structures/cake/C001/C001_renderer.js",
+      "sha256": "E6019B1A76431769D9D41F18E2792662239C2BA924FB332F0F40458CF218E34D"
+    },
+    {
+      "path": "structures/cake/C001/C001_spec.js",
+      "sha256": "469E0FD109557AC515C600743F687AA349B1C26DD75835C548D3BD8B4DCD6898"
+    },
+    {
+      "path": "structures/cake/common/Cake2DVisualCommon.js",
+      "sha256": "3A1BE5ED0ABACAA426CA1B301ED324A085015D33C5145DF7FC226064A1A22C06"
+    },
+    {
+      "path": "structures/gable/GA001/GA001_3d_test.js",
+      "sha256": "064965E8D6167028708AA1F5B8310F200561C033A9A06961123FBD260BA5069E"
+    },
+    {
+      "path": "structures/gable/GA001/GA001_layout.js",
+      "sha256": "9F87399D7BC37CB860E8014608BCB771B1C5A94056FC53634BEE6D029990AC7D"
+    },
+    {
+      "path": "structures/gable/GA001/GA001_renderer.js",
+      "sha256": "A5C6B0D70B7D4BF07584174699CC517504490CED5E5D55F5ED9D472AF33B1FCE"
+    },
+    {
+      "path": "structures/gable/GA001/GA001_spec.js",
+      "sha256": "BBD0DF8E0A38429A3204936ABEA31C03C87C07CBED0B9DB7F9743B86193A9895"
+    },
+    {
+      "path": "structures/gable/common/Gable2DVisualCommon.js",
+      "sha256": "CBAE840B085F554A6012B743FB4B5B950C3BE464F404127A2E5DF2F2BFB30888"
+    },
+    {
+      "path": "structures/mailer/M001/M001_3d_test.js",
+      "sha256": "D0EFB61FE91AA1ED6E78DA4C6ACD3EE76EDB1B2E4C7DC8A64F44DFC93392215D"
+    },
+    {
+      "path": "structures/mailer/M001/M001_layout.js",
+      "sha256": "DF7FBA18333A63DEBCBA74E3BEC3613F06BB4866360BF4728C90C96FE081DAC4"
+    },
+    {
+      "path": "structures/mailer/M001/M001_renderer.js",
+      "sha256": "F8F5EC7BEE546C42D89EDA06C71E69D50D72557D76D9990BDD594A3591EDF427"
+    },
+    {
+      "path": "structures/mailer/M001/M001_spec.js",
+      "sha256": "D450D342EF0875C7AAE259A603E9C8AF810063C3DB3C79066EEC3EA08033C374"
+    },
+    {
+      "path": "structures/mailer/M002/M002_3d.js",
+      "sha256": "D2D5277D2665734F65C04635C66D150759F032BFFD728B7FB24105BA9CF6F83A"
+    },
+    {
+      "path": "structures/mailer/M002/M002_layout.js",
+      "sha256": "5D5A252CA15E0F8FBB066352DA3B99D00113BC595C695CF827D7E5EF23ED2DDC"
+    },
+    {
+      "path": "structures/mailer/M002/M002_renderer.js",
+      "sha256": "FF9C113E0FA914A217F63524EB72B907222EB0DF35982820507596D50D62C4D4"
+    },
+    {
+      "path": "structures/mailer/M002/M002_spec.js",
+      "sha256": "695B7602A29E4C90B422380940B9008D13FB5D8974D5CA26B16E775C4A4A43C9"
+    },
+    {
+      "path": "structures/mailer/M003/M003_3d_test.js",
+      "sha256": "B963EDFBFC5B92B94DCA97667B4F886BACE6AF734E09F70EA2FCEF2EF03C18BB"
+    },
+    {
+      "path": "structures/mailer/M003/M003_layout.js",
+      "sha256": "BA2F7CEEB990C703E5CE7B2A6C8CC568934762EBC44AFB20A7B6ED9235527181"
+    },
+    {
+      "path": "structures/mailer/M003/M003_renderer.js",
+      "sha256": "71F9A2F7D5864AF25D4894EF256A73E476141D5D1320D1564C037CCF06CB205E"
+    },
+    {
+      "path": "structures/mailer/M003/M003_spec.js",
+      "sha256": "9923D301E1E312CECDB8BB3A9FE1B4F7240D9CE3B64F11CD559A3C1DCD7250FD"
+    },
+    {
+      "path": "structures/mailer/common/Mailer2DVisualCommon.js",
+      "sha256": "AFC3E87F68D3739972037D39202063291DDD47C6267EF255A9266B83F2D3E3A7"
+    },
+    {
+      "path": "structures/shipping/common/Shipping2DVisualCommon.js",
+      "sha256": "C320D246AEB8BCC2A158BAF784A1B735FB1286CAE1923AE4A0D06FB99FDF6461"
+    },
+    {
+      "path": "structures/shipping/rsc/R001/R001_3d.js",
+      "sha256": "6C88AFA23F2AD328315F3C9F4DEBCEAF20107FD254BC7B012EB1225DD4B5382C"
+    },
+    {
+      "path": "structures/shipping/rsc/R001/R001_layout.js",
+      "sha256": "89986CA83D080D56C808D5D8B48AC15FF6B876ED2258BF9B26DCD568FDE57A6D"
+    },
+    {
+      "path": "structures/shipping/rsc/R001/R001_renderer.js",
+      "sha256": "A2319D35ED6FC0B3E683DC3DC1189B94D27D13856231D00BA8896B41589EBC19"
+    },
+    {
+      "path": "structures/shipping/rsc/R001/R001_spec.js",
+      "sha256": "26D6061CA90DD830FAF8740E5B5660F630D055418752CA5C53A6EBA77B59910A"
+    },
+    {
+      "path": "structures/shipping/rsc/R002/R002_3d.js",
+      "sha256": "60477DC6C72237058949BF3360AEA97D215A633C03B6B27B05EDCEEF978EC88C"
+    },
+    {
+      "path": "structures/shipping/rsc/R002/R002_layout.js",
+      "sha256": "7493151D9CB6B43E51C2862CACDAAEE154614FCD0D5C19108852B2B1FD148F6F"
+    },
+    {
+      "path": "structures/shipping/rsc/R002/R002_renderer.js",
+      "sha256": "E2C97082F98A19B0D51BA89952F61CB80A488ABAB0DB0CAF330299BABFDFC7EC"
+    },
+    {
+      "path": "structures/shipping/rsc/R002/R002_spec.js",
+      "sha256": "04010A7C561892A425573E138272F95BAFFD119E00B55BEA38AD692E313EFCE0"
+    },
+    {
+      "path": "structures/shipping/rsc/R003/R003_3d.js",
+      "sha256": "2258EB0656EDBBC2890A1E232AC87D5159A831D2F3EACE58DB7EA9DFFA24ACC6"
+    },
+    {
+      "path": "structures/shipping/rsc/R003/R003_layout.js",
+      "sha256": "BBC40E754416E9AC022051635C0FE00B7E43168F5244DE0074F6197713EBBDE4"
+    },
+    {
+      "path": "structures/shipping/rsc/R003/R003_renderer.js",
+      "sha256": "8463E80FDD5016D10B0BF0483DA391943476A3E2D744EF512141A2EDF84B02D2"
+    },
+    {
+      "path": "structures/shipping/rsc/R003/R003_spec.js",
+      "sha256": "E8143CEB3F5A55BEABBE013E40C186E8BEB9DF73A396DEF910E4BB28370F8A75"
+    },
+    {
+      "path": "structures/shipping/rsc/R004/R004_3d.js",
+      "sha256": "1CBEB9B0085442EA05AC6B0BBC18DC816749E156C0DF17B8B32E2B0798A5F019"
+    },
+    {
+      "path": "structures/shipping/rsc/R004/R004_layout.js",
+      "sha256": "6537718B2F4C313EE41071E3AEE49F5776CD967D0AC9BDA8D8E76D090AAD7974"
+    },
+    {
+      "path": "structures/shipping/rsc/R004/R004_renderer.js",
+      "sha256": "E3F6748CDC690864773C9E707069646490B7096065773186235B56DB9ED6D432"
+    },
+    {
+      "path": "structures/shipping/rsc/R004/R004_spec.js",
+      "sha256": "E25FDA119B99D551B63964B5B7FAD0FBDF2A129C622AE274F13A37C833F630B4"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_3d.js",
+      "sha256": "04AD9EAC16FDB2F54F39067E055D520874E447ED3743642989EDDA7F6466529B"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_assembly_3d.js",
+      "sha256": "8672F14A0D452BFDCB902C0694EA1C7C4E7B210A514BB52AD0B392033372855A"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_assembly_exact_3d.js",
+      "sha256": "9A377D47E882B5F63AE4E05F5F9821CFF1CFBD3A4A5385F4C609F3CCC1F5DADC"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_export.js",
+      "sha256": "D6EF4A843E17043692106B6CC984AA7F4D4BD9B8CEBB698A087CA5282AAFA7D2"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_inner_3d.js",
+      "sha256": "A01E1904973FD2E498418E8F9C1093530F2D76AD4E73E056C685FE19ED41A214"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_insert_3d.js",
+      "sha256": "9A98391BDE23819D6E8E38F061086C5C73C900B4D51561BDAA17BCA0615F275F"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_layout.js",
+      "sha256": "DA15A945D939726A41FFE81F7B56FB31A71BBD22EF687917345B3AAA362302C7"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_renderer.js",
+      "sha256": "319E19A458F9ABB37816834DAA42890EEF273EBD72724857271927D5157EA2D4"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/S001_spec.js",
+      "sha256": "CFF31132C14C7D4A479A472097F45B9A9CF2C2B222964A2474B12C6E10F250A8"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/product_fit/S001_product_cut_paths.js",
+      "sha256": "F47CEC67BD8845FC33E8179D90EEFC3C7873C9F7E969D0B8CB474F5FF27240C9"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/product_fit/S001_product_fit_scenarios.js",
+      "sha256": "BC370EF64EE4380D5447CE80FFF12D5FC8D6D0A672823533E324BC78C8E68940"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/product_fit/S001_product_instances.js",
+      "sha256": "ACD8B1ACB5826A744869F5F2D773C22C1A6BB4C5FA309E0E5E4C059974004A73"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/product_fit/S001_product_placement.js",
+      "sha256": "F800BA46C44172E25E45E3538823E0AC8DECC623B2A068117686A0B4C950BC2C"
+    },
+    {
+      "path": "structures/sleeve_slide/S001/product_fit/S001_product_profiles.js",
+      "sha256": "6E083FA324B9450AAAF08262F3D8D056DEDFAEB250902CB45CE16014EF4D3E09"
+    },
+    {
+      "path": "structures/tray/TR001/TR001_3d.js",
+      "sha256": "0E5EA83A6A1C9A10B4925130F5FA62E0BD9C32BF67C2951D1E187EB1021B4300"
+    },
+    {
+      "path": "structures/tray/TR001/TR001_layout.js",
+      "sha256": "6D74E0569C130C882A6B3E7D7686C8CC585D19A70919BB2F6993CCF4E0843ED6"
+    },
+    {
+      "path": "structures/tray/TR001/TR001_renderer.js",
+      "sha256": "8D202F66B8E1D62DCD09D0AE2829AC29AE83730667EA7C67C06A9D8AE44716DD"
+    },
+    {
+      "path": "structures/tray/TR001/TR001_spec.js",
+      "sha256": "86B97BAD00758CE78EA84AAB001A1ABEAC92DC1D1B958728AE68A7CF3A72DA3D"
+    },
+    {
+      "path": "structures/tray/TR002/TR002_3d.js",
+      "sha256": "4C65C7839FAA263420D76D2CA393E87BEB69DD98C11469D5FB08A0776CAC42AB"
+    },
+    {
+      "path": "structures/tray/TR002/TR002_layout.js",
+      "sha256": "1379549BB51C719BB041864C399BD24F18FCA81EE8794A3E710F7DF1C83D6304"
+    },
+    {
+      "path": "structures/tray/TR002/TR002_renderer.js",
+      "sha256": "C35F221A534D94F1B4AAC010B7F07F62D43B4CAE7ECC2DAC3AE5420E410D7B3E"
+    },
+    {
+      "path": "structures/tray/TR002/TR002_spec.js",
+      "sha256": "8CBBF16A59758532BACF1CC29DF86B1ACD8CF8DCDD16AA87DF6B12EA8B08BBA2"
+    },
+    {
+      "path": "structures/tray/TR003/TR003_3d.js",
+      "sha256": "6470A278AB41D224A3EB4383CA13AC26900D37F8C2A4A6D1FC9285B9BF9C0624"
+    },
+    {
+      "path": "structures/tray/TR003/TR003_layout.js",
+      "sha256": "A0FBA0F97AB410EB8B5AE89ABA301B235C7BC4299D811A436709A291F7BCBF89"
+    },
+    {
+      "path": "structures/tray/TR003/TR003_renderer.js",
+      "sha256": "69DEAF56F37B5597F90EF14D3375AFB691CB416063718A50F220E0861006E181"
+    },
+    {
+      "path": "structures/tray/TR003/TR003_spec.js",
+      "sha256": "84FC6CF724EACF6E0ABFF9E0E8BD35C6E755B174EE33583143AA6ADCAB912AC7"
+    },
+    {
+      "path": "structures/tray/common/Tray2DVisualCommon.js",
+      "sha256": "52361AC661F0D5122F6C0A1DFFFC18A8B9B6091616D663960EB276A06A24121C"
+    },
+    {
+      "path": "structures/tuck/T001/T001_3d_test.js",
+      "sha256": "7808BC5EFD2614E6EB3B27E6964824AA59E8BF14B2AD802436E17B102DC0797A"
+    },
+    {
+      "path": "structures/tuck/T001/T001_layout.js",
+      "sha256": "C3BEFF9CFA6A8C85B1DACBF0A535AF389EE79D2FA337291441006A63C7319D4F"
+    },
+    {
+      "path": "structures/tuck/T001/T001_renderer.js",
+      "sha256": "6AB3D607D4C65F61405F4801C4D4B49470D43FDAA7BE828FD1951BDB53DD285C"
+    },
+    {
+      "path": "structures/tuck/T001/T001_spec.js",
+      "sha256": "DB533962877FC12B9C726E38091D3AFE992E87F37322E0A57FBE05AD7E71EB97"
+    },
+    {
+      "path": "structures/tuck/T002/T002_3d.js",
+      "sha256": "3A812C8E9B7F3F1193E50F04805CFBA1310E8310A060BB9C1F61D52EF947BD84"
+    },
+    {
+      "path": "structures/tuck/T002/T002_layout.js",
+      "sha256": "FD2FD69622A264B5E4B9849F70CB08DAEA6184E6DEC819D01E7411C008A14167"
+    },
+    {
+      "path": "structures/tuck/T002/T002_renderer.js",
+      "sha256": "04E61A03FC125DD39EDD4B3DBC5549F3D42A4787024F41DD349C81592AFA7A90"
+    },
+    {
+      "path": "structures/tuck/T002/T002_spec.js",
+      "sha256": "659B31F29CEB45B40E74FA7BCD1E2FA13E54D707DC428678948EC95D5BCA0A01"
+    },
+    {
+      "path": "structures/tuck/T003/T003_3d.js",
+      "sha256": "DFD76BC0822C432385BAE4C25120482DCE1A1ECD9126AD98A619AE5F516EEC19"
+    },
+    {
+      "path": "structures/tuck/T003/T003_layout.js",
+      "sha256": "4637759EEDDCEEEBBA579F30F6C0ECA77ED4A6F85DDFF3EF98865D1CCBC0B1BE"
+    },
+    {
+      "path": "structures/tuck/T003/T003_renderer.js",
+      "sha256": "A256CF3A5269B98CFA6518DF63AE795376400E5DA780F9FA0C2DFE85EDA9ACA4"
+    },
+    {
+      "path": "structures/tuck/T003/T003_spec.js",
+      "sha256": "C0A1474A972793D2B4BC02EF9B75C74DBA011799F42BC698AFBEDA365FC2CE1A"
+    },
+    {
+      "path": "structures/tuck/T004/T004_3d.js",
+      "sha256": "3DF1125FF498513EC72FB7481EC452C8ED2D11571A5F155A3D40FABD759CE212"
+    },
+    {
+      "path": "structures/tuck/T004/T004_layout.js",
+      "sha256": "43B2021CAC93DE92F9C9AE3FFF02EC0EFA73B7F2FC59D5C8833DF6C55FB9752A"
+    },
+    {
+      "path": "structures/tuck/T004/T004_renderer.js",
+      "sha256": "93A7E9E6A6384521E714B1671C8D5356381A85D3D3D3F54741F48F2198CE6528"
+    },
+    {
+      "path": "structures/tuck/T004/T004_spec.js",
+      "sha256": "D89FB3AD90F48E0438E4DBD2E3B97D3FF8A1F0F743D508B7BD83565899CB9BBE"
+    },
+    {
+      "path": "structures/tuck/T005/T005_3d.js",
+      "sha256": "CF78B02329F0A148E6D48D123D39FF7D67640C9B543C3E2C6EC38EAB40EE3053"
+    },
+    {
+      "path": "structures/tuck/T005/T005_layout.js",
+      "sha256": "053921A33FF6BE05C31210A582938E185FA5A40BE8DABA9C2B349AA8158817AA"
+    },
+    {
+      "path": "structures/tuck/T005/T005_renderer.js",
+      "sha256": "9F06EEC80C1377D9404C27C4B6242BB74CC5357334DD99F405171F0EB6EF9A0F"
+    },
+    {
+      "path": "structures/tuck/T005/T005_spec.js",
+      "sha256": "0EBE13219CC0C26D260A93C309EE25D81F3D2A53BDE4331F549095ECBC7E1F5E"
+    },
+    {
+      "path": "structures/tuck/T007/T007_3d.js",
+      "sha256": "10A1C8EB0D866B92A6E370CF64465A8636A055E34D29F411F60FCA350B336885"
+    },
+    {
+      "path": "structures/tuck/T007/T007_layout.js",
+      "sha256": "E53D5CFE206021FD5F6E0317E7314C9F8D3C236898924AA724B0D03ECEAF7E32"
+    },
+    {
+      "path": "structures/tuck/T007/T007_renderer.js",
+      "sha256": "402C99476323C1D3A1E4BF3B2B4074031BDA0DE470A5A86C501373B148233C38"
+    },
+    {
+      "path": "structures/tuck/T007/T007_source.js",
+      "sha256": "4DF479B50F3760E9A6C333C725758F1AAB329BA3ACE8862D9A9FA6A481050D62"
+    },
+    {
+      "path": "structures/tuck/T007/T007_spec.js",
+      "sha256": "0EB1425CA5E96F8C18EA6A6328FC5E17226A121A4034A68182866F6C66F80D3F"
+    },
+    {
+      "path": "structures/tuck/T008/T008_3d.js",
+      "sha256": "0BE6E479CCC3D4DE7F3494908B772367792D2BB0173AEA873CDE2286160725A8"
+    },
+    {
+      "path": "structures/tuck/T008/T008_layout.js",
+      "sha256": "391FE3FBF4799D45CB8670E5CDDE86CCA8ACB8C81EFD1FA2471F1F11EA78DAB4"
+    },
+    {
+      "path": "structures/tuck/T008/T008_renderer.js",
+      "sha256": "8618FDBCBB25F4B09303815811DD6E5B62B9EF3255755265899D9390B118632F"
+    },
+    {
+      "path": "structures/tuck/T008/T008_spec.js",
+      "sha256": "1F88D57F1135B03519461251C1D45B8CFF827F4346024E5A0843AB21F75A51EA"
+    },
+    {
+      "path": "structures/tuck/T009/T009_3d.js",
+      "sha256": "B448813784C43348D18342AE90CDE68B025962EFF0E35C5929E7DDD4E3C2C5B4"
+    },
+    {
+      "path": "structures/tuck/T009/T009_layout.js",
+      "sha256": "33850A704E05D0AA885C8FF44F5B7EA0A9624D4215DDB802E6D88305BAF9A0F0"
+    },
+    {
+      "path": "structures/tuck/T009/T009_renderer.js",
+      "sha256": "8A9EA815D940DF97A6998D8653FF6F745BDC0D2ABF2F8A6FB6FB106A9F9A1DF3"
+    },
+    {
+      "path": "structures/tuck/T009/T009_spec.js",
+      "sha256": "F919266BE0A8B5C1B08A848472C64A4DF0222F82E6E4F277038084536182175E"
+    },
+    {
+      "path": "structures/tuck/common/Tuck2DVisualCommon.js",
+      "sha256": "7F436C712577967FF998A640E6609B63C16E644B35C66AF441E4C5A0AAFB85A0"
+    },
+    {
+      "path": "structures/tuck/T006/T006_3d.js",
+      "sha256": "543D99BDC472C43833A2FD5EF72D855BAFEE43781F9B91552028E1B555BA3924"
+    },
+    {
+      "path": "structures/tuck/T006/T006_layout.js",
+      "sha256": "199FC47D88AC96D6A8F9DDAB2D352025FA3A83FC04B263DA9D79551CC3834120"
+    },
+    {
+      "path": "structures/tuck/T006/T006_renderer.js",
+      "sha256": "5F417432CD7727BBD9092E34C41330744A16D0DADF4082201FD7D41EBB2E2D6D"
+    },
+    {
+      "path": "structures/tuck/T006/T006_spec.js",
+      "sha256": "2B65B763504A99802080067E322D0BD68BD648051A13802107E71B02B5B74345"
+    },
+    {
+      "path": "structures/tuck/T010/T010_3d.js",
+      "sha256": "29F429DF04CFDA9FDEC4EF7717E5DE958C378DDB851A939FD37A46ADBF1902EB"
+    },
+    {
+      "path": "structures/tuck/T010/T010_layout.js",
+      "sha256": "C92FA1EDD8CAE72CA7958E30190AA33308D4F327907330F5C5D8A7F2914671DD"
+    },
+    {
+      "path": "structures/tuck/T010/T010_renderer.js",
+      "sha256": "DA1CA115A29C945DD3AF98BB6F97D8B6EF4BED64D8D0D9492C9D5DB915DD2144"
+    },
+    {
+      "path": "structures/tuck/T010/T010_source.js",
+      "sha256": "C22846645A00D0DAA217EA772ED1E15D4997BCA52DCD90BEA5C46EE8C4878E20"
+    },
+    {
+      "path": "structures/tuck/T010/T010_spec.js",
+      "sha256": "E20737C26CAA3E31389632F3DE2DC6D285CC81E41BD042C4775F4B716D8CFB1A"
+    },
+    {
+      "path": "shared/PacVu2DVisualContract.js",
+      "sha256": "0FEA4CC7EB0C0ECD5E7B597293268426ADB5B3708C8738F3664A7058C31900AD"
+    },
+    {
+      "path": "shared/PacVu2DVisualEngine.js",
+      "sha256": "7B60AA0D0068A46F8CFD70346B92465C6515B83AB112E952E6712E17589E989D"
+    },
+    {
+      "path": "shared/PacVu2DVisualProfiles.js",
+      "sha256": "21CB889A2CF41D7B42D9E37036B4BFF67FC790B680E02DE27F6D425350CCB0A0"
+    },
+    {
+      "path": "shared/PacVu2DWatermarkOverlay.js",
+      "sha256": "F6F9AD51A1A5D83ED6C0215B4463727E09D2CF6930C1C67813729986589DE2AC"
+    },
+    {
+      "path": "shared/PacVuShippingCommon.js",
+      "sha256": "F3B13FE34C6CC8598FB1C14E129973739043D174A8F2172CB0118F96C8039D81"
+    },
+    {
+      "path": "shared/PacVuUnits.js",
+      "sha256": "CA4E0AC89F113970D4D11BDFA88386B0598AB14CD077F348E303FA6148D6E7BF"
+    },
+    {
+      "path": "viewer/PacVu3DFoldMetadata.js",
+      "sha256": "E676CD910650C0E5B8288178DFD5372F165849A045F160BB2FE949833EE8FE42"
+    },
+    {
+      "path": "viewer/PacVu3DTheme.js",
+      "sha256": "0DB83B80359AEF3B099CF65EFC3DA98E4772F9B3CE704DBBAE7C8121AC0D82B6"
+    },
+    {
+      "path": "viewer/PacVu3DViewer.js",
+      "sha256": "A22AAADD16E80426F5299B57E154C95B4364FAFCDCAD102D6843ECA15D975807"
+    },
+    {
+      "path": "viewer/PacVuPhysicalPaper3D.js",
+      "sha256": "3E6F2E0C8E3A3A628E953AC01F0C518925205BBEA561AE66B9DB7E7A383D0B4B"
+    },
+    {
+      "path": "viewer/PacVuWhitePaperboard.js",
+      "sha256": "84F270FEFAFD88B36837AD29CF8A379A379090C47B254F2795C8C73F34F82874"
+    },
+    {
+      "path": "viewer/PacVuWhiteStudio.js",
+      "sha256": "9E6F4E27EE5CA99C6D546F6CD5E55691D5081A9E7CB7E381011FAE6BDA4AF593"
+    }
+  ]
+}

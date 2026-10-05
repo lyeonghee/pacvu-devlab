@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><base href="../../">
+<title>B001 · B002 · C001 Contract mapping QA</title>
+<style>
+body{font:14px system-ui;margin:24px;color:#21312f;background:#f5f7f6}h1{font-size:22px}select,button{font:inherit;margin:4px;padding:6px}#status{padding:12px;background:#e2efe7;white-space:pre-wrap}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:white;padding:12px;border:1px solid #cdd8d2;border-radius:8px}.card svg{width:100%;height:440px}.raw *{fill:none!important;stroke:#bd403e!important;stroke-width:.55!important}.crease *{stroke:#305ebb!important;stroke-dasharray:3 2}.guide *{stroke:#278151!important;stroke-dasharray:2 2}.notes{white-space:pre-wrap;font-size:12px}h2{font-size:16px}
+</style>
+<h1>Contract 매핑 검수 — B001 / B002 / C001</h1>
+<p>원본 도면 비교용 독립 테스트 화면. 기존 앱·3D·Physical Paper에 연결하지 않음.</p>
+<label>구조 <select id="structure"><option>B001</option><option>B002</option><option>C001</option></select></label>
+<label>B002 앞면 가이드 <select id="punch"><option value="true">ON</option><option value="false">OFF</option></select></label>
+<label>C001 프리셋 <select id="preset"><option>no3</option><option>mini</option><option>no1</option><option>no2</option><option>no4</option></select></label>
+<label>높이 <select id="height"><option>Standard</option><option>Tall</option><option>2-Tier</option><option>Custom</option></select></label>
+<label>Window <select id="window"><option>None</option><option>Guide Only</option><option>Cutout</option></select></label>
+<button id="run">치수·옵션 전체 검증</button>
+<pre id="status">검증 준비 중</pre>
+<div class="grid"><section class="card"><h2>원본 Cut / Fold / Opening</h2><div id="original"></div></section><section class="card"><h2>Contract Cut / Fold / Opening</h2><div id="mapped"></div></section><section class="card"><h2>Contract Panel.regions</h2><div id="regions"></div></section></div>
+<p>빨강: Cut · 파랑: 원본 Crease · 초록: 미확정 perforation 가이드. 패널 색은 식별용이며 물리 검증이 아님.</p>
+<div class="notes" id="notes"></div>
+<script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+<script src="structures/tuck/T001/T001_spec.js"></script><script src="structures/tuck/T001/T001_layout.js"></script>
+<script src="structures/bakery/B001/B001_spec.js"></script><script src="structures/bakery/B001/B001_layout.js"></script>
+<script src="structures/bakery/B002/B002_spec.js"></script><script src="structures/bakery/B002/B002_layout.js"></script>
+<script src="structures/cake/C001/C001_spec.js"></script><script src="structures/cake/C001/C001_layout.js"></script><script src="structures/cake/C001/C001_renderer.js"></script>
+<script src="viewer/PacVu3DContract.js"></script><script src="viewer/PacVu3DContractBakeryCakeSource.js"></script><script src="viewer/PacVu3DContractBakeryCakeMapping.js"></script><script src="viewer/PacVu3DContractAdapter.js"></script>
+<script>
+'use strict';
+const el=id=>document.getElementById(id),point=p=>p.x+' '+p.y;
+const d=p=>'M'+point(p.start)+' '+p.segments.map(s=>s.type==='line'?'L'+point(s.to):s.type==='cubic'?'C'+point(s.control1)+' '+point(s.control2)+' '+point(s.to):'A'+[s.rx,s.ry,s.rotationDeg,+s.largeArc,+s.sweep,s.to.x,s.to.y].join(' ')).join(' ')+(p.closed?' Z':'');
+let suite='전체 옵션 검증 전';
+function render(){
+  try{
+    const id=el('structure').value,options={frontPunchEnabled:el('punch').value==='true',preset:el('preset').value,heightOption:el('height').value,customH:181,windowMode:el('window').value},result=PacVu3DContractAdapter.convert(id,options),c=result.contract;
+    if(!result.validation.ok)throw new Error(JSON.stringify(result.validation.errors));
+    const l=id==='C001'?C001_getLayout(options):window[id+'_getLayout'](c.parameters.dimensions.W,c.parameters.dimensions.D,c.parameters.dimensions.H,options),b=l.dielineBounds||l.bounds;
+    const svg=content=>'<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+[b.minX-5,b.minY-5,b.width+10,b.height+10].join(' ')+'">'+content+'<\/svg>';
+    const transform=items=>id==='C001'?C001_visibleElements(items).map(x=>C001_transformElement(x,'',l)).join(''):items.join('');
+    const group=(items,cls)=>'<g class="raw '+cls+'"'+(id==='B002'?' transform="matrix('+[l.transform.a,0,0,l.transform.d,l.transform.e,l.transform.f].join(' ')+')"':'')+'>'+transform(items)+'</g>';
+    const holes=id==='B001'?l.requiredCutElements:id==='B002'?l.requiredPunchElements:C001_getHandleCutoutPaths().map(x=>'<path d="'+x+'"/>');
+    el('original').innerHTML=svg(group(l.cutElements.concat(id==='C001'?C001_supplementCutElements():[]),'')+group(holes,'')+group(l.foldElements,'crease')+group(l.punchElements||[],'guide'));
+    const pathIds=[...new Set(c.cuts.map(k=>k.pathId))],draw=(ids,cls)=>'<g class="raw '+cls+'">'+ids.map(id=>'<path d="'+d(c.paths.find(p=>p.id===id))+'"/>').join('')+'</g>';
+    el('mapped').innerHTML=svg(draw(pathIds,'')+draw(c.source.sourceFolds,'crease')+draw(c.source.unresolvedFeatures.filter(f=>f.kind==='perforation').map(f=>f.pathId),'guide'));
+    const get=id=>c.paths.find(p=>p.id===id);
+    el('regions').innerHTML=svg(c.panels.flatMap((p,i)=>p.regions.map(g=>{const openings=g.holeIds.map(id=>d(get(c.holes.find(h=>h.id===id).boundaryPathId))),other=g.id==='paper'?c.source.materialExclusions.filter(e=>e.panelId===p.id).map(e=>d(get(c.panels.find(p=>p.id===e.excludedPanelId).regions[0].outerPathId))):[];return '<path fill="hsl('+(i*53%360)+' 55% 77%)" stroke="#344b43" stroke-width=".25" fill-rule="evenodd" d="'+[d(get(g.outerPathId)),...openings,...other].join(' ')+'"><title>'+p.id+' / '+g.id+'</title></path>';})).join('')+draw(c.source.sourceFolds,'crease'));
+    el('status').textContent=suite+'\n'+id+' Contract PASS · '+Object.values(c.parameters.dimensions).join(' × ')+' mm · '+c.panels.length+' panels / '+c.folds.length+' folds / '+c.holes.length+' holes / '+c.slits.length+' slits';
+    el('notes').textContent=[...new Set(result.diagnostics.map(x=>x.code))].join(' · ')+'\nB001 연속 굽힘: 가짜 Fold 없음 / C001 Window: 진단만 유지';
+  }catch(error){el('status').textContent='FAIL '+error.stack;}
+}
+function run(){
+  let count=0;try{
+    const check=(id,input)=>{const x=PacVu3DContractAdapter.convert(id,input);if(!x.validation.ok)throw new Error(id+JSON.stringify(x.validation.errors));count++;return x.contract;};
+    for(const id of ['B001','B002']){const base=check(id,{});for(const input of [{W:210},{D:92},{H:190},{W:320,D:220,H:160}]){const c=check(id,input);if(JSON.stringify(c.paths)!==JSON.stringify(base.paths))throw new Error('Fixed source geometry changed: '+id);}}
+    for(const value of [true,false]){const c=check('B002',{frontPunchEnabled:value});if(c.holes.length!==3)throw new Error('Optional perforation became hole');}
+    for(const preset of ['mini','no1','no2','no3','no4'])for(const heightOption of ['Standard','Tall','2-Tier','Custom']){const input={preset,heightOption,customH:181},c=check('C001',input),cfg=C001_resolveConfig(input);if(['W','D','H'].some(k=>c.parameters.dimensions[k]!==cfg[k]))throw new Error('Preset mismatch');}
+    const base=check('C001',{});for(const windowMode of ['None','Guide Only','Cutout']){const c=check('C001',{windowMode});if(JSON.stringify(c.paths)!==JSON.stringify(base.paths))throw new Error('Invented Window geometry');}
+    suite='Native browser SVG: '+count+'/'+count+' PASS';
+  }catch(error){suite='FAIL after '+count+': '+error.message;}render();
+}
+document.querySelectorAll('select').forEach(s=>s.addEventListener('change',render));el('run').addEventListener('click',run);run();
+</script></html>
