@@ -72,7 +72,7 @@
   }
   function downloadTransparentPng(code){
     if(!renderer||!scene||!camera)return;const hidden=[],brands=[];
-    scene.traverse(object=>{if(object.userData?.pacvuBrand){brands.push([object.material,object.material.opacity]);object.material.opacity=.78;}if(object.isGridHelper||object.type==='GridHelper'||object.material?.isShadowMaterial){hidden.push([object,object.visible]);object.visible=false;}});
+    scene.traverse(object=>{if(object.userData?.pacvuBrand){brands.push([object.material,object.material.opacity]);object.material.opacity=.78;}if(object.isGridHelper||object.type==='GridHelper'||object.material?.isShadowMaterial||object.userData?.pacvuStudioSurface){hidden.push([object,object.visible]);object.visible=false;}});
     const background=scene.background,clearColor=renderer.getClearColor(new root.THREE.Color()).clone(),clearAlpha=renderer.getClearAlpha();scene.background=null;renderer.setClearColor(0x000000,0);renderer.render(scene,camera);
     renderer.domElement.toBlob(blob=>{hidden.forEach(([object,visible])=>{object.visible=visible;});brands.forEach(([material,opacity])=>{material.opacity=opacity;});scene.background=background;renderer.setClearColor(clearColor,clearAlpha);renderer.render(scene,camera);if(!blob)return;const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`${code}_3D_${Math.round(Number(range.value))}.png`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);},'image/png');
   }
@@ -80,6 +80,9 @@
   function materials(){
     if(boardMaterials)return boardMaterials;
     boardMaterials=root.PacVu3DViewer.createBoardMaterials(root.THREE);
+    // Only the cut-edge presentation is white; retain the kraft interior.
+    boardMaterials[2].color.copy(boardMaterials[0].color);
+    boardMaterials[2].name='M003 white cut edge / kraft interior';
     return boardMaterials;
   }
   function assignFaceMaterials(geometry){
@@ -93,7 +96,22 @@
     const ratios=targets.map((target,index)=>target/(modelScale*(ys[index+1]-ys[index]))),starts=[ys[0]];
     for(let i=0;i<5;i+=1)starts.push(starts[i]+(ys[i+1]-ys[i])*ratios[i]);
     const y=n=>{let i=0;if(n>=ys[5])i=4;else while(i<4&&n>=ys[i+1])i+=1;return starts[i]+(n-ys[i])*ratios[i];};
-    return {x,y,point:(xValue,yValue)=>({x:x(xValue),y:y(yValue)})};
+    // The lower side walls share nominal H, not a common SVG X scale.
+    // Their measured f-8 -> f-7 spans differ in the supplied drawing. Map
+    // each span to the same assembly height and use that mapping for the
+    // cut regions AND their hinges (including the bonded f-11 gussets).
+    const bodyX=(n,sourceY)=>{
+      const left=612.623+(sourceY-1100.76)*.01/(1681.862-1100.76);
+      const right=1193.716+(sourceY-1098.325)*.01/(1679.427-1098.325);
+      const dstLeft=x(612.628),dstRight=dstLeft+cfg.W/modelScale;
+      // Nominal Original stock allowance keeps the return flap below lid.
+      // Variable POC stock is still handled by the shared physical engine.
+      const wallHeight=cfg.H/modelScale-1.5*T;
+      if(n<left)return dstLeft+(n-left)*wallHeight/(left-428.494);
+      if(n>right)return dstRight+(n-right)*wallHeight/(1380.79-right);
+      return dstLeft+(n-left)*(dstRight-dstLeft)/(right-left);
+    };
+    return {x,y,point:(xValue,yValue)=>({x:yValue>=1096.199&&yValue<=1681.862?bodyX(xValue,yValue):x(xValue),y:y(yValue)})};
   }
   function sampleSvgPath(d){const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',d);const length=path.getTotalLength(),count=Math.max(24,Math.ceil(length/2)),points=[];for(let index=0;index<count;index+=1){const p=path.getPointAtLength(length*index/count);points.push({x:p.x,y:p.y});}return points;}
   function clipPolygon(subject,mask){
@@ -112,16 +130,17 @@
   function attach(parentFrame,childMesh,a,b,start,end,angle=90,collapseAt=null,hingeOffset=0){
     const THREE=root.THREE,p=new THREE.Vector3(a.x,-a.y,hingeOffset),q=new THREE.Vector3(b.x,-b.y,hingeOffset),hinge=new THREE.Group();hinge.position.copy(p);parentFrame.add(hinge);const frame=new THREE.Group();frame.position.copy(p).multiplyScalar(-1);hinge.add(frame);frame.add(childMesh);
     const axis=q.sub(p).normalize(),box=new THREE.Box3().setFromObject(childMesh),center=box.getCenter(new THREE.Vector3()),radial=center.sub(p),inward=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;
-    const hingeState={g:hinge,axis,angle:angle*inward,inward,start,end,fixed:false,collapseAt};
+    const hingeState={g:hinge,object:hinge,axis,angle:angle*inward,inward,start,end,fixed:false,collapseAt,frame,parentMesh:parentFrame.userData.panel,childMesh,a,b};
     hinges.push(hingeState);
     frame.userData.hinge=hinge;
     frame.userData.hingeState=hingeState;
+    frame.userData.panel=childMesh;
     return frame;
   }
   function localHome(object){return {position:object.position.clone(),quaternion:object.quaternion.clone(),scale:object.scale.clone()};}
   function restoreLocal(object,home){object.position.copy(home.position);object.quaternion.copy(home.quaternion);object.scale.copy(home.scale);object.updateMatrix();}
   function registerBond(source,target,leaderHinge,drivenHinge,threshold,reference){
-    bonds.push({source,target,leaderHinge,drivenHinge,threshold,reference,sourceHome:localHome(source),drivenHome:localHome(drivenHinge),bondedTarget:null});
+    bonds.push({source,target,leaderHinge,drivenHinge,threshold,reference,paperContact:{sourceFace:1,targetFace:-1},sourceHome:localHome(source),drivenHome:localHome(drivenHinge),bondedTarget:null});
   }
   function restoreBondHomes(){
     bonds.forEach(bond=>{
@@ -180,6 +199,7 @@
     return assignFaceMaterials(geometry);
   }
   function build(resetPose){
+    mailerControls?.release();
     const THREE=root.THREE,cfg=typeof getCfgM003==='function'?getCfgM003():{W:205,D:205,H:65};
     if(model){scene.remove(model);model.traverse(o=>{o.geometry?.dispose();if(o.material){if(o.userData?.pacvuBrand)o.material.map?.dispose();o.material.dispose?.();}});}
     hinges.length=0;bonds=[];storageRig=null;model=new THREE.Group();scene.add(model);
@@ -187,15 +207,20 @@
     const polygon=points=>points.map(p=>point(p.x,p.y));
     const out=polygon(sampleSvgPath(layout.cutFillPath));
     const rect=(x1,y1,x2,y2)=>[point(x1,y1),point(x2,y1),point(x2,y2),point(x1,y2)];
-    const base=regionMesh('base',out,rect(612.623,1096.199,1193.726,1681.553),[...(layout.cutFillVoids||[]).map(d=>({points:polygon(sampleSvgPath(d))}))]);model.add(base);
+    const base=regionMesh('base',out,rect(612.623,1096.199,1193.726,1681.553),[...(layout.cutFillVoids||[]).map(d=>({points:polygon(sampleSvgPath(d))}))]);model.add(base);model.userData.panel=base;
     const back=regionMesh('back',out,rect(613.482,917.453,1194.585,1096.199));
     const backL=regionMesh('B-Glue-out-L',out,rect(475,917.453,613.482,1096.199));
     const backR=regionMesh('B-Glue-out-R',out,rect(1194.585,917.453,1335,1096.199));
-    const sideLMask=polygon([{x:612.623,y:1100.76},{x:612.633,y:1681.553},{x:428.494,y:1681.553},{x:428.494,y:1275.03}]);
-    const sideRMask=polygon([{x:1193.716,y:1098.325},{x:1380.79,y:1278.28},{x:1380.79,y:1681.553},{x:1193.726,y:1681.553}]);
+    // Use the actual f-11 lines for both region boundaries and hinge axes.
+    // The previous right-hand diagonal was an independently approximated line.
+    const diagonal=id=>{const f=layout.fold.find(f=>f.id===id);return {a:{x:f.x1,y:f.y1},b:{x:f.x2,y:f.y2},atX:x=>({x,y:f.y1+(x-f.x1)*(f.y2-f.y1)/(f.x2-f.x1)})};};
+    const diagL=diagonal('f-11L'),diagR=diagonal('f-11R');
+    const lStart=diagL.atX(612.623),lEnd=diagL.atX(428.494),rStart=diagR.atX(1193.716),rEnd=diagR.atX(1380.79);
+    const sideLMask=polygon([lStart,{x:612.633,y:1681.553},{x:428.494,y:1681.553},lEnd]);
+    const sideRMask=polygon([rStart,rEnd,{x:1380.79,y:1681.553},{x:1193.726,y:1681.553}]);
     const sideL=regionMesh('side-panel-L',out,sideLMask),sideR=regionMesh('side-panel-R',out,sideRMask);
-    const bGlueInLPoints=polygon([{x:428.494,y:1100.451},{x:612.623,y:1100.76},{x:428.494,y:1275.03}]);
-    const bGlueInRPoints=polygon([{x:1193.716,y:1098.325},{x:1380.79,y:1100.451},{x:1380.79,y:1278.28}]);
+    const bGlueInLPoints=polygon([{x:428.494,y:1096.199},{x:612.623,y:1096.199},lStart,lEnd]);
+    const bGlueInRPoints=polygon([{x:1193.716,y:1096.199},{x:1380.79,y:1096.199},rEnd,rStart]);
     const bGlueInL=regionMesh('B-Glue-in-L',out,bGlueInLPoints);
     const bGlueInR=regionMesh('B-Glue-in-R',out,bGlueInRPoints);
     const f7L=regionMesh('f-7-inner-fold-L',out,rect(360,1096.199,428.494,1681.553));
@@ -216,8 +241,8 @@
     const sideRFrame=attach(model,sideR,point(1193.716,1098.325),point(1193.726,1679.427),.56,.66,90,.95);
     // f-11 is reserved for the optional storage-flat action. The standard
     // close sequence keeps the bonded B Glue-in gussets fixed.
-    const bGlueInLFrame=attach(sideLFrame,bGlueInL,point(612.623,1100.76),point(428.494,1275.03),0,1,0);
-    const bGlueInRFrame=attach(sideRFrame,bGlueInR,point(1193.716,1098.325),point(1380.79,1278.28),0,1,0);
+    const bGlueInLFrame=attach(sideLFrame,bGlueInL,point(diagL.a.x,diagL.a.y),point(diagL.b.x,diagL.b.y),0,1,0);
+    const bGlueInRFrame=attach(sideRFrame,bGlueInR,point(diagR.a.x,diagR.a.y),point(diagR.b.x,diagR.b.y),0,1,0);
     const f7LFrame=attach(sideLFrame,f7L,point(428.494,1100.451),point(428.494,1681.553),.66,.72,90,.95);
     const f7RFrame=attach(sideRFrame,f7R,point(1380.79,1100.451),point(1380.79,1681.553),.66,.72,90,.95);
     const frontFrame=attach(model,front,point(615.26,1681.553),point(1195.645,1681.553),.72,.78,90,.92);
@@ -253,6 +278,8 @@
       bGlueOutLFrame:backLFrame,bGlueOutRFrame:backRFrame
     };
     captureBonds();
+    if(!mailerControls)mailerControls=root.PacVuMailer3DControls.create({id:'M003',modal,stage,renderer,scene,camera,controls:orbit,getModel:()=>model,getAssembly:()=>({panels:new Map([[model.userData.panel.name,model.userData.panel],...hinges.map(h=>[h.childMesh.name,h.childMesh])]),hinges,bonds,anchoredPanels:['base','back','lid','lidSideFlapLeft','lidSideFlapRight','dustFront'],layerOrder:['lidSideFlapLeft','lidSideFlapRight','side-panel-L','side-panel-R','B-Glue-out-L','B-Glue-out-R','A-Glue-out-L','A-Glue-out-R'],layerConstraints:[{outer:'lid',inner:'f-7-inner-fold-L'},{outer:'lid',inner:'f-7-inner-fold-R'}],closureClearances:[{lid:'lid',phase:[.78,.88],contents:['back','front','side-panel-L','side-panel-R','f-7-inner-fold-L','f-7-inner-fold-R','B-Glue-out-L','B-Glue-out-R','B-Glue-in-L-bonded','B-Glue-in-R-bonded']}],preserveSourceEdge:true,sourceThickness:T})});
+    mailerControls.bind();
     if(resetPose){range.value='0';storageRange.value='0';storageMode=false;assemblyModeButton.click();}else pose();fit();
   }
   function smooth(v){v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);}
@@ -343,12 +370,14 @@
     // stacked final hierarchy is built and approved from the physical sample.
     restoreBondHomes();applyHingePose(p);model.updateMatrixWorld(true);enforceBonds(p);
     if(storageMode)applyStorageStep2(value);
+    mailerControls?.update(p);
   }
   function bounds(){model.updateMatrixWorld(true);return new root.THREE.Box3().setFromObject(model);}
-  function fit(){root.PacVu3DViewer.fitObject(model,camera,orbit,'iso');}
-  function setView(v){root.PacVu3DViewer.fitObject(model,camera,orbit,v);}
+  function fit(){mailerControls.fit('iso');}
+  function setView(v){mailerControls.fit(v);}
   function resize(){if(!renderer||!stage)return;const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   function animate(){if(!modal.classList.contains('open'))return;orbit.update();renderer.render(scene,camera);raf=requestAnimationFrame(animate);}
+  let mailerControls;
   root.M003_3D_syncAvailability=sync;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })(typeof window!=='undefined'?window:globalThis);

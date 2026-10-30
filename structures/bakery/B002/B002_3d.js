@@ -1954,6 +1954,7 @@
     board[2].color.copy(board[0].color);
     board[2].name = 'B002 seamless white paper edge';
     const model = new THREE.Group(); scene.add(model);
+    let presentation = null, paper = null;
 
     // Start from the approved production dieline itself. The two handle
     // openings and lid slot are always holes; the front perforation becomes
@@ -2456,7 +2457,7 @@
         // identical and their exterior/interior caps z-fight. Preserve the
         // manufactured board thickness instead of biasing either material.
         if (backHandleRecord) {
-          backHandleRecord.mesh.position.z = backHandleBaseZ + (PAPER * 1.05 * laminateAmount);
+          backHandleRecord.mesh.position.z = backHandleBaseZ + ((paper?.enabled ? paper.thickness : PAPER) * 1.05 * laminateAmount);
         }
       }
       if (handleWingFold) {
@@ -2845,7 +2846,7 @@
       record.mesh.position.z = topStackBaseZ.get(record) + localLift;
       return localLift;
     };
-    function pose(value) {
+    function pose(value, skipPaper=false) {
       // B002 uses one verified fixed assembly for the entire 0-100% range.
       // Never swap to a separate Flat render object at the first slider step.
       if (!validation.animationAllowed) value = 0;
@@ -2942,6 +2943,10 @@
       modal.querySelectorAll('.assembly-labels span').forEach((node, index) => node.classList.toggle('active', index <= step));
       const activeStage = assemblySequence.findLast(entry => value >= entry.start) || assemblySequence[0];
       modal.querySelector('.assembly-title').textContent = activeStage ? activeStage.step + '/8 · ' + activeStage.action : 'Assembly Stage';
+      const thickness = paper?.enabled ? paper.thickness : PAPER;
+      rootRecord.mesh.children.forEach(child=>{if(child.userData.pacvuBrand)child.position.z=thickness/2+.025;});
+      model.updateMatrixWorld(true);
+      if(!skipPaper)presentation?.update(value);
     }
     const slider = modal.querySelector('.m001-3d-controls input');
     slider.disabled = !validation.animationAllowed;
@@ -2991,7 +2996,8 @@
     }
     function setCameraView(viewName) {
       const requestedView = viewName === 'reset' ? (flat.visible ? 'top' : 'isometric') : viewName;
-      global.PacVu3DViewer.fitObject(flat.visible ? flat : assemblyRoot,camera,controls,requestedView);
+      if(presentation)presentation.fit(requestedView==='isometric'?'iso':requestedView);
+      else global.PacVu3DViewer.fitObject(flat.visible ? flat : assemblyRoot,camera,controls,requestedView);
     }
     cameraToolbar.addEventListener('click', event => {
       const button = event.target.closest('[data-camera-view]');
@@ -3005,6 +3011,23 @@
     const grid = new THREE.GridHelper(global.PacVu3DTheme.grid.size, global.PacVu3DTheme.grid.divisions, global.PacVu3DTheme.grid.centerColor, global.PacVu3DTheme.grid.lineColor);
     grid.rotation.x = Math.PI / 2; grid.position.z = global.PacVu3DTheme.grid.z; scene.add(grid);
     global.PacVu3DViewer.standardizeEnvironment({renderer,scene,controls,floor,grid});
+    presentation = global.PacVuMailer3DControls.create({id:'B002',modal,stage,renderer,scene,camera,controls,getModel:()=>assemblyRoot,
+      createPaper(){
+        const pieces = new Map([...panelById].map(([id,r])=>[id,{mesh:r.mesh,flatCenter:new THREE.Vector3(r.made.centerX-flatMade.centerX,flatMade.bottom-r.made.bottom,0)}]));
+        const white = global.PacVuWhitePaperboard.createMaterials(THREE,renderer,{sourceMaterials:board});
+        paper = global.PacVuPhysicalPaper3D.createFoldedAdapter({THREE,root:assemblyRoot,pieces,frames:new Map(),
+          center:{x:flatMade.centerX,y:flatMade.bottom},point:flatVector,materials:board,whitePaperboard:white,
+          baseMaterialSets:{existing:board,white:white.materials},initialThickness:PAPER,clamp,phase:(v,r)=>phase(v,r[0],r[1]),
+          contract:{code:'B002',panels:contract.panels.map(p=>({id:p.id,polygon:p.closedPath,holes:p.holes})),
+            folds:hierarchy.map(r=>({id:r.fold.id,parentId:r.parentPanelId,childId:r.childPanelId,axis:r.fold.axis,phase:[0,1]}))},
+          hinges:animatedFolds.map(h=>({id:h.id,object:h.hinge,axis:h.axis})),
+          repose(){const v=Number(slider.value)/100;pose(v,true);paper.update(v);},
+          afterRebuild({paperThickness}){pieces.forEach(p=>global.PacVu3DViewer.assignBoardFaceMaterials(p.mesh.geometry,paperThickness,'exterior'));}
+        });
+        return {...paper,get enabled(){return paper.enabled;},dispose(){paper.dispose();white.dispose();}};
+      }});
+    presentation.bind();
+    pose(Number(slider.value)/100);
     modal.querySelectorAll('[data-view]').forEach(button => {
       button.onclick = () => setCameraView(button.dataset.view);
     });
@@ -3024,7 +3047,7 @@
     }
     const observer = new ResizeObserver(resize); observer.observe(stage); resize();
     let live = true;
-    (function loop() { if (!live) return; requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+    (function loop() { if (!live) return; requestAnimationFrame(loop); if(modal.classList.contains('open')){controls.update(); renderer.render(scene, camera);} })();
     const expandButton = modal.querySelector('[data-expand]');
     expandButton.onclick = () => {
       const expanded = modal.classList.contains('pacvu-viewer--expanded');
@@ -3040,7 +3063,7 @@
         requestAnimationFrame(() => setCameraView('reset'));
       },
       destroy() {
-        live = false; observer.disconnect(); controls.dispose?.();
+        live = false; observer.disconnect(); presentation.dispose(); controls.dispose?.();
         model.traverse(object => {
           if (!object.userData?.pacvuBrand) return;
           object.material?.map?.dispose(); object.material?.dispose(); object.geometry?.dispose();

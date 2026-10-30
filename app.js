@@ -122,6 +122,14 @@ function getCfg() {
   };
 }
 
+function getActiveSharedMailerEngine() {
+  const id = selectedBoxMeta?.variantKey;
+  if (id === 'M004' && window.PacVuM004) return window.PacVuM004;
+  if (id === 'M005' && window.PacVuM005) return window.PacVuM005;
+  if (id === 'R005' && window.PacVuR005) return window.PacVuR005;
+  return null;
+}
+
 // T001 (B-Type) config
 function getCfgT001() {
   return {
@@ -451,7 +459,10 @@ function render(forceFit = false, visualReason = 'initial-render') {
   updateUpperTuckCustomizeUi();
   if (eng !== 'gbox' && eng !== 'gbox2' && eng !== 'gbox3' && eng !== 'bbox' && eng !== 'bbox2' && eng !== 'bbox3' && eng !== 'bbox4' && eng !== 'bbox5' && eng !== 'bbox6' && eng !== 'bbox7' && eng !== 'bbox8' && eng !== 'bbox9' && eng !== 'bbox10' && eng !== 'tr001' && eng !== 'tr002' && eng !== 'tr003') updateT001DielineSizeInfo(null);
 
-  if (eng === 'gbox') {
+  if (getActiveSharedMailerEngine()) {
+    svgStr = getActiveSharedMailerEngine().renderSVG(getCfg(), state);
+    updateT001DielineSizeInfo(getActiveSharedMailerEngine().getLayout(getCfg()));
+  } else if (eng === 'gbox') {
     const cfg = getCfg();
     validateDimensions(cfg.W, cfg.D, cfg.H);
     svgStr = M001_renderSVG(cfg, state);
@@ -685,7 +696,9 @@ function fitToScreen(visualReason = 'fit') {
     // bounds 계산 — engine별
     let bounds;
     const eng = selectedBoxMeta.engineKey;
-    if (eng === 'gbox') {
+    if (getActiveSharedMailerEngine()) {
+      bounds = getActiveSharedMailerEngine().getLayout(getCfg()).bounds;
+    } else if (eng === 'gbox') {
       const layout = M001_getLayout(getCfg());
       bounds = layout.bounds;
     } else if (eng === 'gbox2') {
@@ -829,6 +842,7 @@ function zoomAt(nextZoom) {
 // EXPORT SVG / DXF
 // ============================================================
 function buildExportSVG(cfg, eng) {
+  if (eng === 'mailer-source-cut' || eng === 'shipping-source-cut') return getActiveSharedMailerEngine().buildExportSVG(cfg);
   if (eng === 'gable1') {
     return typeof window.GA001_buildExportSVG === 'function'
       ? window.GA001_buildExportSVG(cfg)
@@ -966,6 +980,7 @@ function buildExportSVG(cfg, eng) {
 }
 
 function buildDXF(cfg, eng) {
+  if (eng === 'shipping-source-cut') return window.PacVuR005.buildDXF(cfg);
   if (eng === 'gbox') return typeof M001_buildDXF === 'function' ? M001_buildDXF(cfg) : '';
   if (eng === 'gbox2') return typeof M002_buildDXF === 'function' ? M002_buildDXF(cfg) : '';
   if (eng === 'gbox3') return typeof M003_buildDXF === 'function' ? M003_buildDXF(cfg) : '';
@@ -2132,7 +2147,7 @@ function bindAll() {
   setupMobileViewerLayout();
   ensureDimensionUnitControl();
 
-  fetch('./data/boxLibrary.json?v=20260927-t006-t010-registry1')
+  fetch('./data/boxLibrary.json?v=20261019-r005-1')
     .then(r => r.json())
     .then(data => {
       BOX_LIBRARY = data;

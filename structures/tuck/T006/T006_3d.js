@@ -122,6 +122,107 @@ function frontLockGeometry(THREE,topology,cx,cy,thickness) {
   return geometry;
 }
 
+
+// The central tear area is a 3D presentation partition of the approved panels.
+// Source cut, punch, mapper and assembly geometry remain the authority.
+function centralTearPartition(contract) {
+  const layout=contract.layout,lib=global.ClipperLib,precision=1e6;
+  const punches=layout.punchElements.map(e=>global.T001_flattenPathD(global.T001_elementToPathD(e)));
+  const lock=contract.panels.find(p=>p.id==='frontLock'),topology=lock.topology;
+  const upper=punches[2],upperCurve=punches[3],lower=punches[0],lowerCurve=punches[1];
+  const upperSlit=topology.slits[0],lowerSlit=topology.slits[1];
+  const tip=upperCurve[upperCurve.length-1],dx=upperSlit.b.x-upperSlit.a.x,dy=upperSlit.b.y-upperSlit.a.y;
+  const t=((tip.x-upperSlit.a.x)*dx+(tip.y-upperSlit.a.y)*dy)/(dx*dx+dy*dy);
+  if(!(t>=0&&t<=1))throw new Error('T006 tear: upper punch no longer meets the approved slit bank.');
+  const upperBridge=vec(upperSlit.a.x+t*dx,upperSlit.a.y+t*dy);
+  // Explicitly tear the original residual ligaments, without extending/snapping
+  // any source path. The lower ligament is 0.434975 mm at the nominal size.
+  const bridges=[{a:tip,b:upperBridge},{a:lowerSlit.b,b:lowerCurve[0]}];
+  const tongue=topology.cells.find(c=>c.id==='tongue').points;
+  const bIndex=tongue.indexOf(upperSlit.a),dIndex=tongue.indexOf(lowerSlit.b);
+  if(bIndex<0||dIndex<=bIndex)throw new Error('T006 tear: approved tongue topology changed.');
+  // The upper curve starts slightly before the Front/FrontLock crease; its
+  // first straight segment overlaps the transverse punch. Keep their union.
+  const mask=[...upper,...upperCurve.slice(1),upperBridge,...tongue.slice(bIndex,dIndex+1),
+    ...lowerCurve,...lower];
+  const toPath=points=>points.map(p=>({X:Math.round(p.x*precision),Y:Math.round(p.y*precision)}));
+  const area=points=>Math.abs(lib.Clipper.Area(toPath(points)))/(precision*precision);
+  function clip(points,operation){
+    const c=new lib.Clipper(),paths=new lib.Paths();c.StrictlySimple=true;
+    c.AddPath(toPath(points),lib.PolyType.ptSubject,true);
+    c.AddPath(toPath(mask),lib.PolyType.ptClip,true);
+    c.Execute(operation,paths,lib.PolyFillType.pftNonZero,lib.PolyFillType.pftNonZero);
+    // Remove only sub-micrometre integer-clipping spikes along coincident banks.
+    return lib.Clipper.CleanPolygons(paths,2).filter(p=>Math.abs(lib.Clipper.Area(p))>1).map(p=>p.map(q=>vec(q.X/precision,q.Y/precision)));
+  }
+  const parts={};
+  ['front','frontLock'].forEach(id=>{
+    const panel=contract.panels.find(p=>p.id===id),cells=panel.topology?panel.topology.cells:[{id:'front',points:panel.polygon}];
+    const moving=[],fixed=[],tonguePolygons=[];
+    cells.forEach(({id:cellId,points})=>{
+      const a=clip(points,lib.ClipType.ctIntersection),b=clip(points,lib.ClipType.ctDifference);
+      if(Math.abs([...a,...b].reduce((s,p)=>s+area(p),0)-area(points))>1e-3)
+        throw new Error('T006 tear: panel area must be preserved.');
+      moving.push(...a);fixed.push(...b);
+      if(cellId==='tongue')tonguePolygons.push(...a);
+    });
+    if(!moving.length||!fixed.length)throw new Error('T006 tear: missing central or retained panel.');
+    parts[id]={moving,fixed,tonguePolygons,continuousEdges:panel.topology?.continuousEdges||[]};
+  });
+  return {parts,bridges};
+}
+function centralTearGeometry(THREE,polygons,continuousEdges,cx,cy,thickness,bend){
+  const vertices=[],tongueVertices=[],expanded=[];
+  const bendCuts=bend?Array.from({length:33},(_,i)=>bend.rootX+(bend.tipX-bend.rootX)*i/32):[];
+  polygons.forEach(points=>{
+    const tongue=!!bend?.polygons.includes(points);
+    if(!tongue){expanded.push({points,tongue});return;}
+    const xs=[-1e6,...bendCuts,1e6],lib=global.ClipperLib,precision=1e6;
+    for(let i=1;i<xs.length;i++){
+      const c=new lib.Clipper(),paths=new lib.Paths();
+      const path=ps=>ps.map(p=>({X:Math.round(p.x*precision),Y:Math.round(p.y*precision)}));
+      c.AddPath(path(points),lib.PolyType.ptSubject,true);
+      c.AddPath(path([vec(xs[i-1],-1e6),vec(xs[i],-1e6),vec(xs[i],1e6),vec(xs[i-1],1e6)]),lib.PolyType.ptClip,true);
+      c.Execute(lib.ClipType.ctIntersection,paths,lib.PolyFillType.pftNonZero,lib.PolyFillType.pftNonZero);
+      lib.Clipper.CleanPolygons(paths,2).forEach(p=>{if(p.length>=3)expanded.push({points:p.map(q=>vec(q.X/precision,q.Y/precision)),tongue});});
+    }
+  });
+  const triangle=(a,b,c,side)=>[a,b,c].forEach(p=>vertices.push(p.x-cx,cy-p.y,side*thickness/2));
+  function onContinuous(a,b){
+    return bendCuts.some(x=>Math.abs(a.x-x)<2e-6&&Math.abs(b.x-x)<2e-6)||continuousEdges.some(([p,q])=>{
+      const dx=q.x-p.x,dy=q.y-p.y,length=Math.hypot(dx,dy);
+      const on=r=>Math.abs((r.x-p.x)*dy-(r.y-p.y)*dx)<length*2e-6&&
+        (r.x-p.x)*dx+(r.y-p.y)*dy>=-2e-6&&
+        (r.x-q.x)*dx+(r.y-q.y)*dy<=2e-6;
+      return on(a)&&on(b);
+    });
+  }
+  expanded.forEach(({points,tongue})=>{
+    const start=vertices.length/3;
+    const contour=points.map(p=>new THREE.Vector2(p.x-cx,cy-p.y));
+    const triangles=THREE.ShapeUtils.triangulateShape(contour,[]);
+    let covered=0,area=0;
+    points.forEach((p,i)=>{const q=points[(i+1)%points.length];area+=p.x*q.y-q.x*p.y;});
+    triangles.forEach(([a,b,c])=>{
+      const p=contour[a],q=contour[b],r=contour[c],signed=(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);
+      if(Math.abs(signed)<1e-12)return;
+      covered+=Math.abs(signed)/2;if(signed<0)[b,c]=[c,b];
+      triangle(points[a],points[b],points[c],1);triangle(points[c],points[b],points[a],-1);
+    });
+    if(Math.abs(covered-Math.abs(area)/2)>1e-3)throw new Error('T006 tear: incomplete panel triangulation.');
+    points.forEach((p,i)=>{
+      const q=points[(i+1)%points.length];if(onContinuous(p,q))return;
+      let a=p,b=q;if(area>0)[a,b]=[b,a];
+      [[a,-1],[b,-1],[b,1],[a,-1],[b,1],[a,1]].forEach(([v,s])=>vertices.push(v.x-cx,cy-v.y,s*thickness/2));
+    });
+    if(tongue)for(let i=start;i<vertices.length/3;i++)tongueVertices.push(i);
+  });
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();
+  if(bend)geometry.userData.bend={...bend,length:bend.tipX-bend.rootX,rootX:bend.rootX-cx,tongueVertices,rest:geometry.attributes.position.array.slice()};
+  return geometry;
+}
+
 function buildContract(input) {
   const layout = global.T006_getLayout(input || {W:100,D:40,H:220});
   const g = layout.grid, outline = global.T001_flattenPathD(layout.fillPath);
@@ -179,8 +280,9 @@ function buildContract(input) {
   grid.rotation.x=Math.PI/2; grid.position.z=global.PacVu3DTheme.grid.z; scene.add(grid);
   Viewer.standardizeEnvironment({renderer,scene,controls,floor,grid});
   const materials=Viewer.createBoardMaterials(THREE);
-  materials[1].color.set(global.PacVu3DTheme.colors.exterior);
-  materials[2].color.set(global.PacVu3DTheme.colors.exterior);
+  // Standard board: white exterior, kraft interior. White Paperboard is white on both faces.
+  // Keep visible cut/fold edges light without changing the kraft inner face.
+  materials[2].color.copy(materials[0].color);
   const whitePaperboard=global.PacVuWhitePaperboard?.createMaterials(THREE,renderer,{sourceMaterials:materials});
   const materialSets={existing:materials,white:whitePaperboard?.materials||materials};
   let materialMode='existing';
@@ -239,54 +341,196 @@ function buildContract(input) {
     const frame=new THREE.Group();frame.position.copy(a).multiplyScalar(-1);hinge.add(frame);frame.add(piece.mesh);frames.set(relation.childId,frame);
     const axis=b.clone().sub(a).normalize(),radial=piece.flatCenter.clone().sub(a);
     const sign=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;
-    hinges.push({hinge,axis,radians:THREE.MathUtils.degToRad(relation.angle)*sign,phase:relation.phase});
+    hinges.push({id:relation.id,hinge,axis,radians:THREE.MathUtils.degToRad(relation.angle)*sign,phase:relation.phase});
   });
   const slider=modal.querySelector('input'),clamp=v=>Math.max(0,Math.min(1,v));
-  let whiteStudio=null;
+  let tearModel=null,physicalPaper=null;
+  function activeThickness(){return physicalPaper?.enabled?physicalPaper.thickness:thickness;}
   const smooth=v=>{v=clamp(v);return v*v*(3-2*v);};
   function pose(value){
-    const p=clamp(value);
+    const p=clamp(value),thickness=activeThickness();
+    resetTearPresentation();
     hinges.forEach(h=>h.hinge.quaternion.setFromAxisAngle(h.axis,h.radians*smooth((p-h.phase[0])/(h.phase[1]-h.phase[0]))));
     pieces.get('frontLock').mesh.position.z=-thickness*smooth((p-.52)/(.66-.52));
+    if(tearModel){
+      tearModel.frontHinge.quaternion.copy(hinges.find(h=>h.id==='side-left-front').hinge.quaternion);
+      tearModel.lockHinge.quaternion.copy(hinges.find(h=>h.id==='front-lock').hinge.quaternion);
+      tearModel.lockMeshes.forEach(mesh=>mesh.position.z=pieces.get('frontLock').mesh.position.z);
+    }
     ['topDustLeft','topDustRight','bottomDustLeft','bottomDustRight'].forEach(id=>pieces.get(id).mesh.visible=p<.985);
+    physicalPaper?.update(p);
+    pieces.forEach(piece=>piece.mesh.children.filter(o=>o.isLine).forEach(line=>{const offset=line.name.includes('slit')?.002:.03;line.scale.z=(thickness/2+offset)/(.45/2+offset);}));
     root.position.z=0;root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(root);
     if(!box.isEmpty())root.position.z=grid.position.z+thickness/2-box.min.z;
     modal.querySelector('.assembly-fill').style.width=Math.round(p*100)+'%';
   }
-  function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
-  function view(type){if(type==='iso'&&whiteStudio){Viewer.fitObject(root,camera,controls,'iso');whiteStudio.view();}else Viewer.fitObject(root,camera,controls,type);}
-  function setMaterialMode(mode){
-    materialMode=mode==='white'?'white':'existing';
-    pieces.forEach(piece=>{piece.mesh.material=materialSets[materialMode];});
-    modal.querySelectorAll('[data-material-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.materialMode===materialMode)));
+  // T006 central Tear OPEN/CLOSE POC. End closures keep their approved pose.
+  let lidPoc=true;
+  let closedRootZ=0;
+  let hasOpened=false;
+  function resetTearPresentation(){
+    if(!tearModel)return;
+    tearModel.nodes.forEach(node=>node.visible=false);
+    const geometry=tearModel.tongueMesh.geometry;
+    geometry.attributes.position.array.set(geometry.userData.bend.rest);geometry.attributes.position.needsUpdate=true;
+    geometry.computeBoundingBox();geometry.computeBoundingSphere();
+    pieces.get('front').mesh.visible=true;pieces.get('frontLock').mesh.visible=true;
   }
-  const materialControls=document.createElement('div');
-  const viewControls=modal.querySelector('.m001-3d-views.pacvu-viewer__views');
-  viewControls?.classList.add('t006-view-controls');
-  materialControls.className='m001-3d-views pacvu-viewer__views t006-material-controls';
-  materialControls.style.right='118px';
-  materialControls.innerHTML='<button type="button" class="btn light" data-material-mode="existing" aria-pressed="true">Existing Material</button><button type="button" class="btn light" data-material-mode="white" aria-pressed="false">White Paperboard</button>';
-  stage.append(materialControls);
-  materialControls.querySelectorAll('[data-material-mode]').forEach(button=>{button.onclick=()=>setMaterialMode(button.dataset.materialMode);});
-  slider.oninput=()=>pose(Number(slider.value)/100);
+  function createTearModel(){
+    const thickness=activeThickness();
+    const partition=centralTearPartition(contract),nodes=[],meshes=[],lockMeshes=[];
+    const frontRelation=contract.folds.find(f=>f.id==='side-left-front');
+    const lockRelation=contract.folds.find(f=>f.id==='front-lock');
+    function hingeFrame(parent,relation){
+      const a=to3(relation.a),hinge=new THREE.Group(),frame=new THREE.Group();
+      hinge.position.copy(a);frame.position.copy(a).multiplyScalar(-1);parent.add(hinge);hinge.add(frame);
+      return {hinge,frame};
+    }
+    // Clone the approved crease frames, without moving the original descendants.
+    const front=hingeFrame(frames.get('sideLeft'),frontRelation),lock=hingeFrame(front.frame,lockRelation);
+    front.hinge.name='T006 central front opening hinge';lock.hinge.name='T006 central lock release hinge';
+    nodes.push(front.hinge);
+    const topology=contract.panels.find(p=>p.id==='frontLock').topology;
+    const rootX=topology.slits[0].b.x,tipX=Math.max(...topology.cells.find(c=>c.id==='tongue').points.map(p=>p.x));
+    function fragment(id,kind,parent){
+      const source=pieces.get(id).mesh,cx=source.position.x+center.x,cy=center.y-source.position.y;
+      const part=partition.parts[id],bend=id==='frontLock'&&kind==='moving'?{rootX,tipX,polygons:part.tonguePolygons}:null;
+      const geometry=centralTearGeometry(THREE,part[kind],part.continuousEdges,cx,cy,thickness,bend);
+      global.PacVuWhitePaperboard?.applyPhysicalUV(THREE,geometry,{offsetX:cx,offsetY:cy});
+      Viewer.assignBoardFaceMaterials(geometry,thickness,'interior');
+      const mesh=new THREE.Mesh(geometry,materialSets[materialMode]);mesh.name='T006 tear '+id+' '+kind;
+      mesh.position.copy(source.position);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);meshes.push(mesh);
+      if(id==='frontLock')lockMeshes.push(mesh);
+      return mesh;
+    }
+    ['front','frontLock'].forEach(id=>nodes.push(fragment(id,'fixed',frames.get(id))));
+    fragment('front','moving',front.frame);const tongueMesh=fragment('frontLock','moving',lock.frame);
+    const slotPiece=pieces.get('sideRight'),slot=contract.panels.find(p=>p.id==='sideRight').holes[0];
+    const slotCenter=new THREE.Vector3((Math.min(...slot.map(p=>p.x))+Math.max(...slot.map(p=>p.x)))/2-center.x-slotPiece.flatCenter.x,
+      center.y-(Math.min(...slot.map(p=>p.y))+Math.max(...slot.map(p=>p.y)))/2-slotPiece.flatCenter.y,0);
+    slotPiece.mesh.localToWorld(slotCenter);
+    return {thickness,nodes,meshes,lockMeshes,tongueMesh,slotCenter,frontHinge:front.hinge,lockHinge:lock.hinge,bridges:partition.bridges};
+  }
+  function bendTongue(progress,release){
+    const model=tearModel,mesh=model.tongueMesh,geometry=mesh.geometry,bend=geometry.userData.bend;
+    const data=geometry.attributes.position,rest=bend.rest,length=bend.length;
+    const curl=hasOpened?smooth((.85-progress)/.4):0;
+    data.array.set(rest);if(curl===0){data.needsUpdate=true;geometry.computeVertexNormals();return;}
+    // Paper flex only: C-D remains attached; the source has no added crease.
+    // Prepare the tongue while the panel descends, then guide its tip to the
+    // existing slot from outside and feed it through at the end of closure.
+    const guided=smooth(((1-release)-.6)/.15),insert=smooth((.12-progress)/.12);
+    const rootLocal=new THREE.Vector3(bend.rootX,0,0),rootWorld=mesh.localToWorld(rootLocal.clone());
+    const slot=model.slotCenter,depth=Math.max(2,length-2);
+    const targetWorld=new THREE.Vector3(slot.x+.8-(depth+.8)*insert,rootWorld.y,slot.z);
+    const c1World=new THREE.Vector3(Math.max(rootWorld.x,slot.x+.8)+1,rootWorld.y,slot.z);
+    const c2World=new THREE.Vector3(slot.x+.8,rootWorld.y,slot.z);
+    const [c1,c2,end]=[c1World,c2World,targetWorld].map(p=>mesh.worldToLocal(p).sub(rootLocal));
+    function centerline(s){
+      const u=s/length,a=Math.PI/2*curl,r=length/Math.max(a,1e-9),angle=a*u;
+      let x=Math.sin(angle)*r,z=(1-Math.cos(angle))*r;
+      const v=1-u;
+      const gx=3*v*v*u*c1.x+3*v*u*u*c2.x+u*u*u*end.x;
+      const gz=3*v*v*u*c1.z+3*v*u*u*c2.z+u*u*u*end.z;
+      x=x*(1-guided)+gx*guided;z=z*(1-guided)+gz*guided;
+      return {x,z};
+    }
+    bend.tongueVertices.forEach(i=>{
+      const j=i*3,s=rest[j]-bend.rootX;if(s<=1e-6)return;
+      const t=Math.max(0,Math.min(length,s)),p=centerline(t),h=.001;
+      const a=centerline(Math.max(0,t-h)),b=centerline(Math.min(length,t+h));
+      const norm=Math.hypot(b.x-a.x,b.z-a.z)||1,blend=smooth(t/Math.min(1,length*.1));
+      const nx=-(b.z-a.z)/norm*blend,nz=(b.x-a.x)/norm*blend+1-blend,n=Math.hypot(nx,nz)||1;
+      data.array[j]=bend.rootX+p.x+rest[j+2]*nx/n;data.array[j+2]=p.z+rest[j+2]*nz/n;
+    });
+    data.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+  }
+  function lidPose(value){
+    const p=clamp(value);
+    pose(1);closedRootZ=root.position.z;
+    if(tearModel&&tearModel.thickness!==activeThickness()){tearModel.nodes.forEach(node=>node.removeFromParent());tearModel.meshes.forEach(mesh=>mesh.geometry.dispose());tearModel=null;}
+    if(p>0||hasOpened){
+      if(!tearModel)tearModel=createTearModel();
+      pieces.get('front').mesh.visible=false;pieces.get('frontLock').mesh.visible=false;
+      tearModel.nodes.forEach(node=>node.visible=true);
+      const release=smooth((p-.12)/.23),opening=smooth((p-.35)/.65);
+      const front=hinges.find(h=>h.id==='side-left-front'),lock=hinges.find(h=>h.id==='front-lock');
+      tearModel.frontHinge.quaternion.setFromAxisAngle(front.axis,front.radians*(1-opening));
+      tearModel.lockHinge.quaternion.setFromAxisAngle(lock.axis,lock.radians*(1-release));
+      tearModel.lockMeshes.forEach(mesh=>mesh.position.z=-activeThickness());
+      root.position.z=closedRootZ;root.updateMatrixWorld(true);bendTongue(p,release);
+    }
+    // No cumulative transforms: every slider value has one reversible pose.
+    root.position.z=closedRootZ;
+    root.updateMatrixWorld(true);
+    modal.querySelector('.assembly-fill').style.width=Math.round(p*100)+'%';
+    modal.querySelector('.assembly-labels span').textContent=hasOpened?'LOCKED':'SEALED';
+  }
+  function applySlider(){const p=Number(slider.value)/100;if(lidPoc&&p>=.85)hasOpened=true;(lidPoc?lidPose:pose)(p);}
+  function syncLidPoc(){
+    modal.querySelector('.assembly-title').textContent=lidPoc?'T006 Tear OPEN / CLOSE POC':'Assembly Stage';
+    slider.setAttribute('aria-label',lidPoc?'T006 central tear opening progress':'Assembly progress');
+    const labels=modal.querySelectorAll('.assembly-labels span');
+    labels.forEach((label,i)=>label.textContent=(lidPoc?[hasOpened?'LOCKED':'SEALED','Unlock → Tear','OPEN']:['Flat','Fold','3D Mockup'])[i]);
+    pocButton.textContent=lidPoc?'Assembly Mode':'Tear OPEN/CLOSE POC';
+    slider.value=lidPoc?'0':'100';
+    applySlider();
+  }
+  const pocButton=document.createElement('button');
+  pocButton.type='button';pocButton.className='btn light';
+  pocButton.onclick=()=>{lidPoc=!lidPoc;hasOpened=false;syncLidPoc();};
+  // Add the mode button outside the shared slider's transparent hit area.
+  function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  function view(type){
+    // Fit the full opening once per requested view; slider motion never moves the camera.
+    if(lidPoc)lidPose(1);
+    presentation.fit(type);
+    if(lidPoc){
+      const offset=camera.position.clone().sub(controls.target).multiplyScalar(1.55);
+      camera.position.copy(controls.target).add(offset);
+      camera.far*=1.55;camera.updateProjectionMatrix();controls.update();lidPose(Number(slider.value)/100);
+    }
+  }
+  const presentation=global.PacVuMailer3DControls.create({
+    id:'T006',modal,stage,renderer,scene,camera,controls,getModel:()=>root,
+    createPaper:()=>{
+      const adapter=global.PacVuPhysicalPaper3D.createFoldedAdapter({
+        THREE,contract:{...contract,folds:contract.folds.map(f=>({...f,axis:{a:f.a,b:f.b}}))},
+        pieces,frames,hinges:hinges.map(h=>({...h,object:h.hinge})),root,center,materials,whitePaperboard,
+        clamp:(v,min=0,max=1)=>Math.max(min,Math.min(max,v)),phase:(p,r)=>smooth((p-r[0])/(r[1]-r[0])),
+        point:to3,initialThickness:thickness,baseMaterialSets:materialSets,repose:applySlider,
+        afterRebuild:({paperThickness})=>{
+          // Preserve the audited zero-width slit cells, not a filled outer polygon.
+          const piece=pieces.get('frontLock'),def=contract.panels.find(p=>p.id==='frontLock');
+          piece.mesh.geometry.dispose();
+          piece.mesh.geometry=frontLockGeometry(THREE,def.topology,piece.flatCenter.x+center.x,center.y-piece.flatCenter.y,paperThickness);
+          global.PacVuWhitePaperboard?.applyPhysicalUV(THREE,piece.mesh.geometry);
+          Viewer.assignBoardFaceMaterials(piece.mesh.geometry,paperThickness,'interior');
+        }
+      });
+      physicalPaper=adapter;
+      return {...adapter,get enabled(){return adapter.enabled;},get thickness(){return adapter.thickness;},
+        setMaterialMode(mode){materialMode=mode;adapter.setMaterialMode(mode);tearModel?.meshes.forEach(mesh=>{mesh.material=materialSets[mode];});}
+      };
+    }
+  });presentation.bind();
+  function setMaterialMode(mode){presentation.setMaterial(mode);}
+  const materialControls=modal.querySelector('[data-mailer-controls="T006"]');
+  materialControls.append(pocButton);
+  slider.oninput=applySlider;
   modal.querySelectorAll('[data-view]').forEach(button=>{button.onclick=()=>view(button.dataset.view);});
   modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');
-  let gridVisible=grid.visible;const gridButton=modal.querySelector('[data-grid]');
-  function syncGrid(){grid.visible=gridVisible;if(gridButton){gridButton.setAttribute('aria-pressed',String(gridVisible));gridButton.textContent=gridVisible?'Grid On':'Grid Off';}}
-  if(gridButton)gridButton.onclick=()=>{gridVisible=!gridVisible;syncGrid();};
-  syncGrid();
-  let shadows=true;modal.querySelector('[data-shadow]').onclick=e=>{shadows=!shadows;renderer.shadowMap.enabled=shadows;sun.castShadow=shadows;floor.visible=shadows;whiteStudio?.setShadows(shadows);e.currentTarget.setAttribute('aria-pressed',String(shadows));e.currentTarget.textContent=shadows?'Shadows On':'Shadows Off';};
+  let shadows=true;modal.querySelector('[data-shadow]').onclick=e=>{shadows=!shadows;renderer.shadowMap.enabled=shadows;sun.castShadow=shadows;floor.visible=shadows;e.currentTarget.setAttribute('aria-pressed',String(shadows));e.currentTarget.textContent=shadows?'Shadows On':'Shadows Off';};
   modal.querySelector('[data-download]').onclick=()=>Viewer.downloadPNG({renderer,scene,camera,controls,filename:'T006_3D_'+slider.value+'.png'});
-  const observer=new ResizeObserver(resize);observer.observe(stage);resize();pose(0);Viewer.fitObject(root,camera,controls,'iso');
-  whiteStudio=global.PacVuWhiteStudio?.create({scene,camera,controls,renderer,root,sun,floor,grid})||null;
+  const observer=new ResizeObserver(resize);observer.observe(stage);resize();pose(1);closedRootZ=root.position.z;syncLidPoc();Viewer.fitObject(root,camera,controls,'iso');
   let hasInitialView=false;
   let live=true,frameId=0;(function animate(){if(!live)return;frameId=requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
   return {contract,signature:[contract.dimensions.W,contract.dimensions.D,contract.dimensions.H].join(':'),
-    open(state){modal.classList.add('open');const value=contract.states[state]??Number(slider.value)/100;slider.value=String(Math.round(value*100));pose(value);resize();if(!hasInitialView){view('iso');hasInitialView=true;}},
-    setState(state){const value=contract.states[state]??0;slider.value=String(Math.round(value*100));pose(value);},
+    open(state){modal.classList.add('open');const value=lidPoc?0:(contract.states[state]??Number(slider.value)/100);slider.value=String(Math.round(value*100));applySlider();resize();if(!hasInitialView){view('iso');hasInitialView=true;}},
+    setState(state){const value=lidPoc?(state==='open'?1:0):(contract.states[state]??0);slider.value=String(Math.round(value*100));applySlider();},
     setMaterialMode,
     get materialMode(){return materialMode;},
-    destroy(){live=false;cancelAnimationFrame(frameId);observer.disconnect();if(controls.dispose)controls.dispose();whiteStudio?.dispose();whitePaperboard?.dispose();renderer.dispose();modal.remove();}};
+    destroy(){live=false;cancelAnimationFrame(frameId);observer.disconnect();if(controls.dispose)controls.dispose();presentation.dispose();whitePaperboard?.dispose();tearModel?.meshes.forEach(mesh=>mesh.geometry.dispose());renderer.dispose();modal.remove();}};
 }
 let master=null;
 function open(state,input){const cfg=input||{W:100,D:40,H:220},signature=[cfg.W,cfg.D,cfg.H].join(':');if(!master||master.signature!==signature){if(master)master.destroy();master=createMaster(cfg);}master.open(state||'flat');return master;}

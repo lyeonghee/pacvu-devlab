@@ -41,7 +41,7 @@
     const button = document.getElementById('mockup3dBtn');
     if (!button) return;
     const engineKey = getSelectedEngineKey();
-    const isReady = Boolean(mockupButtonByEngine[engineKey]);
+    const isReady = engineKey === 'mailer-source-cut' || engineKey === 'shipping-source-cut' || Boolean(mockupButtonByEngine[engineKey]);
     const isPlanned = mockupPlannedEngines.has(engineKey);
     button.hidden = !(isReady || isPlanned);
     button.style.display = isReady || isPlanned ? '' : 'none';
@@ -88,6 +88,12 @@
     button.textContent = '3D MOCKUP viewer';
     button.addEventListener('click', () => {
       const engineKey = getSelectedEngineKey();
+      if (engineKey === 'mailer-source-cut' || engineKey === 'shipping-source-cut') {
+        if (selectedBoxMeta.variantKey === 'M004') window.PacVuM0043D.open(getCfg());
+        else if (selectedBoxMeta.variantKey === 'M005') window.PacVuM0053D.open(getCfg());
+        else if (selectedBoxMeta.variantKey === 'R005') window.PacVuR0053D.open(getCfg());
+        return;
+      }
       const targetId = mockupButtonByEngine[engineKey];
       const targetButton = targetId && document.getElementById(targetId);
 

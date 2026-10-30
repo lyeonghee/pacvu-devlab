@@ -181,7 +181,7 @@
   function downloadTransparentPng(code){
     if(!renderer||!scene||!camera)return;
     const hidden=[],brands=[];
-    scene.traverse(object=>{if(object.userData?.pacvuBrand){brands.push([object.material,object.material.opacity]);object.material.opacity=.78;}if(object.isGridHelper||object.type==='GridHelper'||object.material?.isShadowMaterial){hidden.push([object,object.visible]);object.visible=false;}});
+    scene.traverse(object=>{if(object.userData?.pacvuBrand){brands.push([object.material,object.material.opacity]);object.material.opacity=.78;}if(object.isGridHelper||object.type==='GridHelper'||object.material?.isShadowMaterial||object.userData?.pacvuStudioSurface){hidden.push([object,object.visible]);object.visible=false;}});
     const background=scene.background,clearColor=renderer.getClearColor(new root.THREE.Color()).clone(),clearAlpha=renderer.getClearAlpha();
     scene.background=null;renderer.setClearColor(0x000000,0);renderer.render(scene,camera);
     renderer.domElement.toBlob(blob=>{
@@ -460,6 +460,7 @@
   }
 
   function buildModel(){
+    mailerControls?.release();
     const THREE=root.THREE;
     if(model){scene.remove(model);model.traverse(object=>{
       object.geometry?.dispose();
@@ -489,6 +490,8 @@
     relations=selectRelations(layout.foldRelations);
     buildHierarchy();
     const b=layout.bounds;model.position.set(-(b.minX+b.maxX)/2,(b.minY+b.maxY)/2,0);
+    if(!mailerControls)mailerControls=root.PacVuMailer3DControls.create({id:'M001',modal,stage,renderer,scene,camera,controls:orbit,getModel:()=>model,getAssembly:()=>({panels:panelMeshes,hinges,voids:[...layout.slots,...layout.holes],insertions:layout.insertionRelations,locks:layout.locks,slots:layout.slots,anchoredPanels:['base','back','lid','lidFront','sidePanelLeft','sidePanelRight'],sourceThickness:PAPER_THICKNESS})});
+    mailerControls.bind();
     range.value='0';updatePose();fitCamera();
   }
 
@@ -547,7 +550,7 @@
         const axis=b.sub(a).normalize(),bounds=layout.panels.find(panel=>panel.id===child).bounds;
         const radial=new THREE.Vector3(bounds.x+bounds.width/2-a.x,-(bounds.y+bounds.height/2)-a.y,0);
         const inwardSign=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;
-        hinges.push({object:hinge,axis,relation,orientation,inwardSign});
+        hinges.push({object:hinge,axis,relation,orientation,inwardSign,frame,parentMesh:panelMeshes.get(current.id),childMesh,a:relation.axis.a,b:relation.axis.b});
         visited.add(child);frames.set(child,frame);queue.push({id:child,frame});
       });
     }
@@ -571,16 +574,16 @@
       {x:outer.axis.a.x,y:y1},{x:inner.axis.a.x,y:y1},
       {x:inner.axis.a.x,y:y2},{x:outer.axis.a.x,y:y2}
     ]};
-    const spine=new THREE.Mesh(shapeGeometry(spinePanel),paperMaterial);spine.castShadow=false;spine.receiveShadow=false;spineFrame.add(spine);
+    const spine=new THREE.Mesh(shapeGeometry(spinePanel),paperMaterial);spine.name=spinePanel.id;spine.castShadow=false;spine.receiveShadow=false;spineFrame.add(spine);panelMeshes.set(spine.name,spine);
     const axis1=b1.sub(a1).normalize(),radial1=new THREE.Vector3((a2.x-a1.x)/2,0,0);
     const sign1=new THREE.Vector3().crossVectors(axis1,radial1).z>=0?1:-1;
-    hinges.push({object:hinge1,axis:axis1,relation:{foldIds:[`f-7${side}-2`],angle:90},inwardSign:sign1,assemblyOrder:4});
+    hinges.push({object:hinge1,axis:axis1,relation:{foldIds:[`f-7${side}-2`],angle:90},inwardSign:sign1,assemblyOrder:4,frame:spineFrame,parentMesh:panelMeshes.get(sideId),childMesh:spine,a:outer.axis.a,b:outer.axis.b});
     const hinge2=new THREE.Group();hinge2.position.copy(a2);spineFrame.add(hinge2);
     const lockFrame=new THREE.Group();lockFrame.position.copy(a2).multiplyScalar(-1);hinge2.add(lockFrame);lockFrame.add(panelMeshes.get(lockId));
     const lockBounds=layout.panels.find(panel=>panel.id===lockId).bounds;
     const axis2=b2.sub(a2).normalize(),radial2=new THREE.Vector3(lockBounds.x+lockBounds.width/2-a2.x,-(lockBounds.y+lockBounds.height/2)-a2.y,0);
     const sign2=new THREE.Vector3().crossVectors(axis2,radial2).z>=0?1:-1;
-    hinges.push({object:hinge2,axis:axis2,relation:{foldIds:[`f-7${side}-1`],angle:90},inwardSign:sign2,assemblyOrder:4});
+    hinges.push({object:hinge2,axis:axis2,relation:{foldIds:[`f-7${side}-1`],angle:90},inwardSign:sign2,assemblyOrder:4,frame:lockFrame,parentMesh:spine,childMesh:panelMeshes.get(lockId),a:inner.axis.a,b:inner.axis.b});
     visited.add(lockId);frames.set(lockId,lockFrame);
   }
 
@@ -597,6 +600,7 @@
       );
       item.object.quaternion.setFromAxisAngle(item.axis,angle);
     });
+    mailerControls?.update(progress);
     updateModelBounds();
     if(boxCenter&&orbit)orbit.target.copy(boxCenter);
     const stageIndex=Math.min(MAX_STAGE,Math.floor(progress*MAX_STAGE+1e-6));
@@ -653,17 +657,18 @@
 
   function fitCamera(){
     if(!layout||!orbit||!model)return;
-    root.PacVu3DViewer.fitObject(model,camera,orbit,'iso');
+    mailerControls.fit('iso');
   }
 
   function setCameraView(view){
     if(!orbit||!model)return;
-    root.PacVu3DViewer.fitObject(model,camera,orbit,view);
+    mailerControls.fit(view);
   }
 
   function resize(){if(!renderer||!stage)return;const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   function animate(){if(!modal.classList.contains('open'))return;orbit?.update();renderer.render(scene,camera);raf=requestAnimationFrame(animate);}
 
+  let mailerControls;
   root.M001_3D_syncAvailability=syncAvailability;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUI);else installUI();
   document.addEventListener('change',event=>{if(event.target?.id==='boxType')setTimeout(syncAvailability,0);});

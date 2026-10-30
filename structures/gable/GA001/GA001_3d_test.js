@@ -248,10 +248,10 @@
     return result;
   }
 
-  function geometry(poly, holes, smoothOutline) {
+  function geometry(poly, holes, smoothOutline, origin) {
     let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
     poly.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);});
-    const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+    const cx=origin.x, cy=origin.y;
     const shape = new THREE.Shape();
     const localPoly = poly.map(p => ({ x: (p.x-cx)*U, y: (cy-p.y)*U }));
     if (smoothOutline) appendSmoothOutline(shape, localPoly);
@@ -340,10 +340,13 @@
       const sourcePoly=layout.panels[name]; if(!sourcePoly||sourcePoly.length<3)return;
       const poly=sourcePoly;
       const hs=(holeIds||[]).map(i=>holes[i]);
-      const made=geometry(poly,hs,name==='handleBack'||name==='handleFront');
+      // Shared PhysicalPaper expects all source shapes and crease axes in one
+      // sheet coordinate system, not a different origin for each panel.
+      const made=geometry(poly,hs,name==='handleBack'||name==='handleFront',center);
       const mesh=new THREE.Mesh(made.g,mats); mesh.castShadow=true; mesh.receiveShadow=true; mesh.name=name;
       mesh.position.set((made.cx-center.x)*U,(center.y-made.cy)*U,0);
-      pieceByName.set(name,{mesh,flatCenter:mesh.position.clone()});
+      const xs=poly.map(p=>p.x),ys=poly.map(p=>p.y);
+      pieceByName.set(name,{mesh,flatCenter:new THREE.Vector3(((Math.min(...xs)+Math.max(...xs))/2-center.x)*U,(center.y-(Math.min(...ys)+Math.max(...ys))/2)*U,0)});
       return mesh;
     }
 
@@ -379,6 +382,7 @@
     const standPivot=point(g.xBackL,g.yBodyBottom);
     const standHinge=new THREE.Group();standHinge.position.copy(standPivot);root.add(standHinge);
     sheet.position.copy(standPivot).multiplyScalar(-1);standHinge.add(sheet);
+    sheet.userData.panelId='back';
     sheet.add(pieceByName.get('back').mesh);
     hinges.push({object:standHinge,axis:X,angle:Math.PI/2,start:.44,end:.54});
 
@@ -388,7 +392,11 @@
       const frame=new THREE.Group();frame.position.copy(p).multiplyScalar(-1);hinge.add(frame);frame.add(piece.mesh);
       const axis=q.clone().sub(p).normalize(),radial=piece.flatCenter.clone().sub(p);
       const sign=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;
-      hinges.push({object:hinge,axis,angle:angle*sign,start,end});
+      frame.userData.panelId=name;
+      const parentMesh=pieceByName.get(parentFrame.userData.panelId).mesh;
+      hinges.push({object:hinge,frame,axis,angle:angle*sign,start,end,parentMesh,childMesh:piece.mesh,
+        a:{x:p.x-parentMesh.position.x,y:-(p.y-parentMesh.position.y)},
+        b:{x:q.x-parentMesh.position.x,y:-(q.y-parentMesh.position.y)}});
       return frame;
     }
 
@@ -414,6 +422,14 @@
     attach(sideAFrame,'gableA',{x:g.xBackR,y:g.yBodyTop},{x:g.xSideL,y:g.yBodyTop},.955,.995,THREE.MathUtils.degToRad(35));
     attach(sideBFrame,'gableB',{x:g.xFrontR,y:g.yBodyTop},{x:g.xSideR,y:g.yBodyTop},.955,.995,THREE.MathUtils.degToRad(35));
 
+    const presentation=global.PacVuMailer3DControls.create({id:'GA001',modal,stage,renderer,scene,camera,controls,
+      getModel:()=>root,getAssembly:()=>({
+        panels:new Map([...pieceByName].map(([id,p])=>[id,p.mesh])),
+        hinges:hinges.filter(h=>h.childMesh),sourceThickness:PAPER,
+        anchoredPanels:['back','front','sideA','sideB'],
+        layerOrder:['back','front','sideA','sideB','glue','bottomA','bottomB','bottomBack','bottomFront','roofBack','roofFront','handleBack','handleFront','gableA','gableB']
+      })});
+    presentation.bind();
     function pose(v){
       modal.querySelector('.m001-3d-controls')?.style.setProperty('--progress',`${Math.round(v*100)}%`);
       hinges.forEach(h=>{const t=phase(v,h.start,h.end);h.object.quaternion.setFromAxisAngle(h.axis,h.angle*t);});
@@ -424,10 +440,12 @@
       const lifted=phase(v,.38,.46);
       const lowered=phase(v,.72,.80);
       root.position.z=liftHeight*lifted*(1-lowered);
+      root.updateMatrixWorld(true);
+      presentation.update(v);
     }
     function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
-    function view(type){global.PacVu3DViewer.fitObject(root,camera,controls,type);}
-    const slider=modal.querySelector('input'); slider.oninput=()=>{pose(+slider.value/100);const step=+slider.value<34?0:+slider.value<90?1:2;modal.querySelectorAll('.assembly-track span,.assembly-labels span').forEach((node,index)=>node.classList.toggle('active',index%3<=step));};slider.onchange=()=>view('iso');
+    function view(type){presentation.fit(type);}
+    const slider=viewer.range; slider.oninput=()=>{pose(+slider.value/100);const step=+slider.value<34?0:+slider.value<90?1:2;modal.querySelectorAll('.assembly-track span,.assembly-labels span').forEach((node,index)=>node.classList.toggle('active',index%3<=step));};
     modal.querySelectorAll('[data-view]').forEach(x=>x.onclick=()=>view(x.dataset.view));
     modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');
     let shadowOn=true;
@@ -454,6 +472,7 @@
         live=false;
         cancelAnimationFrame(raf);
         ro.disconnect();
+        presentation.dispose();
         if(controls.dispose)controls.dispose();
         root.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.userData?.pacvuBrand){o.material?.map?.dispose();o.material?.dispose();}});
         mats.forEach(m=>m.dispose());

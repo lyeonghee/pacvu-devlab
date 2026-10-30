@@ -140,6 +140,32 @@
     floor.position.z = 0;
     grid.position.z = .02;
 
+    // The set reuses the approved, already-folded component trees. Paper
+    // layers are resolved within each component, never across sliding parts.
+    const presentation=global.PacVuMailer3DControls.create({id:'S001 Set',modal,stage,renderer,scene,camera,controls,getModel:()=>root,
+      createPaper(){
+        const parts=[[outer.object,'outer','exterior'],[tray.object,'tray','interior'],[insert.object,'insert','exterior']].map(([model,id,face])=>{
+          const panels=new Map(),overlays=[];
+          model.traverse(mesh=>{
+            if(mesh.userData.pacvuBrand||mesh.userData.s001ProductCutGuide)overlays.push([mesh,mesh.position.z]);
+            else if(mesh.isMesh&&mesh.geometry.parameters?.shapes){mesh.name=id+'-'+panels.size;panels.set(mesh.name,mesh);}
+          });
+          const adapter=global.PacVuPhysicalPaper3D.createAssemblyAdapter({THREE,renderer,model,panels,hinges:[],sourceThickness:.4});
+          function surfaces(){if(!adapter.enabled)return;panels.forEach(mesh=>global.PacVu3DViewer.assignBoardFaceMaterials(mesh.geometry,adapter.thickness,face));overlays.forEach(([mesh,z])=>{mesh.position.z=z+(adapter.thickness-.4)/2;});}
+          return {adapter,surfaces,restoreOverlays(){overlays.forEach(([mesh,z])=>{mesh.position.z=z;});}};
+        });
+        return {
+          get enabled(){return parts.every(p=>p.adapter.enabled);},
+          update(v){parts.forEach(p=>{p.adapter.update(v);p.surfaces();});},
+          setEnabled(v){parts.forEach(p=>{p.adapter.setEnabled(v);if(v)p.surfaces();else p.restoreOverlays();});},
+          setThickness(v){let value;parts.forEach(p=>{value=p.adapter.setThickness(v);p.surfaces();});return value;},
+          setMaterialMode(v){parts.forEach(p=>p.adapter.setMaterialMode(v));},
+          getDiagnostics(){return parts.flatMap(p=>p.adapter.getDiagnostics());},
+          dispose(){parts.forEach(p=>{p.adapter.dispose();p.restoreOverlays();});}
+        };
+      }});
+    presentation.bind();
+
     function pose(v) {
       global.PacVu3DViewer.syncProgress(
         viewer,
@@ -168,6 +194,7 @@ payload.position.set(
       root.rotation.set(Math.PI / 2 * stand, 0, 0);
       root.position.z = 0;
       root.updateMatrixWorld(true);
+      presentation.update(v);
 
       if (stand > 0) {
         const assembledBounds = new THREE.Box3().setFromObject(root);
@@ -184,11 +211,9 @@ payload.position.set(
       camera.updateProjectionMatrix();
     }
 
-    const fit = v =>
-      global.PacVu3DViewer.fitObject(root, camera, controls, v);
+    const fit = v => presentation.fit(v);
 
     viewer.range.oninput = () => pose(+viewer.range.value / 100);
-    viewer.range.onchange = () => fit('iso');
 
     modal.querySelectorAll('[data-view]').forEach(
       b => (b.onclick = () => fit(b.dataset.view)),
@@ -224,8 +249,7 @@ payload.position.set(
       if (!live) return;
 
       requestAnimationFrame(loop);
-      controls.update();
-      renderer.render(scene, camera);
+      if(modal.classList.contains('open')){controls.update();renderer.render(scene,camera);}
     }());
 
     return {
@@ -238,6 +262,7 @@ payload.position.set(
       destroy() {
         live = false;
         ob.disconnect();
+        presentation.dispose();
         controls.dispose?.();
         renderer.dispose();
         modal.remove();

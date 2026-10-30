@@ -3,9 +3,9 @@
 
   const ROUTING=Object.freeze({
     T001:'legacy-t001',T002:'renderer',T003:'renderer',T004:'renderer',T005:'renderer',
-    M001:'legacy-t001',M002:'legacy-t001',M003:'contract',
+    M001:'legacy-t001',M002:'legacy-t001',M003:'contract',M004:'contract',M005:'contract',
     B001:'renderer',B002:'renderer',
-    R001:'contract',R002:'contract',R003:'contract',R004:'contract',
+    R001:'contract',R002:'contract',R003:'contract',R004:'contract',R005:'contract',
     GA001:'renderer',S001:'contract',
     TR001:'renderer',TR002:'renderer',TR003:'renderer',C001:'contract'
   });
@@ -97,7 +97,7 @@
     if(!svg||typeof svg.querySelector!=='function')return false;
 
     const route=ROUTING[templateId]||'renderer';
-    const profile=root.PacVu2DVisualProfiles?.get?.(templateId)||null;
+    const profile=root.PacVu2DVisualProfiles?.get?.(['M004','M005','R005'].includes(templateId)?'M001':templateId)||null;
     const responsiveScale=prepareResponsiveScale(svg,reason);
     const before=markerSnapshot(svg);
     const count=(APPLY_COUNTS.get(svg)||0)+1;

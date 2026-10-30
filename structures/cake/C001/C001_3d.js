@@ -218,6 +218,15 @@
       frontFlapTop: clipContour(rawContours.sideFront, band(clipBounds.minY, topFold)),
       frontFlapBottom: clipContour(rawContours.sideFront, band(bottomFold, clipBounds.maxY))
     };
+    // Separate only the flexible insertion tips in the 3D rig. The union of
+    // each pair is the unchanged SVG contour; no manufactured crease is added.
+    const tabNecks = { Top: layout.mapPoint(0, 237).y, Bottom: layout.mapPoint(0, 1516.563).y };
+    for (const end of ['Top', 'Bottom']) {
+      const original = contours['lock' + end];
+      const top = end === 'Top', neck = tabNecks[end];
+      contours['lockTab' + end] = clipContour(original, band(top ? clipBounds.minY : neck, top ? neck : clipBounds.maxY));
+      contours['lock' + end] = clipContour(original, band(top ? neck : bottomFold, top ? topFold : neck));
+    }
     const handlePanels = handlePanelPaths().map(d => (
       flattenPath(global.C001_transformPathD(d, layout), FLATTEN_TOLERANCE_MM)
     ));
@@ -239,7 +248,7 @@
     contours.lidFrontSeam = mappedRect(2411.179, 2415.993);
     contours.sideFrontSeam = mappedRect(2415.993, 2420.245);
 
-    const viewer = global.PacVu3DViewer.createModal({ id: 'c0013dModal', badge: 'C001 · Cake Box · Stage 1' });
+    const viewer = global.PacVu3DViewer.createModal({ id: 'c0013dModal', badge: 'C001 · Cake Box' });
     const modal = viewer.modal;
     const stage = viewer.stage;
     const scene = new THREE.Scene();
@@ -298,13 +307,14 @@
     global.PacVu3DViewer.standardizeEnvironment({ renderer, scene, controls, floor, grid });
 
     const materials = global.PacVu3DViewer.createBoardMaterials(THREE);
-    materials[1] = materials[1].clone();
-    materials[1].color.copy(materials[0].color);
-    materials[1].name = 'C001 white paper inside';
+    // C001 folds toward -Z: its printed exterior is the positive-Z face.
+    [materials[0], materials[1]] = [materials[1], materials[0]];
     materials[2] = materials[2].clone();
-    materials[2].color.copy(materials[0].color);
+    materials[2].color.copy(materials[1].color);
     materials[2].name = 'C001 seamless paper edge';
     const root = new THREE.Group();
+    // The lid is the local origin; the body assembles below it.
+    root.position.z = size.H;
     scene.add(root);
     const pieceByName = new Map();
     const hinges = [];
@@ -325,7 +335,7 @@
         steps: 1
       });
       geometry.translate(0, 0, -PAPER / 2);
-      global.PacVu3DViewer.assignBoardFaceMaterials(geometry);
+      global.PacVu3DViewer.assignBoardFaceMaterials(geometry, PAPER);
       geometry.computeVertexNormals();
       return geometry;
     }
@@ -391,6 +401,8 @@
     add('lidMain', handleHoles.concat(handlePanels));
     add('lockTop');
     add('lockBottom');
+    add('lockTabTop');
+    add('lockTabBottom');
     add('handleLeft');
     add('handleRight');
     add('sideFrontMain');
@@ -408,6 +420,7 @@
     const sheet = new THREE.Group();
     root.add(sheet);
     sheet.add(pieceByName.get('lidMain').mesh);
+    sheet.userData.foldPanel = pieceByName.get('lidMain').mesh;
     sheet.add(pieceByName.get('lidFrontSeam').mesh);
 
     function attach(parent, name, sourceA, sourceB, start, end, angle) {
@@ -424,7 +437,9 @@
       const axis = q.clone().sub(p).normalize();
       const radial = piece.flatCenter.clone().sub(p);
       const sign = new THREE.Vector3().crossVectors(axis, radial).z >= 0 ? 1 : -1;
-      hinges.push({ object: hinge, axis, angle: -(angle || Math.PI / 2) * sign, start, end });
+      frame.userData.foldPanel = piece.mesh;
+      hinges.push({ object: hinge, frame, parentMesh: parent.userData.foldPanel, childMesh: piece.mesh,
+        a: { x: p.x, y: -p.y }, b: { x: q.x, y: -q.y }, axis, angle: -(angle || Math.PI / 2) * sign, start, end });
       return frame;
     }
 
@@ -461,6 +476,12 @@
     const lockBottomFrame = attach(sheet, 'lockBottom',
       { x: 2415.993, y: 1266.547 }, { x: 1636.469, y: 1266.547 }, 0.65, 0.78);
 
+    attach(lockTopFrame, 'lockTabTop',
+      { x: 1930, y: 237 }, { x: 2120, y: 237 }, 0.65, 0.72, Math.PI / 10);
+    attach(lockBottomFrame, 'lockTabBottom',
+      { x: 2120, y: 1516.563 }, { x: 1930, y: 1516.563 }, 0.65, 0.72, Math.PI / 10);
+    const tabHinges = hinges.filter(hinge => hinge.childMesh.name.startsWith('lockTab'));
+
     // The two handles are separate punched panels. They remain flat until all
     // side locks have engaged, then rise together as the final operation.
     attach(sheet, 'handleLeft',
@@ -468,7 +489,72 @@
     attach(sheet, 'handleRight',
       { x: 2073.419, y: 1122.772 }, { x: 2073.419, y: 630.797 }, 0.86, 0.98, -Math.PI / 2);
 
+    const presentation = global.PacVuMailer3DControls.create({
+      id: 'C001', modal, stage, renderer, scene, camera, controls, getModel: () => root,
+      getAssembly() {
+        const panels = new Map([...pieceByName].map(([name, piece]) => [name, piece.mesh]));
+        // Punched handles pivot inside the lid, not across its boundary.
+        // Keep their source pivots; a whole-panel crease would clip away the lid.
+        const paperHinges = hinges.filter(hinge => !hinge.childMesh.name.startsWith('handle') && !hinge.childMesh.name.startsWith('lockTab')).map(hinge => ({ ...hinge }));
+        // The approved relief channel is closed by the existing seam strips.
+        // Bind their shared fold axis, without treating the relief as a fold.
+        const frontHinge = paperHinges.find(hinge => hinge.childMesh.name === 'sideFrontMain');
+        frontHinge.parentMesh = panels.get('lidFrontSeam');
+        frontHinge.childMesh = panels.get('sideFrontSeam');
+        const layerConstraints = [{ outer: 'sideFrontMain', inner: 'glue', interiorSign: -1 }];
+        for (const end of ['Top', 'Bottom']) {
+          layerConstraints.push({ outer: 'lock' + end, inner: 'slot' + end, interiorSign: -1 });
+          for (const side of ['back', 'front']) {
+            layerConstraints.push({ outer: 'lock' + end, inner: side + 'Flap' + end, interiorSign: -1 });
+            layerConstraints.push({ outer: 'slot' + end, inner: side + 'Flap' + end, interiorSign: -1 });
+          }
+        }
+        return { panels, hinges: paperHinges, sourceThickness: PAPER, preserveSourceEdge: true,
+          anchoredPanels: ['sideFrontMain', 'lockTop', 'lockBottom', 'lockTabTop', 'lockTabBottom'],
+          layerOrder: ['sideFrontMain', 'lockTop', 'lockBottom', 'slotTop', 'slotBottom',
+            'backFlapTop', 'frontFlapTop', 'backFlapBottom', 'frontFlapBottom', 'glue'], layerConstraints };
+      }
+    });
+    presentation.bind();
+    // Logos sit on C001's positive-Z exterior, including when stock changes.
+    function syncBrands() {
+      for (const piece of pieceByName.values()) {
+        if (!piece.mesh.children.some(child => child.userData.c001Brand)) continue;
+        piece.mesh.geometry.computeBoundingBox();
+        piece.mesh.children.forEach(child => { if (child.userData.c001Brand) child.position.z = piece.mesh.geometry.boundingBox.max.z + .012; });
+      }
+    }
+    let assemblyProgress = 0;
+    function seatLockTabs() {
+      root.updateMatrixWorld(true);
+      for (const hinge of tabHinges) {
+        const end = hinge.childMesh.name.endsWith('Top') ? 'Top' : 'Bottom';
+        const slot = pieceByName.get('slot' + end).mesh;
+        const lock = pieceByName.get('lock' + end).mesh;
+        const mouth = vector(849.879, end === 'Top' ? 348.113 : 1405.449);
+        // Target the actual U-cut mouth after the common thickness offsets.
+        const target = lock.parent.worldToLocal(slot.localToWorld(mouth));
+        const origin = hinge.object.position;
+        const travel = Math.abs(target.y - origin.y);
+        const angle = Math.atan2(Math.max(.15, origin.z - target.z), Math.max(1, travel));
+        const prepared = Math.PI / 10;
+        const seated = clamp(angle, .025, Math.PI / 4);
+        const bend = prepared + (seated - prepared) * phase(assemblyProgress, .77, .83);
+        hinge.object.quaternion.setFromAxisAngle(hinge.axis, Math.sign(hinge.angle) * bend * phase(assemblyProgress, .65, .72));
+      }
+      root.updateMatrixWorld(true);
+    }
+    const syncPresentation = () => {
+      if (modal.querySelector('[data-mailer-action=original]')?.getAttribute('aria-pressed') === 'true') {
+        for (const end of ['Top', 'Bottom']) pieceByName.get('slot' + end).mesh.position.z = -(PAPER + .02) * phase(assemblyProgress, .65, .78);
+      }
+      seatLockTabs(); syncBrands();
+    };
+    modal.addEventListener('input', syncPresentation);
+    modal.addEventListener('click', syncPresentation);
+
     function pose(value) {
+      assemblyProgress = value;
       modal.querySelector('.m001-3d-controls')?.style.setProperty('--progress', `${Math.round(value * 100)}%`);
       hinges.forEach(hinge => {
         const amount = phase(value, hinge.start, hinge.end);
@@ -478,6 +564,10 @@
       // board thickness only during final contact so the trapezoid Glue edge
       // cannot z-fight through the covering panel.
       pieceByName.get('sideFrontMain').mesh.position.z = -(PAPER + 0.02) * phase(value, 0.34, 0.40);
+      for (const end of ['Top', 'Bottom']) pieceByName.get('slot' + end).mesh.position.z = -(PAPER + .02) * phase(value, .65, .78);
+      presentation.update(value);
+      seatLockTabs();
+      syncBrands();
     }
 
     function resize() {
@@ -487,10 +577,10 @@
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
-    function view(type) { global.PacVu3DViewer.fitObject(root, camera, controls, type); }
-    const slider = modal.querySelector('input');
+    function view(type) { presentation.fit(type); }
+    const slider = viewer.range;
     slider.oninput = () => pose(+slider.value / 100);
-    slider.onchange = () => view('iso');
+    slider.onchange = slider.oninput;
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => view(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
     let shadows = true;
@@ -514,7 +604,7 @@
     resizeObserver.observe(stage);
     resize();
     pose(0);
-    view('top');
+    view('iso');
     let live = true;
     let animation = 0;
     (function loop() {
@@ -537,11 +627,12 @@
 
     return {
       signature,
-      open() { modal.classList.add('open'); resize(); view('top'); },
+      open() { modal.classList.add('open'); resize(); view('iso'); },
       destroy() {
         live = false;
         cancelAnimationFrame(animation);
         resizeObserver.disconnect();
+        presentation.dispose();
         controls.dispose?.();
         root.traverse(object => {
           object.geometry?.dispose();

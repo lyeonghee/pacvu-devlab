@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const T=.22,hinges=[];
-  let modal,stage,range,renderer,scene,camera,orbit,model,raf=0,rebuildTimer=0,boardMaterials=null,shadowOn=true;
+  let modal,stage,range,renderer,scene,camera,orbit,model,raf=0,rebuildTimer=0,boardMaterials=null,shadowOn=true,presentation=null;
   const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
   const clamp=value=>Math.max(0,Math.min(1,value));
   const smooth=value=>{const n=clamp(value);return n*n*(3-2*n);};
@@ -15,7 +15,7 @@
     modal=viewer.modal;stage=viewer.stage;range=viewer.range;
     const close=modal.querySelector('[data-close]'),download=modal.querySelector('[data-download]'),shadow=modal.querySelector('[data-shadow]'),views=modal.querySelector('.m001-3d-views');
     button.onclick=open;close.onclick=closeView;modal.onclick=event=>{if(event.target===modal)closeView();};
-    range.oninput=pose;range.onchange=fit;
+    range.oninput=pose;range.onchange=pose;
     views.onclick=event=>{if(event.target.dataset.view)setView(event.target.dataset.view);};
     shadow.onclick=()=>toggleShadow(shadow);download.onclick=downloadPng;
     document.addEventListener('input',event=>{
@@ -45,10 +45,8 @@
     const grid=new THREE.GridHelper(theme.grid.size,theme.grid.divisions,theme.grid.centerColor,theme.grid.lineColor);grid.rotation.x=Math.PI/2;grid.position.z=theme.grid.z;scene.add(grid);
     orbit=new root.PacVuOrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.enablePan=false;orbit.minPolarAngle=.08;orbit.maxPolarAngle=Math.PI*.72;
     root.PacVu3DViewer.standardizeEnvironment({renderer,scene,controls:orbit,floor,grid});
-    scene.traverse(object=>{
-      if(object.isHemisphereLight)object.intensity=theme.hemisphereLight.intensity*.68;
-      if(object.isDirectionalLight&&object!==key)object.intensity=theme.fillLight.intensity*.45;
-    });
+    presentation=root.PacVuMailer3DControls.create({id:'TR001',modal,stage,renderer,scene,camera,controls:orbit,getModel:()=>model,getAssembly:paperAssembly});
+    new ResizeObserver(resize).observe(stage);
     window.addEventListener('resize',resize);
   }
 
@@ -100,11 +98,52 @@
     const THREE=root.THREE,p=new THREE.Vector3(a.x,-a.y,0),q=new THREE.Vector3(b.x,-b.y,0),hinge=new THREE.Group();hinge.position.copy(p);parent.add(hinge);
     const frame=new THREE.Group();frame.position.copy(p).multiplyScalar(-1);hinge.add(frame);frame.add(mesh);
     const axis=q.sub(p).normalize(),box=new THREE.Box3().setFromObject(mesh),center=box.getCenter(new THREE.Vector3()),radial=center.sub(p),inward=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;
-    hinges.push({hinge,axis,radians:Math.PI/2*turns*inward,start,end});return frame;
+    frame.userData.foldPanels=mesh;
+    hinges.push({hinge,frame,a,b,parentPanels:parent.userData.foldPanels,childPanels:mesh,axis,radians:Math.PI/2*turns*inward,start,end});return frame;
+  }
+
+  // Feed the existing cut shapes and actual shared crease segments to the
+  // common paper engine. Split wall/base patches leave the U-cut openings free.
+  function paperAssembly(){
+    const panels=new Map(),paperHinges=[];
+    model.traverse(mesh=>{if(mesh.isMesh&&mesh.geometry?.parameters?.shapes)panels.set(mesh.name,mesh);});
+    const meshes=node=>node.isMesh?[node]:node.children.filter(child=>child.isMesh);
+    function intervals(mesh,a,b){
+      const dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy),ux=dx/length,uy=dy/length;
+      const points=mesh.geometry.parameters.shapes.getPoints(18),segments=[];
+      for(let i=0;i<points.length;i++){
+        const p=points[i],q=points[(i+1)%points.length];
+        const distance=v=>(v.x-a.x)*uy-(-v.y-a.y)*ux;
+        if(Math.abs(distance(p))>.03||Math.abs(distance(q))>.03)continue;
+        const t=v=>(v.x-a.x)*ux+(-v.y-a.y)*uy;
+        const lo=Math.max(0,Math.min(t(p),t(q))),hi=Math.min(length,Math.max(t(p),t(q)));
+        if(hi-lo>.03)segments.push([lo,hi]);
+      }
+      return segments;
+    }
+    for(const h of hinges){
+      const length=Math.hypot(h.b.x-h.a.x,h.b.y-h.a.y);
+      const point=t=>({x:h.a.x+(h.b.x-h.a.x)*t/length,y:h.a.y+(h.b.y-h.a.y)*t/length});
+      for(const parentMesh of meshes(h.parentPanels))for(const childMesh of meshes(h.childPanels)){
+        for(const p of intervals(parentMesh,h.a,h.b))for(const c of intervals(childMesh,h.a,h.b)){
+          const lo=Math.max(p[0],c[0]),hi=Math.min(p[1],c[1]);
+          if(hi-lo>.03)paperHinges.push({object:h.hinge,frame:h.frame,parentMesh,childMesh,a:point(lo),b:point(hi)});
+        }
+      }
+    }
+    // Outside to inside: rim return, side wall, corner insert.
+    // The inserts fold first, but must not become the exterior layer.
+    const returns=['back-left','back-right','front-left','front-right'].map(s=>'panel-5-'+s);
+    const walls=['panel-3-left','panel-3-right'];
+    const inserts=['back-left','back-right','front-left','front-right'].map(s=>'panel-2-'+s);
+    const layerConstraints=inserts.map(inner=>({outer:inner.endsWith('left')?walls[0]:walls[1],inner,interiorSign:1}));
+    return {panels,hinges:paperHinges,sourceThickness:T,preserveSourceEdge:true,
+      anchoredPanels:walls,layerOrder:[...returns,...walls,...inserts],layerConstraints};
   }
 
   function build(reset){
     const cfg=typeof getCfgTR001==='function'?getCfgTR001():{W:282,D:368,H:140,frontBackHoleCount:3,leftRightHoleCount:4},layout=root.TR001_getLayout(cfg.W,cfg.D,cfg.H,cfg),p=layout.params;
+    presentation?.release();
     if(model){scene.remove(model);model.traverse(object=>object.geometry?.dispose());}
     hinges.length=0;model=new root.THREE.Group();scene.add(model);
     const d=(layout.cutFillElement.match(/d="([^"]+)"/)||[])[1];if(!d)throw new Error('TR001 cutPath is unavailable');
@@ -117,7 +156,7 @@
       rect(p.x1,upperCut.y2,p.x2,lowerCut.y1),
       rect(p.x1,p.y2,upperCut.x1,upperCut.y2),rect(upperCut.x2,p.y2,p.x2,upperCut.y2),
       rect(p.x1,lowerCut.y1,lowerCut.x1,p.y3),rect(lowerCut.x2,lowerCut.y1,p.x2,p.y3)
-    ]);model.add(base);
+    ]);model.add(base);model.userData.foldPanels=base;
     const back=regionGroup('panel-1-back',outline,holes,[
       rect(p.x1,p.y1,p.x2,upperCut.y1),rect(p.x1,upperCut.y1,upperCut.x1,p.y2),rect(upperCut.x2,upperCut.y1,p.x2,p.y2)
     ]);
@@ -127,6 +166,7 @@
     const backFrame=attach(model,back,{x:p.x2,y:p.y2},{x:p.x1,y:p.y2},.04,.22),frontFrame=attach(model,front,{x:p.x1,y:p.y3},{x:p.x2,y:p.y3},.04,.22);
     const tab2BL=regionMesh('panel-2-back-left',outline,rect(p.x0,p.y1,p.x1,p.y2),holes),tab2BR=regionMesh('panel-2-back-right',outline,rect(p.x2,p.y1,p.x3,p.y2),holes);
     const tab2FL=regionMesh('panel-2-front-left',outline,rect(p.x0,p.y3,p.x1,p.y4),holes),tab2FR=regionMesh('panel-2-front-right',outline,rect(p.x2,p.y3,p.x3,p.y4),holes);
+    [tab2BL,tab2BR,tab2FL,tab2FR].forEach(panel=>panel.position.z=T*1.05);
     attach(backFrame,tab2BL,{x:p.x1,y:p.y2},{x:p.x1,y:p.y1},.22,.42);attach(backFrame,tab2BR,{x:p.x2,y:p.y1},{x:p.x2,y:p.y2},.22,.42);
     attach(frontFrame,tab2FL,{x:p.x1,y:p.y3},{x:p.x1,y:p.y4},.22,.42);attach(frontFrame,tab2FR,{x:p.x2,y:p.y4},{x:p.x2,y:p.y3},.22,.42);
     const sideL=regionMesh('panel-3-left',outline,rect(p.x0,p.y2,p.x1,p.y3),holes),sideR=regionMesh('panel-3-right',outline,rect(p.x2,p.y2,p.x3,p.y3),holes);
@@ -140,16 +180,18 @@
     attach(lipBackFrame,tab5BL,{x:p.x1,y:p.y1},{x:p.x1,y:p.y0},.80,1);attach(lipBackFrame,tab5BR,{x:p.x2,y:p.y0},{x:p.x2,y:p.y1},.80,1);
     attach(lipFrontFrame,tab5FL,{x:p.x1,y:p.y4},{x:p.x1,y:p.y5},.80,1);attach(lipFrontFrame,tab5FR,{x:p.x2,y:p.y5},{x:p.x2,y:p.y4},.80,1);
     model.position.set(-(p.x1+p.x2)/2,(p.y2+p.y3)/2,0);
-    if(reset)range.value='0';pose();fit();
+    presentation.bind();
+    if(reset)range.value='0';pose();if(reset)fit();
   }
 
   function pose(){
     const progress=clamp(Number(range.value)/100);
     hinges.forEach(item=>{const amount=smooth((progress-item.start)/(item.end-item.start));item.hinge.quaternion.setFromAxisAngle(item.axis,item.radians*amount);});
+    presentation?.update(progress);
     root.PacVu3DViewer.syncProgress({controls:modal.querySelector('.m001-3d-controls')},progress*100,'Assembly Stage');
   }
-  function fit(){root.PacVu3DViewer.fitObject(model,camera,orbit,'iso');}
-  function setView(view){root.PacVu3DViewer.fitObject(model,camera,orbit,view);}
+  function fit(){presentation.fit('iso');}
+  function setView(view){presentation.fit(view);}
   function toggleShadow(button){shadowOn=!shadowOn;scene.traverse(object=>{if(object.material?.isShadowMaterial)object.visible=shadowOn;if(object.isDirectionalLight)object.castShadow=shadowOn;});button.textContent=shadowOn?'Shadows On':'Shadows Off';}
   function downloadPng(){const canvas=renderer?.domElement;if(!canvas)return;canvas.toBlob(blob=>{if(!blob)return;const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`TR001_3D_${Math.round(Number(range.value))}.png`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);},'image/png');}
   function resize(){if(!renderer||!stage)return;const width=stage.clientWidth,height=stage.clientHeight;if(!width||!height)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}

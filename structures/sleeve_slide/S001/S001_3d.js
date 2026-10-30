@@ -214,7 +214,7 @@
       const logo = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(cfg.W * 0.42, 125), Math.min(cfg.W * 0.42, 125) * 300 / 1024),
         global.PacVu3DViewer.createOverlayMaterial(THREE, { map: texture, transparent: true, opacity: 0.78, depthWrite: false, toneMapped: false }));
       const p = mp((1487.541 + 2332.265) / 2, (504.149 + 1263.834) / 2);
-      logo.position.set((p.x - center.x) * UNIT_TO_MM, (center.y - p.y) * UNIT_TO_MM, PAPER / 2 + 0.015); logo.renderOrder = 1000; logo.userData.s001Brand = true; mesh.add(logo);
+      logo.position.set((p.x - center.x) * UNIT_TO_MM, (center.y - p.y) * UNIT_TO_MM, PAPER / 2 + 0.015); logo.renderOrder = 1000; logo.userData.s001Brand = true; logo.userData.pacvuBrand = true; mesh.add(logo);
     }
     addLogo();
 
@@ -225,10 +225,13 @@
       const frame = new THREE.Group(); frame.position.copy(p).multiplyScalar(-1); hinge.add(frame); frame.add(item.mesh);
       const axis = q.clone().sub(p).normalize(); const radial = item.center.clone().sub(p);
       const natural = new THREE.Vector3().crossVectors(axis, radial).z >= 0 ? -1 : 1;
-      hinges.push({ object: hinge, axis, angle: (angle || Math.PI / 2) * natural * (direction || 1), start, end });
+      frame.userData.panelId=name;
+      hinges.push({ object: hinge, frame, parentMesh:pieces.get(parent.userData.panelId).mesh,childMesh:item.mesh,
+        a:{x:p.x,y:-p.y},b:{x:q.x,y:-q.y},axis, angle: (angle || Math.PI / 2) * natural * (direction || 1), start, end });
       return frame;
     }
     const sheet = new THREE.Group(); root.add(sheet); sheet.add(pieces.get('front').mesh);
+    sheet.userData.panelId='front';
     const leftSide = attach(sheet, 'sideLeft', { x: 1487.541, y: 504.149 }, { x: 1487.541, y: 1263.834 }, 0.03, 0.18);
     const back = attach(leftSide, 'back', { x: 1314.628, y: 1263.834 }, { x: 1314.628, y: 436.117 }, 0.10, 0.25);
     attach(back, 'glue', { x: 469.903, y: 436.117 }, { x: 469.903, y: 1263.834 }, 0.19, 0.31);
@@ -246,36 +249,63 @@
     attach(back, 'lidBack', { x: 469.903, y: 436.117 }, { x: 1314.628, y: 436.117 }, 0.82, 0.91, Math.PI);
     attach(sheet, 'lidFront', { x: 1487.541, y: 504.149 }, { x: 2332.265, y: 504.149 }, 0.91, 1.0, Math.PI);
 
-    function pose(value) {
+    let paper=null;
+    const presentation=global.PacVuMailer3DControls.create({id:'S001 Outer',modal,stage,renderer,scene,camera,controls,getModel:()=>root,
+      createPaper(){
+        const ring=ps=>ps.map(p=>({x:p.x,y:-p.y}));
+        const panels=[...pieces].map(([id,p])=>{const s=p.mesh.geometry.parameters.shapes.extractPoints(1);return {id,polygon:ring(s.shape),holes:s.holes.map(ring)};});
+        const white=global.PacVuWhitePaperboard.createMaterials(THREE,renderer,{sourceMaterials:materials});
+        paper=global.PacVuPhysicalPaper3D.createFoldedAdapter({THREE,
+          contract:{code:'S001-outer',panels,folds:hinges.map((h,i)=>({id:'outer-'+i,parentId:h.parentMesh.name,childId:h.childMesh.name,axis:{a:h.a,b:h.b},phase:[h.start,h.end]}))},
+          pieces:new Map([...pieces].map(([id,p])=>[id,{mesh:p.mesh,flatCenter:new THREE.Vector3()}])),frames:new Map(),hinges:hinges.map((h,i)=>({...h,id:'outer-'+i})),root,center:{x:0,y:0},materials,whitePaperboard:white,baseMaterialSets:{existing:materials,white:white.materials},
+          clamp,phase:(v,r)=>phase(v,r[0],r[1]),point:p=>new THREE.Vector3(p.x,-p.y,0),initialThickness:PAPER,
+          // Repose must not re-enter Controls.update while it is switching
+          // Physical/Original; its previous mode could re-enable the adapter.
+          repose:()=>{const v=Number(viewer.range.value)/100;pose(v,true);paper.update(v);},
+          afterRebuild({paperThickness}){root.traverse(m=>{if(m.isMesh&&!m.userData.pacvuBrand&&Array.isArray(m.material))global.PacVu3DViewer.assignBoardFaceMaterials(m.geometry,paperThickness,'exterior');});}
+        });
+        return {...paper,get enabled(){return paper.enabled;},dispose(){paper.dispose();white.dispose();}};
+      }});
+    presentation.bind();
+    // Outer folds occupy negative source Z. Keep the common studio below
+    // that approved pose instead of allowing its opaque floor to hide it.
+    const floorShift=-cfg.D-5-floor.position.z;
+    floor.position.z+=floorShift;grid.position.z+=floorShift;
+    scene.traverse(o=>{if(o.userData.pacvuStudioSurface)o.position.z+=floorShift;});
+    function pose(value,skipPaper=false) {
       global.PacVu3DViewer.syncProgress(viewer, value * 100, 'Outer Sleeve Assembly');
       hinges.forEach(h => h.object.quaternion.setFromAxisAngle(h.axis, h.angle * phase(value, h.start, h.end)));
-      pieces.get('front').mesh.position.z = -(PAPER + 0.025) * phase(value, 0.28, 0.34);
+      const thickness=paper?.enabled?paper.thickness:PAPER;
+      pieces.get('front').mesh.position.z = -(thickness + 0.025) * phase(value, 0.28, 0.34);
       // Steps 5/6/7 are 180-degree reinforcement folds. At their final pose
       // each flap is physically one paper layer above its parent panel; model
       // that thickness so the two surfaces never occupy the same depth.
-      const layer = PAPER + 0.035;
+      const layer = thickness + 0.035;
       pieces.get('lidSideLeft').mesh.position.z = layer * phase(value, 0.74, 0.82);
       pieces.get('lidSideRight').mesh.position.z = layer * phase(value, 0.74, 0.82);
       pieces.get('lidBack').mesh.position.z = layer * phase(value, 0.82, 0.91);
       pieces.get('lidFront').mesh.position.z = layer * phase(value, 0.91, 1.0);
+      root.updateMatrixWorld(true);if(!skipPaper)presentation.update(value);
+      const logo=pieces.get('front').mesh.children.find(o=>o.userData.s001Brand);
+      if(logo)logo.position.z=thickness/2+.015;
     }
     function resize() { const w = stage.clientWidth; const h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
-    const fit = type => global.PacVu3DViewer.fitObject(root, camera, controls, type);
+    const fit = type => presentation.fit(type);
     viewer.range.oninput = () => pose(+viewer.range.value / 100);
-    viewer.range.onchange = () => fit('iso');
+    // Keep the user's camera when releasing the assembly slider.
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => fit(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
     modal.querySelector('[data-shadow]').onclick = event => { floor.visible = !floor.visible; sun.castShadow = floor.visible; event.currentTarget.textContent = floor.visible ? 'Shadows On' : 'Shadows Off'; };
     modal.querySelector('[data-download]').onclick = () => renderer.domElement.toBlob(blob => { if (!blob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'S001_OUTER_SLEEVE.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
     const observer = new ResizeObserver(resize); observer.observe(stage); resize(); pose(0); fit('top');
     let live = true; let animation = 0;
-    (function loop() { if (!live) return; animation = requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); }());
+    (function loop() { if (!live) return; animation = requestAnimationFrame(loop); if(modal.classList.contains('open')){controls.update();renderer.render(scene,camera);} }());
     global.S001_3D_DEBUG = { tolerance: TOLERANCE_MM, panelVertices: Object.fromEntries(Object.entries(contours).map(([k, v]) => [k, v.length])), pose };
-    return { signature, root, pose, open() { modal.classList.add('open'); resize(); fit('top'); }, destroy() { live = false; cancelAnimationFrame(animation); observer.disconnect(); controls.dispose?.(); root.traverse(o => { o.geometry?.dispose(); if (o.userData?.s001Brand) { o.material?.map?.dispose(); o.material?.dispose(); } }); materials.forEach(m => m.dispose()); renderer.dispose(); modal.remove(); } };
+    return { signature, root, pose, completed(){modal.querySelector('[data-mailer-action=original]').click();modal.querySelector('[data-mailer-action=existing]').click();pose(1);return root;}, open() { modal.classList.add('open'); resize(); fit('iso'); }, destroy() { live = false; cancelAnimationFrame(animation); observer.disconnect();presentation.dispose(); controls.dispose?.(); root.traverse(o => { o.geometry?.dispose(); if (o.userData?.s001Brand) { o.material?.map?.dispose(); o.material?.dispose(); } }); materials.forEach(m => m.dispose()); renderer.dispose(); modal.remove(); } };
   }
 
   let app;
-  global.S001Outer3DModel = { getCompleted() { const cfg = currentConfig(); const signature = [cfg.W, cfg.D, cfg.H, cfg.outerStringHoleEnabled, cfg.outerMainHoleDia, cfg.outerSmallHoleDia, cfg.outerHoleOffsetY].join(':'); if (!app || app.signature !== signature) { app?.destroy(); app = init3D(); } app.pose(1); return app.root; } };
+  global.S001Outer3DModel = { getCompleted() { const cfg = currentConfig(); const signature = [cfg.W, cfg.D, cfg.H, cfg.outerStringHoleEnabled, cfg.outerMainHoleDia, cfg.outerSmallHoleDia, cfg.outerHoleOffsetY].join(':'); if (!app || app.signature !== signature) { app?.destroy(); app = init3D(); } return app.completed(); } };
   function attachButton() {
     const bar = document.querySelector('.toolbar') || document.body;
     if (document.getElementById('s001-3d-btn')) return;

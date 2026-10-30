@@ -437,7 +437,11 @@
     // T008 is intentionally kept on the assembly table until the automatic
     // lock is fully built, pressed and reopened. Standing is a later phase.
 
+    let physicalPaper=null,currentProgress=0;
+    front.mesh.children.forEach(mesh=>{mesh.userData.pacvuBrand=true;});
     function pose(value) {
+      currentProgress=value;
+      const thickness=physicalPaper?.enabled?physicalPaper.thickness:.45;
       const progress = clamp(value, 0, 1);
       // Preserve the approved bottom-lock sequence in the first 68% of the
       // master timeline, then stand the bonded package and close its top.
@@ -529,6 +533,8 @@
       const stand = phase(progress, [0.68, 0.75]);
       standHinge.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2 * stand);
       root.position.z = 0;
+      physicalPaper?.update(progress);
+      front.mesh.children.forEach(mesh=>{if(mesh.userData.pacvuBrand)mesh.position.z=-thickness/2-.012;});
       modal.querySelector('.assembly-fill').style.width = Math.round(progress * 100) + '%';
       modal.querySelector('.m001-3d-controls').style.setProperty('--progress', Math.round(progress * 100) + '%');
       const stateIndex = progress < 0.12 ? 0 : progress < 0.34 ? 1 : progress < 0.54 ? 2 :
@@ -536,50 +542,21 @@
       modal.querySelectorAll('.assembly-labels span').forEach((node, index) => node.classList.toggle('active', index <= stateIndex));
     }
 
-    const whiteStudio = global.PacVuWhiteStudio?.create({ scene, camera, controls, renderer, root, sun, floor, grid }) || null;
-    function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
-    function view(type) {
-      if (type !== 'bottom') { camera.up.set(0, 0, 1); Viewer.fitObject(root, camera, controls, type); if (type === 'iso') whiteStudio?.view(); return; }
-      root.updateMatrixWorld(true);
-      const bottomMeshes = ['bottomA', 'bottomB', 'bottomL', 'bottomR']
-        .map(id => pieces.get(id)?.mesh).filter(Boolean);
-      const box = new THREE.Box3();
-      bottomMeshes.forEach(mesh => box.expandByObject(mesh));
-      const target = box.getCenter(new THREE.Vector3());
-      const reference = pieces.get('bottomA')?.mesh;
-      const normal = new THREE.Vector3(0, 0, -1);
-      const up = new THREE.Vector3(0, 1, 0);
-      if (reference) {
-        const worldQuaternion = reference.getWorldQuaternion(new THREE.Quaternion());
-        normal.applyQuaternion(worldQuaternion).normalize();
-        up.applyQuaternion(worldQuaternion).normalize();
-      }
-      const footprint = Math.max(C.W, C.D, 1);
-      controls.target.copy(target);
-      camera.up.copy(up);
-      camera.position.copy(target).add(normal.multiplyScalar(footprint * 2.35));
-      camera.near = Math.max(0.05, footprint * 0.02); camera.far = Math.max(C.H * 5, footprint * 12);
-      camera.updateProjectionMatrix(); controls.update();
-    }
-    const slider = modal.querySelector('input');
-    function setMaterialMode(mode) {
-      materialMode = mode === 'white' ? 'white' : 'existing';
-      pieces.forEach(piece => { piece.mesh.material = piece.materialSets[materialMode]; });
-      modal.querySelectorAll('[data-material-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.materialMode === materialMode)));
-    }
-    const materialControls = document.createElement('div');
-    materialControls.className = 'm001-3d-views pacvu-viewer__views t008-material-controls';
-    materialControls.style.right = '118px';
-    materialControls.innerHTML = '<button type="button" class="btn light" data-material-mode="existing" aria-pressed="true">Existing Material</button><button type="button" class="btn light" data-material-mode="white" aria-pressed="false">White Paperboard</button>';
-    stage.append(materialControls);
-    materialControls.querySelectorAll('[data-material-mode]').forEach(button => { button.onclick = () => setMaterialMode(button.dataset.materialMode); });
+    const presentation=global.PacVuMailer3DControls.create({
+      id:'T008',modal,stage,renderer,scene,camera,controls,getModel:()=>root,
+      createPaper:()=> (physicalPaper=global.PacVuPhysicalPaper3D.createFoldedAdapter({
+        THREE,contract,pieces,frames,hinges,root,center,materials,whitePaperboard,
+        clamp,phase,point,initialThickness:thickness,baseMaterialSets,bondCopies,
+        repose:()=>pose(currentProgress)
+      }))
+    });presentation.bind();
+    function resize() { const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix(); }
+    function view(type) { if(type==='bottom')presentation.bottomView();else presentation.fit(type); }
+    const slider=modal.querySelector('input');
+    function setMaterialMode(mode) { presentation.setMaterial(mode); }
     slider.oninput = () => pose(Number(slider.value) / 100);
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => view(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
-    let gridVisible = true;
-    const gridButton = modal.querySelector('[data-grid]');
-    gridButton.setAttribute('aria-pressed', 'true');
-    gridButton.onclick = event => { gridVisible = !gridVisible; grid.visible = gridVisible; event.currentTarget.setAttribute('aria-pressed', String(gridVisible)); event.currentTarget.textContent = gridVisible ? 'Grid On' : 'Grid Off'; };
     let shadows = true;
     const shadowButton = modal.querySelector('[data-shadow]');
     shadowButton.setAttribute('aria-pressed', 'true');
@@ -588,7 +565,6 @@
       renderer.shadowMap.enabled = shadows;
       sun.castShadow = shadows;
       floor.visible = shadows;
-      whiteStudio?.setShadows(shadows);
       sun.shadow.needsUpdate = true;
       event.currentTarget.setAttribute('aria-pressed', String(shadows));
       event.currentTarget.textContent = shadows ? 'Shadows On' : 'Shadows Off';
@@ -610,8 +586,8 @@
       },
       setState(state) { const target = contract.states[state] ?? 0; slider.value = String(Math.round(target * 100)); if (target > 0.90) pose(0.90); pose(target); },
       setMaterialMode,
-      get materialMode() { return materialMode; },
-      destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); controls.dispose?.(); whiteStudio?.dispose(); whitePaperboard?.dispose(); renderer.dispose(); modal.remove(); }
+      get materialMode() { return modal.querySelector('[data-mailer-action="white"]').getAttribute('aria-pressed')==='true'?'white':'existing'; },
+      destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); controls.dispose?.(); presentation.dispose(); whitePaperboard?.dispose(); renderer.dispose(); modal.remove(); }
     };
   }
 

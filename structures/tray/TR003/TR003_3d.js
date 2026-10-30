@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const T=.22,hinges=[];
-  let modal,stage,range,renderer,scene,camera,orbit,model,raf=0,rebuildTimer=0,boardMaterials=null,shadowOn=true;
+  let modal,stage,range,renderer,scene,camera,orbit,model,raf=0,rebuildTimer=0,boardMaterials=null,shadowOn=true,presentation=null;
   const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
   const clamp=value=>Math.max(0,Math.min(1,value));
   const smooth=value=>{const n=clamp(value);return n*n*(3-2*n);};
@@ -14,7 +14,7 @@
     const viewer=root.PacVu3DViewer.createModal({id:'tr003-3d-modal',badge:'TR003 · Tray Box'});
     modal=viewer.modal;stage=viewer.stage;range=viewer.range;
     button.onclick=open;modal.querySelector('[data-close]').onclick=closeView;modal.onclick=event=>{if(event.target===modal)closeView();};
-    range.oninput=pose;range.onchange=fit;
+    range.oninput=pose;range.onchange=pose;
     modal.querySelector('.m001-3d-views').onclick=event=>{if(event.target.dataset.view)setView(event.target.dataset.view);};
     modal.querySelector('[data-shadow]').onclick=event=>toggleShadow(event.target);
     modal.querySelector('[data-download]').onclick=downloadPng;
@@ -27,13 +27,15 @@
   function ensureScene(){
     if(renderer)return;const THREE=root.THREE,theme=root.PacVu3DTheme;
     renderer=root.PacVu3DViewer.createRenderer(THREE);stage.prepend(renderer.domElement);scene=new THREE.Scene();camera=root.PacVu3DViewer.createPerspectiveCamera(THREE,typeof getCfg==='function'?getCfg():null);
-    const hemi=new THREE.HemisphereLight(theme.hemisphereLight.skyColor,theme.hemisphereLight.groundColor,theme.hemisphereLight.intensity*.68);scene.add(hemi);
+    const hemi=new THREE.HemisphereLight(theme.hemisphereLight.skyColor,theme.hemisphereLight.groundColor,theme.hemisphereLight.intensity);scene.add(hemi);
     const key=new THREE.DirectionalLight(theme.directionalLight.color,theme.directionalLight.intensity);key.position.fromArray(theme.directionalLight.position);key.castShadow=true;key.shadow.mapSize.set(theme.directionalLight.shadowMapSize,theme.directionalLight.shadowMapSize);scene.add(key);
-    const fill=new THREE.DirectionalLight(theme.fillLight.color,theme.fillLight.intensity*.45);fill.position.fromArray(theme.fillLight.position);scene.add(fill);
+    const fill=new THREE.DirectionalLight(theme.fillLight.color,theme.fillLight.intensity);fill.position.fromArray(theme.fillLight.position);scene.add(fill);
     const floor=new THREE.Mesh(new THREE.PlaneGeometry(2500,2500),new THREE.ShadowMaterial({color:0x48433e,opacity:.14}));floor.position.z=-2;floor.receiveShadow=true;scene.add(floor);
     const grid=new THREE.GridHelper(theme.grid.size,theme.grid.divisions,theme.grid.centerColor,theme.grid.lineColor);grid.rotation.x=Math.PI/2;grid.position.z=theme.grid.z;scene.add(grid);
     orbit=new root.PacVuOrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.enablePan=false;orbit.minPolarAngle=.08;orbit.maxPolarAngle=Math.PI*.72;
-    root.PacVu3DViewer.standardizeEnvironment({renderer,scene,controls:orbit,floor,grid});window.addEventListener('resize',resize);
+    root.PacVu3DViewer.standardizeEnvironment({renderer,scene,controls:orbit,floor,grid});
+    presentation=root.PacVuMailer3DControls.create({id:'TR003',modal,stage,renderer,scene,camera,controls:orbit,getModel:()=>model,getAssembly:paperAssembly});
+    new ResizeObserver(resize).observe(stage);window.addEventListener('resize',resize);
   }
   function materials(){if(!boardMaterials){boardMaterials=root.PacVu3DViewer.createBoardMaterials(root.THREE);boardMaterials[2].color.set(root.PacVu3DTheme.colors.exterior);boardMaterials[2].name='TR003 folded paper edge';}return boardMaterials;}
   function samplePath(d){const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',d);const length=path.getTotalLength(),count=Math.max(64,Math.ceil(length/2)),points=[];for(let i=0;i<count;i+=1){const point=path.getPointAtLength(length*i/count);points.push({x:point.x,y:point.y});}return points;}
@@ -66,9 +68,43 @@
   function rightSideCapMask(x2,x3,topEdge,topMid,bottomEdge,bottomMid,r){const points=[{x:x2+r,y:topEdge},{x:x3,y:topEdge},{x:x3,y:bottomEdge},{x:x2+r,y:bottomEdge}];arcPoints(points,x2+r,bottomMid,r,Math.PI/2,Math.PI);points.push({x:x2,y:topMid});arcPoints(points,x2+r,topMid,r,Math.PI,Math.PI*1.5);return points;}
   function mirrorX(points,axis){return points.map(point=>({x:axis*2-point.x,y:point.y})).reverse();}
   function mirrorY(points,axis){return points.map(point=>({x:point.x,y:axis*2-point.y})).reverse();}
-  function attach(parent,panel,a,b,start,end,turns=1){const THREE=root.THREE,p=new THREE.Vector3(a.x,-a.y,0),q=new THREE.Vector3(b.x,-b.y,0),hinge=new THREE.Group();hinge.position.copy(p);parent.add(hinge);const frame=new THREE.Group();frame.position.copy(p).multiplyScalar(-1);hinge.add(frame);frame.add(panel);const axis=q.sub(p).normalize(),box=new THREE.Box3().setFromObject(panel),center=box.getCenter(new THREE.Vector3()),radial=center.sub(p),inward=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;hinges.push({hinge,axis,radians:Math.PI/2*turns*inward,start,end});return frame;}
+  function attach(parent,panel,a,b,start,end,turns=1){const THREE=root.THREE,p=new THREE.Vector3(a.x,-a.y,0),q=new THREE.Vector3(b.x,-b.y,0),hinge=new THREE.Group();hinge.position.copy(p);parent.add(hinge);const frame=new THREE.Group();frame.position.copy(p).multiplyScalar(-1);hinge.add(frame);frame.add(panel);const axis=q.sub(p).normalize(),box=new THREE.Box3().setFromObject(panel),center=box.getCenter(new THREE.Vector3()),radial=center.sub(p),inward=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;frame.userData.foldPanel=panel;hinges.push({hinge,frame,a,b,parentMesh:parent.userData.foldPanel,childMesh:panel,axis,radians:Math.PI/2*turns*inward,start,end});return frame;}
+  // TR003 has one shape per panel. Bind only the shared crease interval;
+  // its four curved cut boundaries must remain open in Physical Paper mode.
+  function paperAssembly(){
+    const panels=new Map(),paperHinges=[];
+    model.traverse(mesh=>{if(mesh.isMesh&&mesh.geometry?.parameters?.shapes)panels.set(mesh.name,mesh);});
+    function edgeIntervals(mesh,a,b){
+      const length=Math.hypot(b.x-a.x,b.y-a.y),ux=(b.x-a.x)/length,uy=(b.y-a.y)/length;
+      const points=mesh.geometry.parameters.shapes.getPoints(18),result=[];
+      for(let i=0;i<points.length;i++){
+        const p=points[i],q=points[(i+1)%points.length];
+        const distance=v=>(v.x-a.x)*uy-(-v.y-a.y)*ux;
+        if(Math.abs(distance(p))>.03||Math.abs(distance(q))>.03)continue;
+        const t=v=>(v.x-a.x)*ux+(-v.y-a.y)*uy;
+        const lo=Math.max(0,Math.min(t(p),t(q))),hi=Math.min(length,Math.max(t(p),t(q)));
+        if(hi-lo>.03)result.push([lo,hi]);
+      }
+      return result;
+    }
+    for(const h of hinges){
+      if(!h.parentMesh?.isMesh||!h.childMesh?.isMesh)continue;
+      const length=Math.hypot(h.b.x-h.a.x,h.b.y-h.a.y);
+      const point=t=>({x:h.a.x+(h.b.x-h.a.x)*t/length,y:h.a.y+(h.b.y-h.a.y)*t/length});
+      for(const p of edgeIntervals(h.parentMesh,h.a,h.b))for(const c of edgeIntervals(h.childMesh,h.a,h.b)){
+        const lo=Math.max(p[0],c[0]),hi=Math.min(p[1],c[1]);
+        if(hi-lo>.03)paperHinges.push({object:h.hinge,frame:h.frame,parentMesh:h.parentMesh,childMesh:h.childMesh,a:point(lo),b:point(hi)});
+      }
+    }
+    const walls=['panel-1-left','panel-1-right'];
+    const inserts=['front-left','front-right','back-left','back-right'].map(s=>'panel-3-'+s);
+    const layerConstraints=inserts.map(inner=>({outer:inner.endsWith('left')?walls[0]:walls[1],inner,interiorSign:1}));
+    return {panels,hinges:paperHinges,sourceThickness:T,preserveSourceEdge:true,
+      anchoredPanels:walls,layerOrder:[...walls,...inserts],layerConstraints};
+  }
   function build(reset){
     const cfg=typeof getCfgTR003==='function'?getCfgTR003():{W:317.5,D:496.8875,H:133.35},layout=TR003_getLayout(cfg.W,cfg.D,cfg.H,cfg),p=layout.params;
+    presentation?.release();
     if(model){scene.remove(model);model.traverse(object=>object.geometry?.dispose());}hinges.length=0;model=new root.THREE.Group();scene.add(model);
     const fill=TR003_buildPanelFill(p,layout.spec),d=(fill.match(/d="([^"]+)"/)||[])[1],outline=samplePath(d),slotW=Math.max(8,cfg.H*.50),slotH=Math.max(1.1,cfg.H*.012),slotV=Math.max(8,cfg.H*.34);
     const slotY1=p.y1+cfg.D*.14,slotY2=p.y2-cfg.D*.14;
@@ -97,7 +133,7 @@
     const panel3BackRightMask=mirrorX(panel3BackLeftMask,mirrorAxisX);
     const panel1LeftMask=leftSideCapMask(p.x0,p.x1,topCutLower,topCutMid,bottomCutUpper,bottomCutMid,boundaryArc);
     const panel1RightMask=mirrorX(panel1LeftMask,mirrorAxisX);
-    const base=mesh('base',outline,rect(p.x1,p.y1,p.x2,p.y2));model.add(base);
+    const base=mesh('base',outline,rect(p.x1,p.y1,p.x2,p.y2));model.add(base);model.userData.foldPanel=base;
     // These four horizontal boundaries are CUT lines in the source dieline,
     // not folds. Keep a physical gap between panel 1 and the four panel-3 tabs.
     const sideL=polygonMesh('panel-1-left',panel1LeftMask,leftSlots),sideR=polygonMesh('panel-1-right',panel1RightMask,rightSlots);
@@ -114,10 +150,10 @@
     const bL=polygonMesh('panel-3-back-left',panel3BackLeftMask,[cutBL]),bR=polygonMesh('panel-3-back-right',panel3BackRightMask,[cutBR]);
     attach(frontFrame,fL,{x:p.x1,y:p.y1},{x:p.x1,y:p.y0},.32,.62);attach(frontFrame,fR,{x:p.x2,y:p.y0},{x:p.x2,y:p.y1},.32,.62);
     attach(backFrame,bL,{x:p.x1,y:p.y2},{x:p.x1,y:p.y3},.32,.62);attach(backFrame,bR,{x:p.x2,y:p.y3},{x:p.x2,y:p.y2},.32,.62);
-    model.position.set(-(p.x1+p.x2)/2,(p.y1+p.y2)/2,0);if(reset)range.value='0';pose();fit();
+    model.position.set(-(p.x1+p.x2)/2,(p.y1+p.y2)/2,0);presentation.bind();if(reset)range.value='0';pose();if(reset)fit();
   }
-  function pose(){const progress=clamp(Number(range.value)/100);hinges.forEach(item=>{const amount=smooth((progress-item.start)/(item.end-item.start));item.hinge.quaternion.setFromAxisAngle(item.axis,item.radians*amount);});root.PacVu3DViewer.syncProgress({controls:modal.querySelector('.m001-3d-controls')},progress*100,'Assembly Stage');}
-  function fit(){root.PacVu3DViewer.fitObject(model,camera,orbit,'iso');}function setView(view){root.PacVu3DViewer.fitObject(model,camera,orbit,view);}
+  function pose(){const progress=clamp(Number(range.value)/100);hinges.forEach(item=>{const amount=smooth((progress-item.start)/(item.end-item.start));item.hinge.quaternion.setFromAxisAngle(item.axis,item.radians*amount);});presentation?.update(progress);root.PacVu3DViewer.syncProgress({controls:modal.querySelector('.m001-3d-controls')},progress*100,'Assembly Stage');}
+  function fit(){presentation.fit('iso');}function setView(view){presentation.fit(view);}
   function toggleShadow(button){shadowOn=!shadowOn;scene.traverse(object=>{if(object.material?.isShadowMaterial)object.visible=shadowOn;if(object.isDirectionalLight)object.castShadow=shadowOn;});button.textContent=shadowOn?'Shadows On':'Shadows Off';}
   function downloadPng(){const canvas=renderer?.domElement;if(!canvas)return;canvas.toBlob(blob=>{if(!blob)return;const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`TR003_3D_${Math.round(Number(range.value))}.png`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);},'image/png');}
   function resize(){if(!renderer||!stage)return;const width=stage.clientWidth,height=stage.clientHeight;if(!width||!height)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}

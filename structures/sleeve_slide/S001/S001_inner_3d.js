@@ -79,16 +79,32 @@
     attach(l1,'bottomLockL',[424.024,3037.059],[273.788,3037.059],.64,.70);attach(r1,'bottomLockR',[1407.646,3037.059],[1259.481,3037.059],.64,.70);
     attach(l3,'bottomHookL',[256.78,3027.138],[163.237,3027.138],.70,.76,-1);attach(r3,'bottomHookR',[1424.654,3027.138],[1518.197,3027.138],.70,.76,-1);
     const b12=attach(sheet,'bottom12',[1251.741,3039.894],[429.694,3039.894],.77,.84),b13=attach(b12,'bottom13',[1251.741,3201.468],[429.694,3201.468],.84,.91);attach(b13,'bottom14',[1231.898,3218.477],[449.536,3218.477],.91,1);
-    function pose(v){global.PacVu3DViewer.syncProgress(viewer,v*100,'Inner Tray Assembly');hinges.forEach(h=>h.object.quaternion.setFromAxisAngle(h.axis,h.angle*phase(v,h.start,h.end)));}
-    function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}const fit=t=>global.PacVu3DViewer.fitObject(root,camera,controls,t);
-    viewer.range.oninput=()=>pose(+viewer.range.value/100);viewer.range.onchange=()=>fit('iso');modal.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>fit(b.dataset.view));modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');modal.querySelector('[data-shadow]').onclick=e=>{floor.visible=!floor.visible;sun.castShadow=floor.visible;e.currentTarget.textContent=floor.visible?'Shadows On':'Shadows Off';};
+    // Each clipped contour remains a separate source mesh. The shared paper
+    // adapter receives the existing hierarchy, without replacing its timeline.
+    const paperPanels=new Map();
+    for(const [name,piece] of pieces){piece.mesh.children.forEach((mesh,i)=>{mesh.name=name+'-'+i;paperPanels.set(mesh.name,mesh);});}
+    const paperHinges=hinges.map(h=>{
+      const frame=h.object.children[0],childGroup=frame.children[0];
+      const parentGroup=h.object.parent.children.find(o=>o!==h.object&&o.children?.some(c=>c.isMesh));
+      const p=h.object.position,q=p.clone().add(h.axis);
+      return {...h,frame,parentMesh:parentGroup.children.find(o=>o.isMesh),childMesh:childGroup.children.find(o=>o.isMesh),a:{x:p.x,y:-p.y},b:{x:q.x,y:-q.y}};
+    });
+    const presentation=global.PacVuMailer3DControls.create({id:'S001 Inner',modal,stage,renderer,scene,camera,controls,getModel:()=>root,
+      getAssembly:()=>({panels:paperPanels,hinges:paperHinges,sourceThickness:PAPER,anchoredPanels:['base-0']})});
+    presentation.bind();
+    const floorShift=-.5-floor.position.z;
+    floor.position.z+=floorShift;grid.position.z+=floorShift;
+    scene.traverse(o=>{if(o.userData.pacvuStudioSurface)o.position.z+=floorShift;});
+    function pose(v){global.PacVu3DViewer.syncProgress(viewer,v*100,'Inner Tray Assembly');hinges.forEach(h=>h.object.quaternion.setFromAxisAngle(h.axis,h.angle*phase(v,h.start,h.end)));root.updateMatrixWorld(true);presentation.update(v);}
+    function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}const fit=t=>presentation.fit(t);
+    viewer.range.oninput=()=>pose(+viewer.range.value/100);modal.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>fit(b.dataset.view));modal.querySelector('[data-close]').onclick=()=>modal.classList.remove('open');modal.querySelector('[data-shadow]').onclick=e=>{floor.visible=!floor.visible;sun.castShadow=floor.visible;e.currentTarget.textContent=floor.visible?'Shadows On':'Shadows Off';};
     modal.querySelector('[data-download]').onclick=()=>renderer.domElement.toBlob(blob=>{if(!blob)return;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='S001_INNER_TRAY.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
     // BASE interior is the approved upward-facing assembly side.
     root.userData.s001InteriorUp=true;
-    const observer=new ResizeObserver(resize);observer.observe(stage);resize();pose(0);fit('top');let live=true;(function loop(){if(!live)return;requestAnimationFrame(loop);controls.update();renderer.render(scene,camera);}());
+    const observer=new ResizeObserver(resize);observer.observe(stage);resize();pose(0);fit('top');let live=true;(function loop(){if(!live)return;requestAnimationFrame(loop);if(modal.classList.contains('open')){controls.update();renderer.render(scene,camera);}}());
     global.S001_INNER_3D_DEBUG={tolerance:TOLERANCE_MM,panels:Object.fromEntries(Object.entries(contours).map(([k,v])=>[k,v.reduce((n,p)=>n+p.length,0)])),pose};
-    return{signature,root,pose,open(){modal.classList.add('open');resize();fit('top');},destroy(){live=false;observer.disconnect();controls.dispose?.();root.traverse(o=>o.geometry?.dispose());materials.forEach(m=>m.dispose());renderer.dispose();modal.remove();}};
+    return{signature,root,pose,completed(){modal.querySelector('[data-mailer-action=original]').click();modal.querySelector('[data-mailer-action=existing]').click();pose(1);return root;},open(){modal.classList.add('open');resize();fit('iso');},destroy(){live=false;observer.disconnect();presentation.dispose();controls.dispose?.();root.traverse(o=>o.geometry?.dispose());materials.forEach(m=>m.dispose());renderer.dispose();modal.remove();}};
   }
   let app;
-  global.S001Inner3D={open(){const value=cfg(),signature=[value.W,value.D,value.H].join(':');if(!app||app.signature!==signature){app?.destroy();app=build();}app.open();},getCompleted(){const value=cfg(),signature=[value.W,value.D,value.H].join(':');if(!app||app.signature!==signature){app?.destroy();app=build();}app.pose(1);return app.root;}};
+  global.S001Inner3D={open(){const value=cfg(),signature=[value.W,value.D,value.H].join(':');if(!app||app.signature!==signature){app?.destroy();app=build();}app.open();},getCompleted(){const value=cfg(),signature=[value.W,value.D,value.H].join(':');if(!app||app.signature!==signature){app?.destroy();app=build();}return app.completed();}};
 }(window));

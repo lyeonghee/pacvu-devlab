@@ -140,6 +140,7 @@
     brand.rotation.y = Math.PI;
     brand.renderOrder = 100;
     brand.userData.pacvuBrand = true;
+    brand.userData.flatY = brand.position.y;
     panel.add(brand);
   }
 
@@ -198,6 +199,7 @@
     const model = new THREE.Group(); scene.add(model);
     const pieceByName = new Map();
     const hinges = [];
+    let paper = null, paperMaterialMode = 'existing';
 
     function addPiece(name, rect, holeIndexes) {
       const polygon = clipPolygon(outline, rect);
@@ -208,7 +210,7 @@
       mesh.name = name; mesh.castShadow = true; mesh.receiveShadow = true;
       if (name === 'sideL' || name === 'sideR') mesh.receiveShadow = false;
       mesh.position.set(made.centerX - center.x, center.y - made.centerY, 0);
-      const record = { mesh, flatCenter: mesh.position.clone(), basePosition: mesh.position.clone(), centerY: made.centerY };
+      const record = { mesh, polygon, holes, flatCenter: mesh.position.clone(), basePosition: mesh.position.clone(), centerY: made.centerY };
       pieceByName.set(name, record);
       return mesh;
     }
@@ -276,26 +278,47 @@
         p: [positions.getX(index), positions.getY(index), positions.getZ(index)],
         uv: uvs ? [uvs.getX(index), uvs.getY(index)] : null
       });
-      const midpoint = (a, b) => ({
-        p: a.p.map((value, index) => (value + b.p[index]) * .5),
-        uv: a.uv ? a.uv.map((value, index) => (value + b.uv[index]) * .5) : null
-      });
       const emit = triangle => triangle.forEach(v => {
         outPositions.push(...v.p);
         if (v.uv) outUvs.push(...v.uv);
       });
-      const uniformLevels = 4;
-      const split = (triangle, depth) => {
-        if (depth >= uniformLevels) { emit(triangle); return; }
-        const ab = midpoint(triangle[0], triangle[1]);
-        const bc = midpoint(triangle[1], triangle[2]);
-        const ca = midpoint(triangle[2], triangle[0]);
-        split([triangle[0], ab, ca], depth + 1);
-        split([ab, triangle[1], bc], depth + 1);
-        split([ca, bc, triangle[2]], depth + 1);
-        split([ab, bc, ca], depth + 1);
+      // Shared clipping planes give adjacent triangles identical edge vertices.
+      // Independent recursive splits left T-junctions that opened when bent.
+      const clip = (polygon, axis, boundary, above) => {
+        const result = [];
+        let a = polygon[polygon.length - 1];
+        if (!a) return result;
+        for (const b of polygon) {
+          const ia = above ? a.p[axis] >= boundary : a.p[axis] <= boundary;
+          const ib = above ? b.p[axis] >= boundary : b.p[axis] <= boundary;
+          if (ia !== ib) {
+            const t = (boundary - a.p[axis]) / (b.p[axis] - a.p[axis]);
+            result.push({ p: a.p.map((v, i) => v + (b.p[i] - v) * t),
+              uv: a.uv ? a.uv.map((v, i) => v + (b.uv[i] - v) * t) : null });
+          }
+          if (ib) result.push(b);
+          a = b;
+        }
+        return result;
       };
-
+      const splitAxis = (polygon, axis) => {
+        const values = polygon.map(v => v.p[axis]);
+        const first = Math.floor(Math.min(...values) / maxYSpan);
+        const last = Math.floor(Math.max(...values) / maxYSpan);
+        const parts = [];
+        for (let k = first; k <= last; k++) {
+          const part = clip(clip(polygon, axis, k * maxYSpan, true), axis, (k + 1) * maxYSpan, false);
+          if (part.length >= 3) parts.push(part);
+        }
+        return parts;
+      };
+      const split = triangle => {
+        for (const strip of splitAxis(triangle, 1)) {
+          for (const cell of splitAxis(strip, 0)) {
+            for (let i = 1; i + 1 < cell.length; i++) emit([cell[0], cell[i], cell[i + 1]]);
+          }
+        }
+      };
       groups.forEach(group => {
         const groupStart = outPositions.length / 3;
         for (let i = group.start; i < group.start + group.count; i += 3) {
@@ -305,7 +328,7 @@
       });
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(outPositions, 3));
       if (outUvs.length) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(outUvs, 2));
-      computeGroupedSmoothNormals(geometry);
+      geometry.computeVertexNormals();
       geometry.computeBoundingBox();
       geometry.computeBoundingSphere();
       input.dispose();
@@ -345,15 +368,19 @@
     pieceByName.get('sideL').mesh.material = lockingWingMaterials;
     pieceByName.get('sideR').mesh.material = lockingWingMaterials;
 
-    ['sideL', 'sideR'].forEach(name => {
+    const flexNames = ['glue', 'front', 'back', 'frontRoof', 'backRoof', 'frontHandle', 'backHandle', 'sideL', 'sideR'];
+    const flexSources = new Map();
+    flexNames.forEach(name => {
       const piece = pieceByName.get(name);
       const original = piece.mesh.geometry;
-      piece.mesh.geometry = subdivideForSmoothBend(original, 4);
+      piece.mesh.geometry = subdivideForSmoothBend(original, name === 'sideL' || name === 'sideR' ? 3 : 6);
       original.dispose();
+      flexSources.set(name, new Float32Array(piece.mesh.geometry.attributes.position.array));
     });
 
     const point = (x, y, z) => new THREE.Vector3(x - center.x, center.y - y, z || 0);
     const sheet = new THREE.Group(); model.add(sheet);
+    sheet.userData.panelId = 'front';
     sheet.add(pieceByName.get('front').mesh);
 
     function attach(parentFrame, name, a, b, start, end, angle) {
@@ -367,7 +394,12 @@
       const axis = q.clone().sub(p).normalize();
       const radial = piece.flatCenter.clone().sub(p);
       const sign = new THREE.Vector3().crossVectors(axis, radial).z >= 0 ? 1 : -1;
-      hinges.push({ object: hinge, axis, angle: (angle == null ? Math.PI / 2 : angle) * sign, start, end });
+      frame.userData.panelId = name;
+      const parentMesh = pieceByName.get(parentFrame.userData.panelId).mesh;
+      hinges.push({ object: hinge, frame, parentMesh, childMesh: piece.mesh, sourceA:a, sourceB:b,
+        a: {x:p.x-parentMesh.position.x,y:-(p.y-parentMesh.position.y)},
+        b: {x:q.x-parentMesh.position.x,y:-(q.y-parentMesh.position.y)},
+        axis, angle: (angle == null ? Math.PI / 2 : angle) * sign, start, end });
       return frame;
     }
 
@@ -388,7 +420,7 @@
 
     // Bring the two opposing handle bases together at the centre ridge.
     // 77 degrees gives each 56.5 mm roof shoulder roughly D/2 inward reach.
-    const roofAngle = THREE.MathUtils.degToRad(77);
+    const roofAngle = 0; // Continuous shoulder bending below replaces rigid roof hinges.
     const frontRoofFrame = attach(sheet, 'frontRoof', { x: xs[1], y: top }, { x: xs[0], y: top }, .68, .76, roofAngle);
     const backRoofFrame = attach(backFrame, 'backRoof', { x: xs[2], y: top }, { x: xs[3], y: top }, .7, .78, roofAngle);
     // Cancel the roof tilt at the unprinted neck so both handle crowns finish
@@ -396,19 +428,19 @@
     const handleFoldAngle = roofAngle;
     attach(frontRoofFrame, 'frontHandle', { x: xs[1], y: handleFoldY }, { x: xs[0], y: handleFoldY }, .74, .79, - handleFoldAngle);
     attach(backRoofFrame, 'backHandle', { x: xs[2], y: handleFoldY }, { x: xs[3], y: handleFoldY }, .74, .79, -handleFoldAngle);
-    // Lock the slot wings one at a time. The first wing completes its full
-    // bend/push/seat action before the opposite wing begins to move.
+    // Both wings approach inward; the first slot seats before the second
+    // finishes pushing down onto its separate paper layer.
     const slotInsertions = [
       {
         piece: pieceByName.get('sideR'),
-        bendStart: .81, bendEnd: .88,
-        overStart: .88, overEnd: .91,
+        bendStart: .79, bendEnd: .86,
+        overStart: .86, overEnd: .93,
         stackOffset: PAPER / 2
       },
       {
         piece: pieceByName.get('sideL'),
-        bendStart: .91, bendEnd: .97,
-        overStart: .97, overEnd: 1,
+        bendStart: .82, bendEnd: .90,
+        overStart: .90, overEnd: 1,
         stackOffset: -PAPER / 2
       }
     ];
@@ -419,87 +451,219 @@
       // rigid side wall; vertices above it are the continuous curved lid.
       item.baseY = item.piece.centerY - top;
       item.length = geometry.boundingBox.max.y - item.baseY;
-      item.slotAlong = clamp((98.199 * (D / 110)) / item.length, .45, .8);
+      const slot = requiredCuts[item.piece.mesh.name === 'sideL' ? 2 : 3];
+      item.slotStart = top - Math.max(...slot.map(point => point.y));
+      item.slotEnd = top - Math.min(...slot.map(point => point.y));
       item.originalPositions = new Float32Array(geometry.attributes.position.array);
     });
+
+    // A continuous, arc-length-parametrized shoulder joins the upright body
+    // to the centre crown. A monotone quarter arc avoids the former S-bend.
+    // The handle itself stays upright above the curved shoulder.
+    const shoulderStart = handleFoldY + Math.PI * (D - PAPER - HANDLE_CONTACT_GAP) / 4;
+    const shoulderLength = shoulderStart - handleFoldY;
+    let shoulderCache = null;
+    function shoulderProfile(amount, thickness) {
+      const key = amount + ':' + thickness;
+      if (shoulderCache?.key === key) return shoulderCache;
+      const reach = Math.max(0, (D - thickness - HANDLE_CONTACT_GAP) / 2);
+      const integrate = angle => {
+        const rows = [{ y: 0, z: 0, angle: 0 }];
+        let y = 0, z = 0;
+        for (let i = 1; i <= 256; i++) {
+          const a = angle * Math.pow((i - .5) / 256, .45);
+          y += Math.cos(a) * shoulderLength / 256;
+          z += Math.sin(a) * shoulderLength / 256;
+          rows.push({ y, z, angle: angle * Math.pow(i / 256, .45) });
+        }
+        return rows;
+      };
+      let lo = 0, hi = Math.PI * .55;
+      for (let i = 0; i < 28; i++) {
+        const mid = (lo + hi) / 2;
+        if (integrate(mid)[256].z < reach) lo = mid; else hi = mid;
+      }
+      const rows = integrate((lo + hi) / 2 * amount);
+      const at = distance => {
+        if (distance <= 0) return { y: distance, z: 0, angle: 0 };
+        if (distance >= shoulderLength) return { ...rows[256], y: rows[256].y + distance - shoulderLength, angle: 0 };
+        const index = distance / shoulderLength * 256;
+        const i = Math.floor(index), t = index - i, a = rows[i], b = rows[i + 1];
+        return { y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t, angle: a.angle + (b.angle - a.angle) * t };
+      };
+      shoulderCache = { key, at, base: at(shoulderStart - top), crown: at(shoulderLength) };
+      return shoulderCache;
+    }
+    let shoulderAmount = 0;
+    function curveShoulders(amount, thickness) {
+      const profile = shoulderProfile(amount, thickness);
+      flexNames.filter(name => name !== 'sideL' && name !== 'sideR').forEach(name => {
+        const piece = pieceByName.get(name), original = flexSources.get(name);
+        const geometry = piece.mesh.geometry, positions = geometry.attributes.position;
+        if (piece.lastShoulderKey === profile.key) return;
+        piece.lastShoulderKey = profile.key;
+        for (let i = 0; i < positions.count; i++) {
+          const x = original[i * 3], y = original[i * 3 + 1], z = original[i * 3 + 2] * thickness / PAPER;
+          const distance = shoulderStart - piece.centerY + y;
+          const p = profile.at(distance);
+          if (name === 'glue') positions.setXYZ(i, x - p.z, piece.centerY - shoulderStart + p.y, z);
+          else positions.setXYZ(i, x, piece.centerY - shoulderStart + p.y - z * Math.sin(p.angle), p.z + z * Math.cos(p.angle));
+        }
+        positions.needsUpdate = true;
+        computeGroupedSmoothNormals(geometry);
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+        piece.mesh.children.forEach(child => {
+          if (!child.userData.pacvuBrand) return;
+          const p = profile.at(shoulderStart - piece.centerY + child.userData.flatY);
+          const skin = -thickness / 2 - .02;
+          child.position.y = piece.centerY - shoulderStart + p.y - skin * Math.sin(p.angle);
+          child.position.z = p.z + skin * Math.cos(p.angle);
+          child.rotation.set(p.angle, Math.PI, 0);
+        });
+      });
+    }
 
     function curveSlotWing(item, bentAmount, overAmount) {
       const bent = clamp(bentAmount, 0, 1);
       const over = clamp(overAmount, 0, 1);
-      const poseKey = bent + (over * 2);
+      const thickness = paper?.enabled ? paper.thickness : PAPER;
+      const poseKey = bent + (over * 2) + thickness * 10 + shoulderAmount * 100;
       if (Math.abs(poseKey - (item.lastCurvePose ?? -1)) < .0005) return;
       item.lastCurvePose = poseKey;
       const geometry = item.piece.mesh.geometry;
       const position = geometry.attributes.position;
       const original = item.originalPositions;
-      if (bent < .0001) {
+      if (bent < .0001 && shoulderAmount < .0001) {
         position.array.set(original);
+        for (let index = 0; index < position.count; index += 1) position.setZ(index, original[index * 3 + 2] * thickness / PAPER);
         position.needsUpdate = true;
-        geometry.computeVertexNormals();
+        computeGroupedSmoothNormals(geometry);
         
         return;
       }
-      // Keep the approved quarter-circle as the approach pose, then morph the
-      // whole 1-23 -> 1-21 span into one continuous half ellipse.
-      const bendAngle = Math.PI / 2;
-      const radius = item.length / Math.max(bendAngle, .0001);
-      const ovalRadiusX = W / 2;
-      const ovalRadiusY = 12;
-      for (let index = 0; index < position.count; index += 1) {
+      // The full cross-slot seats across the upright handle, not just its
+      // midpoint. A round shoulder meets a straight slot-bearing saddle.
+      const profile = shoulderProfile(shoulderAmount, thickness);
+      // Spread the bend into the upper 12 mm of the continuous side wall.
+      // This rounds the shoulder without moving the seated slot or handle.
+      const blendLength = 12;
+      const bendBaseY = item.baseY - blendLength;
+      const rootProfile = profile.at(shoulderStart - top - blendLength);
+      const bodyShift = rootProfile.y - (shoulderStart - top - blendLength);
+      const slotStart = item.slotStart + blendLength;
+      const slotEnd = item.slotEnd + blendLength;
+      const slotLength = item.slotEnd - item.slotStart;
+      const reach = (W - slotLength) / 2;
+      const layer = thickness * (item.stackOffset > 0 ? 1 : 2);
+      const rise = profile.crown.y - rootProfile.y + layer;
+      const key = profile.key + ':' + layer;
+      if (item.seatKey !== key) {
+        const sample = (arm, count) => {
+          const rows = [{ s: 0, y: 0, z: 0, angle: 0 }];
+          let length = 0;
+          for (let i = 1; i <= count; i++) {
+            const t = i / count, u = 1 - t;
+            // Collinear first/last three controls give zero curvature at
+            // both joins: the bow eases out of the wall and into the slot.
+            const y = 5 * u ** 4 * t * arm + 20 * u ** 3 * t ** 2 * arm +
+              (10 * u ** 2 * t ** 3 + 5 * u * t ** 4 + t ** 5) * rise;
+            const z = 10 * u ** 2 * t ** 3 * (reach - 2 * arm) +
+              5 * u * t ** 4 * (reach - arm) + t ** 5 * reach;
+            const dy = 5 * (u ** 4 * arm + 4 * u ** 3 * t * arm +
+              6 * u ** 2 * t ** 2 * (rise - 2 * arm));
+            const dz = 5 * (6 * u ** 2 * t ** 2 * (reach - 2 * arm) +
+              4 * u * t ** 3 * arm + t ** 4 * arm);
+            const last = rows[rows.length - 1];
+            length += Math.hypot(y - last.y, z - last.z);
+            rows.push({ s: length, y, z, angle: Math.atan2(dz, dy) });
+          }
+          return rows;
+        };
+        let lo = 0, hi = Math.min(reach, rise) / 2;
+        for (let i = 0; i < 28; i++) {
+          const arm = (lo + hi) / 2;
+          if (sample(arm, 256)[256].s < slotStart) lo = arm; else hi = arm;
+        }
+        item.seatRows = sample((lo + hi) / 2, 256);
+        item.seatKey = key;
+      }
+      const rows = item.seatRows;
+      const finalAt = distance => {
+        if (distance >= slotStart && distance <= slotEnd)
+          return { y: rise, z: reach + distance - slotStart, angle: Math.PI / 2 };
+        if (distance > slotEnd) {
+          const tail = distance - slotEnd, radius = 80, a = tail / radius;
+          return { y: rise - radius * (1 - Math.cos(a)), z: reach + slotLength + radius * Math.sin(a), angle: Math.PI / 2 + a };
+        }
+        let lo = 0, hi = rows.length - 1;
+        while (hi - lo > 1) {
+          const mid = (lo + hi) >> 1;
+          if (rows[mid].s < distance) lo = mid; else hi = mid;
+        }
+        const a = rows[lo], b = rows[hi], t = clamp((distance - a.s) / (b.s - a.s), 0, 1);
+        return { y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t, angle: a.angle + (b.angle - a.angle) * t };
+      };
+      // First bow inward, then push the slot down over the paired handles.
+      // Integrating unit tangents preserves the authored wing/slot lengths.
+      const closure = bent * (.78 + .22 * over);
+      const count = 640, step = (item.length + blendLength) / count;
+      const bentRows = [{ y: 0, z: 0 }];
+      for (let i = 1; i <= count; i++) {
+        const a = finalAt((i - .5) * step).angle * closure;
+        const last = bentRows[i - 1];
+        bentRows.push({ y: last.y + Math.cos(a) * step, z: last.z + Math.sin(a) * step });
+      }
+      for (let index = 0; index < position.count; index++) {
         const offset = index * 3;
-        const x = original[offset];
-        const y = original[offset + 1];
-        const z = original[offset + 2];
-        if (y <= item.baseY) {
-          position.setXYZ(index, x, y, z);
+        const x = original[offset], y = original[offset + 1];
+        const z = original[offset + 2] * thickness / PAPER;
+        if (y <= bendBaseY) {
+          const p = profile.at(shoulderStart - item.piece.centerY + y);
+          position.setXYZ(index, x, item.piece.centerY - shoulderStart + p.y, z);
           continue;
         }
-        const along = clamp((y - item.baseY) / item.length, 0, 1);
-
-
-
-const angle = bendAngle * along;
-const arcCenterY = item.baseY + (Math.sin(angle) * radius);
-const arcCenterZ = (1 - Math.cos(angle)) * radius;
-const arcNormalY = -Math.sin(angle);
-const arcNormalZ = Math.cos(angle);
-const arcY = arcCenterY + (z * arcNormalY);
-const arcZ = arcCenterZ + (z * arcNormalZ);
-
-const ovalAngle = along <= item.slotAlong
-  ? (along / item.slotAlong) * (Math.PI / 2)
-  : (Math.PI / 2) + (((along - item.slotAlong) / (1 - item.slotAlong)) * (Math.PI / 2));
-
-const ovalCenterY = item.baseY + (Math.sin(ovalAngle) * ovalRadiusY);
-const ovalCenterZ = (1 - Math.cos(ovalAngle)) * ovalRadiusX;
-const ovalTangentY = Math.cos(ovalAngle) * ovalRadiusY;
-const ovalTangentZ = Math.sin(ovalAngle) * ovalRadiusX;
-const ovalNormalLength = Math.hypot(ovalTangentY, ovalTangentZ) || 1;
-const ovalNormalY = -ovalTangentZ / ovalNormalLength;
-const ovalNormalZ = ovalTangentY / ovalNormalLength;
-const stackProfile = smooth(clamp(along / .12, 0, 1));
-const surfaceOffset = z + (item.stackOffset * stackProfile * over);
-const ovalY = ovalCenterY + (surfaceOffset * ovalNormalY);
-const ovalZ = ovalCenterZ + (surfaceOffset * ovalNormalZ);
-
-const lockedY = arcY + ((ovalY - arcY) * over);
-const lockedZ = arcZ + ((ovalZ - arcZ) * over);
-
-position.setXYZ(
-  index,
-  x,
-  y + ((lockedY - y) * bent),
-  z + ((lockedZ - z) * bent)
-);
-
-
+        const distance = y - bendBaseY, exact = finalAt(distance);
+        const row = clamp(distance / step, 0, count), i = Math.min(count - 1, Math.floor(row)), t = row - i;
+        const a = bentRows[i], b = bentRows[i + 1];
+        const py = closure === 1 ? exact.y : a.y + (b.y - a.y) * t;
+        const pz = closure === 1 ? exact.z : a.z + (b.z - a.z) * t;
+        const angle = exact.angle * closure;
+        position.setXYZ(index, x, bendBaseY + bodyShift + py - z * Math.sin(angle), pz + z * Math.cos(angle));
       }
       position.needsUpdate = true;
-      geometry.computeVertexNormals();
+      computeGroupedSmoothNormals(geometry);
+      geometry.computeBoundingBox();
       geometry.computeBoundingSphere();
     }
 
-    function pose(value) {
+    // Rigid panels use the shared physical engine. The two continuous wings
+    // retain their authored curved deformation, including its stock normals.
+    const presentation = global.PacVuMailer3DControls.create({id:'B001',modal,stage,renderer,scene,camera,controls,getModel:()=>model,
+      createPaper(){
+        const pieces = new Map([...pieceByName].filter(([id])=>!flexNames.includes(id)));
+        const paperHinges = hinges.filter(h=>h.childMesh&&pieces.has(h.parentMesh.name)&&pieces.has(h.childMesh.name)).map((h,i)=>({...h,id:'b001-'+i}));
+        const white = global.PacVuWhitePaperboard.createMaterials(THREE,renderer,{sourceMaterials:materials});
+        let core;
+        core = global.PacVuPhysicalPaper3D.createFoldedAdapter({THREE,root:model,pieces,frames:new Map(),center,
+          contract:{code:'B001',panels:[...pieces].map(([id,p])=>({id,polygon:p.polygon,holes:p.holes})),
+            folds:paperHinges.map(h=>({id:h.id,parentId:h.parentMesh.name,childId:h.childMesh.name,axis:{a:h.sourceA,b:h.sourceB},phase:[h.start,h.end]}))},
+          hinges:paperHinges,materials,whitePaperboard:white,baseMaterialSets:{existing:materials,white:white.materials},
+          clamp,phase:(v,r)=>phase(v,r[0],r[1]),point:p=>point(p.x,p.y),initialThickness:PAPER,
+          repose(){const v=Number(viewer.range.value)/100;pose(v,true);core.update(v);pose(v,true);}});
+        paper = core;
+        const repose = ()=>pose(Number(viewer.range.value)/100,true);
+        return {get enabled(){return core.enabled;},update(v){core.update(v);repose();},
+          setEnabled(v){core.setEnabled(v);repose();},setThickness(v){const t=core.setThickness(v);repose();return t;},
+          setMaterialMode(mode){paperMaterialMode=mode;core.setMaterialMode(mode);},
+          getDiagnostics:()=>core.getDiagnostics(),dispose(){core.dispose();white.dispose();}};
+      }});
+    presentation.bind();
+
+    function pose(value, skipPaper=false) {
+      const thickness = paper?.enabled ? paper.thickness : PAPER;
+      shoulderAmount = phase(value, .68, .79);
+      curveShoulders(shoulderAmount, thickness);
       modal.querySelector('.m001-3d-controls').style.setProperty('--progress', Math.round(value * 100) + '%');
       hinges.forEach(hinge => {
         hinge.object.quaternion.setFromAxisAngle(hinge.axis, hinge.angle * phase(value, hinge.start, hinge.end));
@@ -516,8 +680,10 @@ position.setXYZ(
         const handleMaterials = closure >= .999
           ? assembledHandleMaterials
           : flatHandleMaterials;
-        frontHandle.mesh.material = handleMaterials;
-        backHandle.mesh.material = handleMaterials;
+        if(paperMaterialMode==='existing') {
+          frontHandle.mesh.material = handleMaterials;
+          backHandle.mesh.material = handleMaterials;
+        }
         const frontBox = new THREE.Box3().setFromObject(frontHandle.mesh);
         const backBox = new THREE.Box3().setFromObject(backHandle.mesh);
         const frontNormal = new THREE.Vector3(0, 0, 1)
@@ -534,7 +700,7 @@ position.setXYZ(
         const frontContact = Math.max(...frontProjection);
         const backContact = Math.min(...backProjection);
         const worldCorrection = frontNormal.clone().multiplyScalar(
-          (frontContact - backContact + HANDLE_CONTACT_GAP) * closure
+          0 // Crowns meet through the continuous shoulder profile, not detached translation.
         );
         const localCorrection = worldCorrection.applyQuaternion(
           backHandle.mesh.parent.getWorldQuaternion(new THREE.Quaternion()).invert()
@@ -551,6 +717,8 @@ position.setXYZ(
         const over = phase(value, item.overStart, item.overEnd);
         curveSlotWing(item, bent, over);
       });
+      model.updateMatrixWorld(true);
+      if(!skipPaper)presentation.update(value);
     }
 
     function resize() {
@@ -559,15 +727,18 @@ position.setXYZ(
       camera.aspect = width / height; camera.updateProjectionMatrix();
     }
     function view(type) {
-      global.PacVu3DViewer.fitObject(model, camera, controls, type);
+      presentation.fit(type);
     }
-    const slider = modal.querySelector('input');
+    const slider = viewer.range;
+    // Common material switches run before this listener; retain B001's
+    // assembled handle-face rule without overriding White Paperboard.
+    modal.addEventListener('click',event=>{if(event.target.closest('[data-mailer-action]'))pose(Number(slider.value)/100,true);});
+    modal.addEventListener('input',event=>{if(event.target!==slider)pose(Number(slider.value)/100,true);});
     slider.oninput = () => {
       const value = Number(slider.value) / 100; pose(value);
       const step = value < .34 ? 0 : value < .9 ? 1 : 2;
       modal.querySelectorAll('.assembly-labels span').forEach((node, index) => node.classList.toggle('active', index <= step));
     };
-    slider.onchange = () => view('iso');
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => view(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
     let shadowOn = true;
@@ -593,12 +764,13 @@ position.setXYZ(
     let live = true; let frame = 0;
     (function renderLoop() {
       if (!live) return;
-      frame = requestAnimationFrame(renderLoop); controls.update(); renderer.render(scene, camera);
+      frame = requestAnimationFrame(renderLoop);
+      if(modal.classList.contains('open')) { controls.update(); renderer.render(scene, camera); }
     })();
     return {
       open() { modal.classList.add('open'); resize(); view('iso'); },
       destroy() {
-        live = false; cancelAnimationFrame(frame); observer.disconnect(); controls.dispose?.();
+        live = false; cancelAnimationFrame(frame); observer.disconnect(); presentation.dispose(); controls.dispose?.();
         model.traverse(object => {
           object.geometry?.dispose();
           if (object.userData?.pacvuOffsetMaterials) object.userData.pacvuOffsetMaterials.forEach(material => material.dispose());
@@ -627,3 +799,6 @@ position.setXYZ(
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attachButton);
   else attachButton();
 })(window);
+
+
+

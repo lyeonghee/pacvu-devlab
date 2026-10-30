@@ -164,6 +164,32 @@
           "D": 205,
           "H": 65
         }
+      },
+      {
+        "label": "G-style Mailer Box 4",
+        "koreanName": "M004 메일러 박스",
+        "fefcoCode": "0427",
+        "engineKey": "mailer-source-cut",
+        "sizeMode": "parametric",
+        "variantKey": "M004",
+        "defaultDims": {
+          "W": 195,
+          "D": 195,
+          "H": 100
+        }
+      },
+      {
+        "label": "G-style Mailer Box 5",
+        "koreanName": "M005 메일러 박스",
+        "fefcoCode": "0427",
+        "engineKey": "mailer-source-cut",
+        "sizeMode": "parametric",
+        "variantKey": "M005",
+        "defaultDims": {
+          "W": 190,
+          "D": 210,
+          "H": 100
+        }
       }
     ]
   },
@@ -212,12 +238,21 @@
         "koreanName": "RSC Shipping Box 4 Handle",
         "fefcoCode": "0201",
         "engineKey": "rbox4",
-        "variantKey": "R004",
+          "variantKey": "R004",
         "defaultDims": {
           "W": 280,
           "D": 220,
           "H": 190
         }
+        },
+        {
+          "id": "shipping-r005",
+            "label": "A-Type / RSC Shipping Box 5",
+            "englishName": "A-Type / RSC Shipping Box 5",
+          "koreanName": "택배박스 5",
+          "engineKey": "shipping-source-cut",
+          "variantKey": "R005",
+          "defaultDims": {"W":225,"D":198,"H":68.5}
       }
     ]
   },

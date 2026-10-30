@@ -87,6 +87,7 @@
   }
 
   function build(){
+    if(mailerControls)mailerControls.release();
     var THREE=root.THREE,cfg=config();layout=root.M002_getLayout(cfg.W,cfg.D,cfg.H);
     validateInsertionRelations();
     if(model){previousModelUuid=model.uuid;scene.remove(model);model.traverse(function(object){if(object.geometry)object.geometry.dispose();});}
@@ -97,6 +98,8 @@
     relations=selectRelations(layout.foldRelations);
     buildHierarchy();
     var b=layout.dielineBounds;model.position.set(-(b.minX+b.maxX)/2,(b.minY+b.maxY)/2,0);scene.add(model);
+    if(!mailerControls)mailerControls=root.PacVuMailer3DControls.create({id:'M002',modal:modal,stage:stage,renderer:renderer,scene:scene,camera:camera,controls:controls,getModel:function(){return model;},getAssembly:function(){return {panels:panelMeshes,hinges:hinges,insertions:layout.insertionRelations,locks:layout.locks,slots:layout.slots,anchoredPanels:['base','back','lid','lidFront','sidePanelLeft','sidePanelRight'],sourceThickness:PAPER_THICKNESS};}});
+    mailerControls.bind();
     range.value='0';updatePose();fit('iso');
   }
 
@@ -137,7 +140,7 @@
         var axis=b.sub(a).normalize(),bounds=layout.panels.find(function(panel){return panel.id===child;}).bounds;
         var radial=new THREE.Vector3(bounds.x+bounds.width/2-a.x,-(bounds.y+bounds.height/2)-a.y,0);
         var inwardSign=new THREE.Vector3().crossVectors(axis,radial).z>=0?1:-1;
-        hinges.push({object:hinge,axis:axis,relation:relation,orientation:relation.parentPanelId===current.id?1:-1,inwardSign:inwardSign,panelId:child});
+        hinges.push({object:hinge,axis:axis,relation:relation,orientation:relation.parentPanelId===current.id?1:-1,inwardSign:inwardSign,panelId:child,frame:frame,parentMesh:panelMeshes.get(current.id),childMesh:panelMeshes.get(child),a:relation.axis.a,b:relation.axis.b});
         visited.add(child);frames.set(child,frame);queue.push({id:child,frame:frame});
       });
     }
@@ -158,16 +161,16 @@
     var spineFrame=new THREE.Group();spineFrame.name='lockSpine'+side+' frame';spineFrame.position.copy(a1).multiplyScalar(-1);hinge1.add(spineFrame);
     var y1=Math.max(outer.axis.a.y,inner.axis.a.y),y2=Math.min(outer.axis.b.y,inner.axis.b.y);
     var spinePanel={id:'lockSpine'+side,polygon:[{x:outer.axis.a.x,y:y1},{x:inner.axis.a.x,y:y1},{x:inner.axis.a.x,y:y2},{x:outer.axis.a.x,y:y2}]};
-    var spine=new THREE.Mesh(geometry(spinePanel,{holes:[],slots:[]}),panelMeshes.get(sideId).material);spine.name='lockSpine'+side;spine.castShadow=false;spine.receiveShadow=false;spineFrame.add(spine);
+    var spine=new THREE.Mesh(geometry(spinePanel,{holes:[],slots:[]}),panelMeshes.get(sideId).material);spine.name='lockSpine'+side;spine.castShadow=false;spine.receiveShadow=false;spineFrame.add(spine);panelMeshes.set(spine.name,spine);
     var axis1=b1.sub(a1).normalize(),radial1=new THREE.Vector3((a2.x-a1.x)/2,0,0);
     var sign1=new THREE.Vector3().crossVectors(axis1,radial1).z>=0?1:-1;
-    hinges.push({object:hinge1,axis:axis1,relation:{foldIds:['f-7'+side+'-2'],angle:90},inwardSign:sign1,panelId:'lockSpine'+side});
+    hinges.push({object:hinge1,axis:axis1,relation:{foldIds:['f-7'+side+'-2'],angle:90},inwardSign:sign1,panelId:'lockSpine'+side,frame:spineFrame,parentMesh:panelMeshes.get(sideId),childMesh:spine,a:outer.axis.a,b:outer.axis.b});
     var hinge2=new THREE.Group();hinge2.name='lockSpine'+side+' -> '+lockId+' hinge';hinge2.position.copy(a2);spineFrame.add(hinge2);
     var lockFrame=new THREE.Group();lockFrame.name=lockId+' frame';lockFrame.position.copy(a2).multiplyScalar(-1);hinge2.add(lockFrame);lockFrame.add(panelMeshes.get(lockId));
     var lockBounds=layout.panels.find(function(panel){return panel.id===lockId;}).bounds;
     var axis2=b2.sub(a2).normalize(),radial2=new THREE.Vector3(lockBounds.x+lockBounds.width/2-a2.x,-(lockBounds.y+lockBounds.height/2)-a2.y,0);
     var sign2=new THREE.Vector3().crossVectors(axis2,radial2).z>=0?1:-1;
-    hinges.push({object:hinge2,axis:axis2,relation:{foldIds:['f-7'+side+'-1'],angle:90},inwardSign:sign2,panelId:lockId});
+    hinges.push({object:hinge2,axis:axis2,relation:{foldIds:['f-7'+side+'-1'],angle:90},inwardSign:sign2,panelId:lockId,frame:lockFrame,parentMesh:spine,childMesh:panelMeshes.get(lockId),a:inner.axis.a,b:inner.axis.b});
     visited.add(lockId);frames.set(lockId,lockFrame);
   }
 
@@ -206,6 +209,7 @@
       var degrees=item.relation.angle*amount+POCKET_OVERFOLD_DEGREES*overfold;
       item.object.quaternion.setFromAxisAngle(item.axis,THREE.MathUtils.degToRad(item.inwardSign*degrees));
     });
+    if(mailerControls)mailerControls.update(progress);
     root.PacVu3DViewer.syncProgress({controls:modal.querySelector('.m001-3d-controls')},Number(range.value),'Assembly Stage');
   }
 
@@ -230,12 +234,13 @@
     };
   }
 
-  function fit(view){if(model&&controls)root.PacVu3DViewer.fitObject(model,camera,controls,view||'iso');}
+  function fit(view){if(model&&controls)mailerControls.fit(view||'iso');}
   function toggleShadow(button){shadowOn=!shadowOn;renderer.shadowMap.enabled=shadowOn;renderer.shadowMap.needsUpdate=true;scene.traverse(function(object){if(object.isDirectionalLight)object.castShadow=shadowOn;});button.textContent=shadowOn?'Shadows On':'Shadows Off';}
   function resize(){if(!renderer||!stage)return;var w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   function animate(){if(!modal.classList.contains('open'))return;controls.update();renderer.render(scene,camera);raf=requestAnimationFrame(animate);}
   function download(){if(!renderer)return;renderer.domElement.toBlob(function(blob){if(!blob)return;var link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='M002_3D_Flat.png';link.click();setTimeout(function(){URL.revokeObjectURL(link.href);},1000);},'image/png');}
 
+  var mailerControls;
   root.M002_3D_syncAvailability=sync;
   root.M002_3D_runtimeSnapshot=runtimeSnapshot;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();

@@ -270,11 +270,6 @@
       node.style.setProperty('justify-self', index === 0 ? 'start' : index === 6 ? 'end' : 'center', 'important');
       node.style.textAlign = index === 0 ? 'left' : index === 6 ? 'right' : 'center';
     });
-    const viewButtons = modal.querySelector('.m001-3d-views');
-    const bottomViewButton = document.createElement('button');
-    bottomViewButton.type = 'button'; bottomViewButton.className = 'btn light';
-    bottomViewButton.dataset.view = 'bottom'; bottomViewButton.textContent = 'Bottom';
-    viewButtons.insertBefore(bottomViewButton, viewButtons.querySelector('[data-shadow]'));
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(global.PacVu3DTheme.colors.background);
     const camera = Viewer.createPerspectiveCamera(THREE, C);
@@ -484,7 +479,10 @@
     // T004 is intentionally kept on the assembly table until the automatic
     // lock is fully built, pressed and reopened. Standing is a later phase.
 
+    let physicalPaper=null,currentProgress=0;
     function pose(value) {
+      currentProgress=value;
+      const thickness=physicalPaper?.enabled?physicalPaper.thickness:0.45;
       const progress = clamp(value, 0, 1);
       // Preserve the approved bottom-lock sequence in the first 68% of the
       // master timeline, then stand the bonded package and close its top.
@@ -594,14 +592,26 @@
       const stateIndex = progress < 0.12 ? 0 : progress < 0.34 ? 1 : progress < 0.54 ? 2 :
         progress < 0.68 ? 3 : progress < 0.76 ? 4 : progress < 0.93 ? 5 : 6;
       modal.querySelectorAll('.assembly-labels span').forEach((node, index) => node.classList.toggle('active', index <= stateIndex));
+      physicalPaper?.update(progress);
     }
 
-    const whiteStudio = global.PacVuWhiteStudio?.create({ scene, camera, controls, renderer, root, sun, floor, grid }) || null;
+    const presentation=global.PacVuMailer3DControls.create({
+      id:'T004',modal,stage,renderer,scene,camera,controls,getModel:()=>root,
+      createPaper:()=> (physicalPaper=global.PacVuPhysicalPaper3D.createFoldedAdapter({
+        THREE,contract,pieces,frames,hinges,root,center,materials,whitePaperboard,
+        clamp,phase,point,initialThickness:thickness,baseMaterialSets,bondCopies,
+        repose:()=>pose(currentProgress)
+      }))
+    });
+    presentation.bind();
     function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
     function view(type) {
       if (type !== 'bottom') {
-        Viewer.fitObject(root, camera, controls, type);
-        if (type === 'iso') whiteStudio?.view();
+        presentation.fit(type);
+        if(type==='iso'){
+          camera.position.sub(controls.target).multiplyScalar(1.3).add(controls.target);
+          camera.far*=1.3;camera.updateProjectionMatrix();controls.update();
+        }
         return;
       }
       root.updateMatrixWorld(true);
@@ -628,34 +638,12 @@
     const slider = modal.querySelector('input');
     function setMaterialMode(mode) {
       materialMode = mode === 'white' ? 'white' : 'existing';
-      pieces.forEach(piece => { piece.mesh.material = piece.materialSets[materialMode]; });
-      bondCopies.forEach(link => {
-        link.copy.material = pieces.get(link.original.name)?.materialSets[materialMode] || link.original.material;
-      });
-      modal.querySelectorAll('[data-material-mode]').forEach(button => {
-        button.setAttribute('aria-pressed', String(button.dataset.materialMode === materialMode));
-      });
+      presentation.setMaterial(materialMode);
     }
-    const materialControls = document.createElement('div');
-    materialControls.className = 'm001-3d-views pacvu-viewer__views t004-material-controls';
-    materialControls.style.right = '118px';
-    materialControls.innerHTML = '<button type="button" class="btn light" data-material-mode="existing" aria-pressed="true">Existing Material</button><button type="button" class="btn light" data-material-mode="white" aria-pressed="false">White Paperboard</button>';
-    stage.append(materialControls);
-    materialControls.querySelectorAll('[data-material-mode]').forEach(button => {
-      button.onclick = () => setMaterialMode(button.dataset.materialMode);
-    });
     slider.oninput = () => pose(Number(slider.value) / 100);
     modal.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => view(button.dataset.view); });
     modal.querySelector('[data-close]').onclick = () => modal.classList.remove('open');
-    let gridVisible = true;
-    const gridButton = modal.querySelector('[data-grid]');
-    gridButton.setAttribute('aria-pressed', 'true');
-    gridButton.onclick = event => {
-      gridVisible = !gridVisible;
-      grid.visible = gridVisible;
-      event.currentTarget.setAttribute('aria-pressed', String(gridVisible));
-      event.currentTarget.textContent = gridVisible ? 'Grid On' : 'Grid Off';
-    };
+    modal.querySelector('[data-grid]').setAttribute('aria-pressed','true');
     let shadows = true;
     const shadowButton = modal.querySelector('[data-shadow]');
     shadowButton.setAttribute('aria-pressed', 'true');
@@ -664,7 +652,6 @@
       renderer.shadowMap.enabled = shadows;
       sun.castShadow = shadows;
       floor.visible = shadows;
-      whiteStudio?.setShadows(shadows);
       sun.shadow.needsUpdate = true;
       event.currentTarget.setAttribute('aria-pressed', String(shadows));
       event.currentTarget.textContent = shadows ? 'Shadows On' : 'Shadows Off';
@@ -689,8 +676,8 @@
       },
       setState(state) { const target = contract.states[state] ?? 0; slider.value = String(Math.round(target * 100)); if (target > 0.90) pose(0.90); pose(target); },
       setMaterialMode,
-      get materialMode() { return materialMode; },
-      destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); controls.dispose?.(); whiteStudio?.dispose(); whitePaperboard?.dispose(); renderer.dispose(); modal.remove(); }
+      get materialMode() { return modal.querySelector('[data-mailer-action="white"]').getAttribute('aria-pressed')==='true'?'white':'existing'; },
+      destroy() { live = false; cancelAnimationFrame(frameId); observer.disconnect(); presentation.dispose(); controls.dispose?.(); whitePaperboard?.dispose(); renderer.dispose(); modal.remove(); }
     };
   }
 
